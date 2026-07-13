@@ -19,7 +19,9 @@ You are building **Local**, a location-centric community platform (working name;
 
 ## Current state
 
-Fresh repo. No milestone started. Begin with M0 (foundation + design system + gallery) using the M0 prompt in spec 10. Deliverable of M0 is a reviewable `/dev/gallery`, not feature screens.
+**M0 complete, awaiting founder review of `/dev/gallery`.** Foundation, seven-axis theming cascade, motion library, hearth ambient, and the full primitive set are built and verified (lint / typecheck / test / build / e2e all green locally). See `/docs/PROGRESS.md` for detail and the one open CI item (Linux screenshot baselines). No feature screens, auth, or database work yet — those begin at M1. Do not start M1 until the founder signs off on the gallery.
+
+Run the gallery: `npm install` then `npm run dev`, open `http://localhost:3005/dev/gallery`.
 
 ## Commands (once scaffolded — keep this section updated)
 

@@ -1,0 +1,35 @@
+// Canonical primitive barrel. Every primitive is documented in
+// docs/reference/COMPONENT_CATALOG.md; the living reference is /dev/gallery.
+export { Icon, type IconName } from './Icon';
+export { Button } from './Button';
+export { IconButton } from './IconButton';
+export { Chip } from './Chip';
+export { Badge } from './Badge';
+export { Card } from './Card';
+export { IconBadge } from './IconBadge';
+export { Avatar } from './Avatar';
+export { ListRow } from './ListRow';
+export { Sheet } from './Sheet';
+export { Modal } from './Modal';
+export { ToastProvider, useToasts, type ToastVariant } from './Toast';
+export { EmptyState } from './EmptyState';
+export { Skeleton, SkeletonListRow, SkeletonCard } from './Skeleton';
+export { SegmentedControl } from './SegmentedControl';
+export { Tabs } from './Tabs';
+export { SearchBar } from './SearchBar';
+export { Field } from './Field';
+export { Textarea } from './Textarea';
+export { Select } from './Select';
+export { Checkbox } from './Checkbox';
+export { Toggle } from './Toggle';
+export { RadioGroup } from './RadioRow';
+export { Banner } from './Banner';
+export { InfoCallout } from './InfoCallout';
+export { TextLink } from './TextLink';
+export { PullToRefresh } from './PullToRefresh';
+export { SwipeAction } from './SwipeAction';
+export { StaggeredBody } from './StaggeredBody';
+export { MetricStat } from './MetricStat';
+export { StatCard } from './StatCard';
+export { BrandLogo } from './BrandLogo';
+export { type Tone } from './tones';

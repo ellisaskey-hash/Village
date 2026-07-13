@@ -1,0 +1,342 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Local — runtime theming cascade (THEMING_ARCHITECTURE.md)
+   Seven axes layered as CSS custom-property rewrites on <html>:
+     data-theme × data-skin × data-accent × data-density × data-font ×
+     data-contrast × data-motion
+   Cascade order below matches the audit's documented order 1..13.
+   ========================================================================== */
+
+/* 1 — dark theme baseline ------------------------------------------------- */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --c-bg: #0d110d;
+  --c-bg-elevated: #151b15;
+  --c-bg-sunken: #090c09;
+  --c-surface: rgba(255, 255, 255, 0.04);
+  --c-surface-hover: rgba(255, 255, 255, 0.07);
+  --c-surface-active: rgba(255, 255, 255, 0.1);
+  --c-border: rgba(255, 255, 255, 0.08);
+  --c-border-strong: rgba(255, 255, 255, 0.16);
+
+  --c-text: #f5f7f2;
+  --c-text-muted: #98a394;
+  --c-text-faint: #6a755f;
+  --c-text-on-accent: #0c140c;
+
+  --c-accent: #7dd883;
+  --c-accent-warm: #f0b95a;
+  --c-positive: #7dd883;
+  --c-warn: #f0b95a;
+  --c-danger: #f07a72;
+  --c-info: #8ac6e8;
+  --c-purple: #c9a0e8;
+
+  --c-chart-1: #7dd883;
+  --c-chart-2: #f0b95a;
+  --c-chart-3: #8ac6e8;
+  --c-chart-4: #f07a72;
+  --c-chart-5: #c9a0e8;
+
+  --c-alert-community: #8ac6e8;
+  --c-alert-verified: #f0b95a;
+  --c-alert-platform: #f07a72;
+
+  /* gradients */
+  --g-brand: linear-gradient(135deg, #7dd883 0%, #f0b95a 100%);
+  --g-hairline: linear-gradient(90deg, rgba(125, 216, 131, 0.6), rgba(240, 185, 90, 0.2));
+
+  /* hearth ambient (the signature) */
+  --bg-ambient-1: radial-gradient(60% 40% at 15% 8%, rgba(240, 185, 90, 0.09), transparent 70%);
+  --bg-ambient-2: radial-gradient(50% 35% at 85% 92%, rgba(125, 216, 131, 0.06), transparent 70%);
+  --bg-ambient-3: none;
+
+  /* glass surfaces (Elevra alphas re-based on the new bg) */
+  --c-glass-panel-bg: rgba(13, 17, 13, 0.8);
+  --c-glass-fade-from: rgba(13, 17, 13, 1);
+  --c-glass-fade-mid: rgba(13, 17, 13, 0.55);
+  --c-glass-backdrop: rgba(13, 17, 13, 0.65);
+  --c-glass-row-bg: rgba(255, 255, 255, 0.04);
+  --c-glass-row-bg-hover: rgba(255, 255, 255, 0.08);
+  --c-glass-row-border: rgba(255, 255, 255, 0.08);
+  --c-glass-scroll-thumb: rgba(125, 216, 131, 0.28);
+  --c-glass-scroll-thumb-hover: rgba(125, 216, 131, 0.55);
+  --c-glass-scroll-thumb-active: rgba(125, 216, 131, 0.75);
+
+  /* focus + shadow */
+  --focus-ring: rgba(125, 216, 131, 0.28);
+  --focus-ring-soft: rgba(125, 216, 131, 0.2);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-raised: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-glow-accent: 0 0 24px rgba(125, 216, 131, 0.22);
+  --shadow-glow-warm: 0 0 24px rgba(240, 185, 90, 0.2);
+
+  /* skeleton shimmer */
+  --skeleton-from: rgba(255, 255, 255, 0.04);
+  --skeleton-via: rgba(255, 255, 255, 0.12);
+
+  /* icon-badge palette */
+  --badge-accent-bg: rgba(125, 216, 131, 0.15);
+  --badge-accent-fg: var(--c-accent);
+  --badge-positive-bg: rgba(125, 216, 131, 0.15);
+  --badge-positive-fg: var(--c-positive);
+  --badge-warn-bg: rgba(240, 185, 90, 0.15);
+  --badge-warn-fg: var(--c-warn);
+  --badge-danger-bg: rgba(240, 122, 114, 0.15);
+  --badge-danger-fg: var(--c-danger);
+  --badge-info-bg: rgba(138, 198, 232, 0.15);
+  --badge-info-fg: var(--c-info);
+  --badge-purple-bg: rgba(201, 160, 232, 0.18);
+  --badge-purple-fg: var(--c-purple);
+  --badge-neutral-bg: rgba(255, 255, 255, 0.06);
+  --badge-neutral-fg: var(--c-text-muted);
+
+  /* brand marks — tokenised, no sacred hex (spec 05 brandability) */
+  --brand-mark-fg: #f5f7f2;
+  --brand-mark-bg: #0d110d;
+
+  /* fonts */
+  --font-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+/* 2 — light theme --------------------------------------------------------- */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --c-bg: #f7f6f1;
+  --c-bg-elevated: #ffffff;
+  --c-bg-sunken: #eeede5;
+  --c-surface: rgba(28, 34, 26, 0.03);
+  --c-surface-hover: rgba(28, 34, 26, 0.05);
+  --c-surface-active: rgba(28, 34, 26, 0.08);
+  --c-border: rgba(28, 34, 26, 0.08);
+  --c-border-strong: rgba(28, 34, 26, 0.14);
+
+  --c-text: #1c221a;
+  --c-text-muted: #5c665a;
+  --c-text-faint: #77826f;
+  --c-text-on-accent: #ffffff;
+
+  --c-accent: #2f7a44;
+  --c-accent-warm: #b4791f;
+  --c-positive: #2f7a44;
+  --c-warn: #b4791f;
+  --c-danger: #cc4a44;
+  --c-info: #2f6fa8;
+  --c-purple: #7a55b8;
+
+  --c-chart-1: #2f7a44;
+  --c-chart-2: #b4791f;
+  --c-chart-3: #2f6fa8;
+  --c-chart-4: #cc4a44;
+  --c-chart-5: #7a55b8;
+
+  --c-alert-community: #2f6fa8;
+  --c-alert-verified: #b4791f;
+  --c-alert-platform: #cc4a44;
+
+  --g-brand: linear-gradient(135deg, #57b36e 0%, #e0a94e 100%);
+  --g-hairline: linear-gradient(90deg, rgba(47, 122, 68, 0.55), rgba(180, 121, 31, 0.18));
+
+  --bg-ambient-1: radial-gradient(75% 55% at 8% 6%, rgba(240, 185, 90, 0.18), transparent 72%);
+  --bg-ambient-2: radial-gradient(70% 50% at 92% 12%, rgba(125, 216, 131, 0.14), transparent 72%);
+  --bg-ambient-3: radial-gradient(85% 60% at 50% 96%, rgba(224, 169, 78, 0.16), transparent 75%);
+
+  --c-glass-panel-bg: #ffffff;
+  --c-glass-fade-from: #ffffff;
+  --c-glass-fade-mid: rgba(255, 255, 255, 0.55);
+  --c-glass-backdrop: rgba(28, 34, 26, 0.28);
+  --c-glass-row-bg: rgba(28, 34, 26, 0.03);
+  --c-glass-row-bg-hover: rgba(28, 34, 26, 0.06);
+  --c-glass-row-border: rgba(28, 34, 26, 0.08);
+  --c-glass-scroll-thumb: rgba(47, 122, 68, 0.32);
+  --c-glass-scroll-thumb-hover: rgba(47, 122, 68, 0.55);
+  --c-glass-scroll-thumb-active: rgba(47, 122, 68, 0.75);
+
+  --focus-ring: rgba(47, 122, 68, 0.28);
+  --focus-ring-soft: rgba(47, 122, 68, 0.2);
+  --shadow-card: 0 1px 2px rgba(28, 34, 26, 0.04), 0 8px 24px rgba(28, 34, 26, 0.06);
+  --shadow-raised: 0 4px 16px rgba(28, 34, 26, 0.06), 0 24px 48px rgba(28, 34, 26, 0.1);
+  --shadow-glow-accent: 0 0 24px rgba(47, 122, 68, 0.16);
+  --shadow-glow-warm: 0 0 24px rgba(180, 121, 31, 0.16);
+
+  --skeleton-from: rgba(28, 34, 26, 0.04);
+  --skeleton-via: rgba(28, 34, 26, 0.1);
+
+  --badge-accent-bg: #e3f0e7;
+  --badge-accent-fg: #2f7a44;
+  --badge-positive-bg: #e3f0e7;
+  --badge-positive-fg: #2f7a44;
+  --badge-warn-bg: #f7ead6;
+  --badge-warn-fg: #8a5a12;
+  --badge-danger-bg: #f8e0de;
+  --badge-danger-fg: #a83a34;
+  --badge-info-bg: #e1ecf5;
+  --badge-info-fg: #245b86;
+  --badge-purple-bg: #eee6f6;
+  --badge-purple-fg: #5e3e8c;
+  --badge-neutral-bg: rgba(28, 34, 26, 0.05);
+  --badge-neutral-fg: var(--c-text-muted);
+
+  --brand-mark-fg: #1c221a;
+  --brand-mark-bg: #f7f6f1;
+}
+
+/* 3 — skin axis (community type). Village is the default identity (no delta).
+      estate/retirement are reserved; defined as config defaults, shipped later. */
+:root[data-skin='estate'],
+[data-skin='estate'] {
+  --c-bg: #0d0f12;
+}
+
+/* 5/6 — accent user override (data-accent). Leaf == theme default (no block). */
+:root[data-accent='honey'],
+[data-accent='honey'] {
+  --c-accent: #f0b95a;
+  --c-text-on-accent: #141005;
+  --g-brand: linear-gradient(135deg, #f0b95a 0%, #7dd883 100%);
+  --shadow-glow-accent: 0 0 24px rgba(240, 185, 90, 0.24);
+  --focus-ring: rgba(240, 185, 90, 0.3);
+  --focus-ring-soft: rgba(240, 185, 90, 0.22);
+  --badge-accent-bg: rgba(240, 185, 90, 0.16);
+  --badge-accent-fg: var(--c-accent);
+  --c-glass-scroll-thumb-hover: rgba(240, 185, 90, 0.55);
+}
+:root[data-theme='light'][data-accent='honey'],
+[data-theme='light'] [data-accent='honey'] {
+  --c-accent: #b4791f;
+  --c-text-on-accent: #ffffff;
+}
+
+:root[data-accent='cobalt'],
+[data-accent='cobalt'] {
+  --c-accent: #7fa8ff;
+  --g-brand: linear-gradient(135deg, #7fa8ff 0%, #7dd883 100%);
+  --shadow-glow-accent: 0 0 24px rgba(127, 168, 255, 0.24);
+  --focus-ring: rgba(127, 168, 255, 0.3);
+  --focus-ring-soft: rgba(127, 168, 255, 0.22);
+  --badge-accent-bg: rgba(127, 168, 255, 0.16);
+  --badge-accent-fg: var(--c-accent);
+  --c-glass-scroll-thumb-hover: rgba(127, 168, 255, 0.55);
+}
+:root[data-theme='light'][data-accent='cobalt'],
+[data-theme='light'] [data-accent='cobalt'] {
+  --c-accent: #3d6fd0;
+  --c-text-on-accent: #ffffff;
+}
+
+/* 7 — density (root font-size; rem utilities scale, px touch targets do not) */
+:root[data-density='compact'],
+[data-density='compact'] {
+  font-size: 15px;
+}
+:root[data-density='spacious'],
+[data-density='spacious'] {
+  font-size: 17px;
+}
+
+/* 8 — font axis (dyslexia body swap) */
+:root[data-font='dyslexia'] body,
+[data-font='dyslexia'] {
+  --font-body: 'Atkinson Hyperlegible', 'Inter', system-ui, sans-serif;
+}
+
+/* 9 — base element styles ------------------------------------------------- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+#root {
+  min-height: 100dvh;
+  isolation: isolate;
+}
+.tabular,
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 10 — focus chrome + safe-area helpers */
+:where(button, a, [role='button'], [tabindex], input, textarea, select):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* skip-link (Elevra fix #10) */
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 70;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--c-bg-elevated);
+  color: var(--c-text);
+  box-shadow: var(--shadow-raised);
+  transition: top 0.16s ease-out;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+/* 11 — reduced motion (CSS fallback for anything not routed through Framer) */
+[data-motion='reduce'] *,
+[data-motion='reduce'] *::before,
+[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* 12 — high contrast: collapse muted onto text, faint onto muted, borders up */
+:root[data-contrast='high'],
+[data-contrast='high'] {
+  --c-border: var(--c-border-strong);
+  --c-text-muted: var(--c-text);
+  --c-text-faint: var(--c-text-muted);
+  --focus-ring: var(--c-accent);
+  --focus-ring-soft: var(--c-accent);
+}
+
+/* 13 — scrollbars (accent-tinted glass thumb) */
+.sheet-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-glass-scroll-thumb) transparent;
+}
+.sheet-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.sheet-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--c-glass-scroll-thumb);
+  border-radius: 999px;
+}
+.sheet-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--c-glass-scroll-thumb-hover);
+}
+.sheet-scrollbar::-webkit-scrollbar-thumb:active {
+  background: var(--c-glass-scroll-thumb-active);
+}
