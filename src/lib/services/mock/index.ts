@@ -41,6 +41,7 @@ import type {
   RequestPost,
   RequestStatus,
   RsvpStatus,
+  SearchResult,
   Service,
   Session,
   Skill,
@@ -945,6 +946,25 @@ export function createMockServices(): Services {
           promoteWaitlistMock(eventId);
         }
         persist();
+      },
+    },
+
+    search: {
+      async search(communityId, query): Promise<SearchResult[]> {
+        const term = query.trim().toLowerCase();
+        if (!term) return [];
+        const d = db();
+        const hit = (t: string | null, de: string | null) =>
+          (t ?? '').toLowerCase().includes(term) || (de ?? '').toLowerCase().includes(term);
+        const out: SearchResult[] = [];
+        d.businesses.filter((x) => x.communityId === communityId && hit(x.name, x.description)).forEach((x) => out.push({ kind: 'business', id: x.id, title: x.name, snippet: x.description ?? '' }));
+        d.services.filter((x) => x.communityId === communityId && x.active && hit(x.title, x.description)).forEach((x) => out.push({ kind: 'service', id: x.id, title: x.title, snippet: x.description ?? '' }));
+        d.places.filter((x) => x.communityId === communityId && hit(x.name, x.description)).forEach((x) => out.push({ kind: 'place', id: x.id, title: x.name, snippet: x.description ?? '' }));
+        d.organisations.filter((x) => x.communityId === communityId && hit(x.name, x.description)).forEach((x) => out.push({ kind: 'organisation', id: x.id, title: x.name, snippet: x.description ?? '' }));
+        d.events.filter((x) => x.communityId === communityId && hit(x.title, x.description)).forEach((x) => out.push({ kind: 'event', id: x.id, title: x.title, snippet: x.description ?? '' }));
+        d.listings.filter((x) => x.communityId === communityId && x.status === 'active' && hit(x.title, x.description)).forEach((x) => out.push({ kind: 'listing', id: x.id, title: x.title, snippet: x.description ?? '' }));
+        d.requests.filter((x) => x.communityId === communityId && (x.status === 'open' || x.status === 'answered') && hit(x.title, x.description)).forEach((x) => out.push({ kind: 'request', id: x.id, title: x.title, snippet: x.description ?? '' }));
+        return out.slice(0, 40);
       },
     },
   };

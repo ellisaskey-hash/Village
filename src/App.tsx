@@ -28,7 +28,27 @@ import { InboxScreen } from '@/screens/InboxScreen';
 import { MeScreen } from '@/screens/MeScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
 import { GalleryScreen } from '@/dev/gallery/GalleryScreen';
+import { LandingScreen } from '@/screens/LandingScreen';
+import { BrandLogo } from '@/components/ui';
+import { useSession, useSessionStore } from '@/app/state/session';
 import { readStore } from '@/lib/storage';
+
+/** Public landing for logged-out visitors; members go straight to the app. */
+function RootSwitch() {
+  const status = useSessionStore((s) => s.status);
+  const session = useSession();
+  if (status === 'loading') {
+    return (
+      <div id="main" className="flex min-h-dvh items-center justify-center">
+        <BrandLogo size={56} />
+      </div>
+    );
+  }
+  if (session) {
+    return <Navigate to={session.memberships.length > 0 ? '/home' : '/welcome'} replace />;
+  }
+  return <LandingScreen />;
+}
 
 function devEnabled(): boolean {
   if (import.meta.env.DEV) return true;
@@ -56,6 +76,8 @@ export function App() {
       <AppBootstrap>
         <RouteAnnouncer />
         <Routes>
+          <Route path="/" element={<RootSwitch />} />
+
           <Route element={<AnonOnlyLayout />}>
             <Route path="/welcome" element={<WelcomeScreen />} />
             <Route path="/j/:code" element={<InviteRedirect />} />
@@ -69,7 +91,7 @@ export function App() {
 
           <Route element={<RequireMembershipLayout />}>
             <Route element={<AppShell />}>
-              <Route index element={<HomeScreen />} />
+              <Route path="/home" element={<HomeScreen />} />
               <Route path="/explore" element={<ExploreScreen />} />
               <Route path="/inbox" element={<InboxScreen />} />
               <Route path="/me" element={<MeScreen />} />

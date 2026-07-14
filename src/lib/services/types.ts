@@ -325,6 +325,18 @@ export interface Alert {
   createdAt: string;
 }
 
+// ---- M6 search -----------------------------------------------------------------
+
+export type SearchKind =
+  | 'business' | 'service' | 'place' | 'organisation' | 'event' | 'listing' | 'request';
+
+export interface SearchResult {
+  kind: SearchKind;
+  id: string;
+  title: string;
+  snippet: string;
+}
+
 export const DEFAULT_CONFIG: CommunityConfig = {
   coldDmMinTrust: 1,
   listingCapT0: 2,

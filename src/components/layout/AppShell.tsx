@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
@@ -11,6 +11,7 @@ import { EventComposer } from '@/screens/compose/EventComposer';
 import { ServiceComposer } from '@/screens/compose/ServiceComposer';
 import { EquipmentComposer } from '@/screens/compose/EquipmentComposer';
 import { AlertComposer } from '@/screens/compose/AlertComposer';
+import { SearchSheet } from '@/screens/SearchSheet';
 
 type Composer = 'none' | 'request' | 'sell' | 'equipment' | 'event' | 'service' | 'alert';
 
@@ -20,7 +21,7 @@ interface Tab {
   icon: IconName;
 }
 const TABS: Tab[] = [
-  { to: '/', label: 'Home', icon: 'home' },
+  { to: '/home', label: 'Home', icon: 'home' },
   { to: '/explore', label: 'Explore', icon: 'search' },
   { to: '/inbox', label: 'Inbox', icon: 'messages' },
   { to: '/me', label: 'Me', icon: 'user' },
@@ -39,8 +40,21 @@ export function AppShell() {
   const [postOpen, setPostOpen] = useState(false);
   const [postChoice, setPostChoice] = useState('request');
   const [composer, setComposer] = useState<Composer>('none');
+  const [searchOpen, setSearchOpen] = useState(false);
   const active = useActiveMembership();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   function startPost() {
     setPostOpen(false);
@@ -66,6 +80,13 @@ export function AppShell() {
           {TABS.map((t) => (
             <RailLink key={t.to} {...t} />
           ))}
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-body font-medium text-textMuted transition-colors hover:bg-surface hover:text-text"
+          >
+            <Icon name="search" size={20} /> Search
+          </button>
         </nav>
         <button
           type="button"
@@ -82,7 +103,7 @@ export function AppShell() {
           <BrandLogo />
           <span className="text-h3 font-semibold text-text">{active?.name ?? 'Local'}</span>
           <div className="ml-auto flex items-center gap-1">
-            <IconButton icon="search" ariaLabel="Search" size="sm" onClick={() => navigate('/explore')} />
+            <IconButton icon="search" ariaLabel="Search" size="sm" onClick={() => setSearchOpen(true)} />
             <IconButton icon="bell" ariaLabel="Notifications" size="sm" onClick={() => navigate('/inbox')} />
           </div>
         </header>
@@ -128,6 +149,7 @@ export function AppShell() {
       <EventComposer open={composer === 'event'} onClose={() => setComposer('none')} />
       <ServiceComposer open={composer === 'service'} onClose={() => setComposer('none')} />
       <AlertComposer open={composer === 'alert'} onClose={() => setComposer('none')} />
+      <SearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

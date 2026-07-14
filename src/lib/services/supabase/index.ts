@@ -47,6 +47,7 @@ import {
   type RequestPost,
   type RequestStatus,
   type RsvpStatus,
+  type SearchResult,
   type SeedProposal,
   type Service,
   type Session,
@@ -833,6 +834,22 @@ export function createSupabaseServices(): Services {
       async resolve(id: string) {
         const { error } = await getSupabase().rpc('resolve_alert', { p_id: id });
         if (error) throw error;
+      },
+    },
+
+    search: {
+      async search(communityId: string, query: string) {
+        if (!query.trim()) return [];
+        const { data, error } = await getSupabase().rpc('global_search', {
+          p_community: communityId,
+          p_query: query,
+          p_kinds: null,
+        });
+        if (error) throw error;
+        return ((data ?? []) as unknown[]).map((row) => {
+          const r = row as { kind: SearchResult['kind']; id: string; title: string; snippet: string };
+          return { kind: r.kind, id: r.id, title: r.title, snippet: r.snippet };
+        });
       },
     },
   };

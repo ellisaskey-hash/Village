@@ -22,6 +22,7 @@ import type {
   RequestPost,
   RequestStatus,
   RsvpStatus,
+  SearchResult,
   SeedProposal,
   Service,
   Session,
@@ -81,6 +82,10 @@ export interface AlertService {
   list(communityId: string): Promise<Alert[]>;
   post(communityId: string, input: AlertInput): Promise<Alert>;
   resolve(id: string): Promise<void>;
+}
+
+export interface SearchService {
+  search(communityId: string, query: string): Promise<SearchResult[]>;
 }
 
 // ---- services ------------------------------------------------------------------
@@ -251,4 +256,5 @@ export interface Services {
   notifications: NotificationService;
   events: EventService;
   alerts: AlertService;
+  search: SearchService;
 }
