@@ -181,6 +181,74 @@ export interface SeedProposal {
   createdAt: string;
 }
 
+// ---- M3 content lifecycle + messaging ------------------------------------------
+
+export type ListingKind = 'sell' | 'free' | 'wanted' | 'lend';
+export type ListingStatus = 'active' | 'reserved' | 'completed' | 'expired' | 'withdrawn';
+
+export interface Listing {
+  id: string;
+  communityId: string;
+  createdBy: string;
+  authorName: string;
+  kind: ListingKind;
+  title: string;
+  description: string | null;
+  category: string;
+  pricePence: number | null;
+  status: ListingStatus;
+  createdAt: string;
+}
+
+export type RequestCategory =
+  | 'trades' | 'childcare' | 'lifts' | 'recommendations' | 'borrow' | 'help' | 'pets' | 'other';
+export type RequestStatus = 'open' | 'answered' | 'fulfilled' | 'expired' | 'withdrawn';
+
+export interface RequestPost {
+  id: string;
+  communityId: string;
+  createdBy: string;
+  authorName: string;
+  title: string;
+  description: string | null;
+  category: RequestCategory;
+  status: RequestStatus;
+  neededBy: string | null;
+  fulfilledBy?: string | null;
+  createdAt: string;
+}
+
+export type ThreadContext = 'listing' | 'request' | 'event' | 'business' | 'organisation' | 'direct';
+
+export interface ThreadSummary {
+  id: string;
+  context: ThreadContext;
+  contextId: string | null;
+  title: string | null;
+  otherName: string;
+  lastMessageAt: string;
+  unread: boolean;
+}
+
+export interface Message {
+  id: string;
+  threadId: string;
+  senderId: string;
+  senderName: string;
+  body: string | null;
+  createdAt: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  category: string;
+  title: string;
+  body: string | null;
+  deepLink: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
 export const DEFAULT_CONFIG: CommunityConfig = {
   coldDmMinTrust: 1,
   listingCapT0: 2,

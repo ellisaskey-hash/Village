@@ -12,6 +12,9 @@ import { AppShell } from '@/components/layout/AppShell';
 import { BusinessDetail } from '@/screens/directory/BusinessDetail';
 import { PlaceDetail } from '@/screens/directory/PlaceDetail';
 import { OrganisationDetail } from '@/screens/directory/OrganisationDetail';
+import { ListingDetail } from '@/screens/content/ListingDetail';
+import { RequestDetail } from '@/screens/content/RequestDetail';
+import { ThreadScreen } from '@/screens/content/ThreadScreen';
 import { SeedingConsole } from '@/screens/admin/SeedingConsole';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { SignInScreen } from '@/screens/auth/SignInScreen';
@@ -72,6 +75,9 @@ export function App() {
               <Route path="/businesses/:id" element={<BusinessDetail />} />
               <Route path="/places/:id" element={<PlaceDetail />} />
               <Route path="/organisations/:id" element={<OrganisationDetail />} />
+              <Route path="/listings/:id" element={<ListingDetail />} />
+              <Route path="/requests/:id" element={<RequestDetail />} />
+              <Route path="/inbox/t/:id" element={<ThreadScreen />} />
             </Route>
           </Route>
 

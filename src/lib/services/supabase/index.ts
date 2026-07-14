@@ -4,11 +4,13 @@
 // methods never re-implement it.
 import type {
   JoinInput,
+  ListingInput,
   ProfilePatch,
+  RequestInput,
   Services,
   SignUpInput,
 } from '../contracts';
-import { joinSchema, signUpSchema } from '../contracts';
+import { joinSchema, listingSchema, requestSchema, signUpSchema } from '../contracts';
 import {
   DEFAULT_CONFIG,
   type Business,
@@ -19,11 +21,19 @@ import {
   type MemberSummary,
   type Membership,
   type MembershipSummary,
+  type Listing,
+  type ListingStatus,
+  type Message,
+  type NotificationItem,
   type Organisation,
   type Place,
   type Profile,
+  type RequestPost,
+  type RequestStatus,
   type SeedProposal,
   type Session,
+  type ThreadContext,
+  type ThreadSummary,
   type TrustLevel,
 } from '../types';
 import { horsmondenDrafts } from '@/lib/ingest/horsmondenFixture';
@@ -139,6 +149,33 @@ function mapProposal(r: DbSeedProposal): SeedProposal {
     payload: r.payload, status: r.status, createdAt: r.created_at,
   };
 }
+
+interface DbListing {
+  id: string; community_id: string; created_by: string; kind: Listing['kind']; title: string;
+  description: string | null; category: string; price_pence: number | null; status: ListingStatus;
+  created_at: string; profiles?: { display_name: string } | null;
+}
+interface DbRequest {
+  id: string; community_id: string; created_by: string; title: string; description: string | null;
+  category: RequestPost['category']; status: RequestStatus; needed_by: string | null;
+  fulfilled_by: string | null; created_at: string; profiles?: { display_name: string } | null;
+}
+function mapListing(r: DbListing): Listing {
+  return {
+    id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
+    kind: r.kind, title: r.title, description: r.description, category: r.category,
+    pricePence: r.price_pence, status: r.status, createdAt: r.created_at,
+  };
+}
+function mapRequest(r: DbRequest): RequestPost {
+  return {
+    id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
+    title: r.title, description: r.description, category: r.category, status: r.status,
+    neededBy: r.needed_by, fulfilledBy: r.fulfilled_by, createdAt: r.created_at,
+  };
+}
+const LISTING_SELECT = '*, profiles!listings_created_by_fkey(display_name)';
+const REQUEST_SELECT = '*, profiles!requests_created_by_fkey(display_name)';
 
 function mapMembership(r: DbMembership): Membership {
   return {
@@ -454,6 +491,155 @@ export function createSupabaseServices(): Services {
       async launch(communityId: string) {
         const { error } = await getSupabase().rpc('launch_community', { id: communityId });
         if (error) throw error;
+      },
+    },
+
+    listings: {
+      async list(communityId: string) {
+        const { data, error } = await getSupabase()
+          .from('listings').select(LISTING_SELECT).eq('community_id', communityId)
+          .neq('status', 'withdrawn').order('created_at', { ascending: false });
+        if (error) throw error;
+        return (data ?? []).map((r) => mapListing(r as unknown as DbListing));
+      },
+      async get(id: string) {
+        const { data, error } = await getSupabase().from('listings').select(LISTING_SELECT).eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data ? mapListing(data as unknown as DbListing) : null;
+      },
+      async create(communityId: string, input: ListingInput) {
+        const parsed = listingSchema.parse(input);
+        const { data, error } = await getSupabase()
+          .from('listings')
+          .insert({
+            community_id: communityId, kind: parsed.kind, title: parsed.title,
+            description: parsed.description ?? null, category: parsed.category,
+            price_pence: parsed.pricePence ?? null,
+          })
+          .select(LISTING_SELECT).single();
+        if (error) throw error;
+        return mapListing(data as unknown as DbListing);
+      },
+      async setStatus(id: string, status: ListingStatus) {
+        const { data, error } = await getSupabase().rpc('set_listing_status', { p_id: id, p_status: status });
+        if (error) throw error;
+        return mapListing(data as unknown as DbListing);
+      },
+    },
+
+    requests: {
+      async list(communityId: string) {
+        const { data, error } = await getSupabase()
+          .from('requests').select(REQUEST_SELECT).eq('community_id', communityId)
+          .neq('status', 'withdrawn').order('created_at', { ascending: false });
+        if (error) throw error;
+        return (data ?? []).map((r) => mapRequest(r as unknown as DbRequest));
+      },
+      async get(id: string) {
+        const { data, error } = await getSupabase().from('requests').select(REQUEST_SELECT).eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data ? mapRequest(data as unknown as DbRequest) : null;
+      },
+      async create(communityId: string, input: RequestInput) {
+        const parsed = requestSchema.parse(input);
+        const { data, error } = await getSupabase()
+          .from('requests')
+          .insert({
+            community_id: communityId, title: parsed.title, description: parsed.description ?? null,
+            category: parsed.category, needed_by: parsed.neededBy ?? null,
+          })
+          .select(REQUEST_SELECT).single();
+        if (error) throw error;
+        return mapRequest(data as unknown as DbRequest);
+      },
+      async setStatus(id: string, status: RequestStatus, fulfilledBy?: string) {
+        const { data, error } = await getSupabase().rpc('set_request_status', {
+          p_id: id, p_status: status, p_fulfilled_by: fulfilledBy ?? null,
+        });
+        if (error) throw error;
+        return mapRequest(data as unknown as DbRequest);
+      },
+    },
+
+    threads: {
+      async mine(): Promise<ThreadSummary[]> {
+        const { data, error } = await getSupabase()
+          .from('threads')
+          .select('id, context, context_id, title, last_message_at, thread_participants!inner(profile_id)')
+          .order('last_message_at', { ascending: false });
+        if (error) throw error;
+        return (data ?? []).map((row) => {
+          const r = row as unknown as {
+            id: string; context: ThreadContext; context_id: string | null; title: string | null; last_message_at: string;
+          };
+          return {
+            id: r.id, context: r.context, contextId: r.context_id, title: r.title,
+            otherName: r.title ?? 'Conversation', lastMessageAt: r.last_message_at, unread: false,
+          };
+        });
+      },
+      async get(id: string) {
+        const sb = getSupabase();
+        const { data: t, error: te } = await sb
+          .from('threads').select('id, context, context_id, title, last_message_at').eq('id', id).maybeSingle();
+        if (te) throw te;
+        if (!t) return null;
+        const tr = t as { id: string; context: ThreadContext; context_id: string | null; title: string | null; last_message_at: string };
+        const { data: msgs, error: me } = await sb
+          .from('messages')
+          .select('id, thread_id, sender_id, body, created_at, profiles(display_name)')
+          .eq('thread_id', id).order('created_at', { ascending: true });
+        if (me) throw me;
+        const messages: Message[] = (msgs ?? []).map((row) => {
+          const m = row as unknown as { id: string; thread_id: string; sender_id: string; body: string | null; created_at: string; profiles?: { display_name: string } | null };
+          return { id: m.id, threadId: m.thread_id, senderId: m.sender_id, senderName: m.profiles?.display_name ?? '', body: m.body, createdAt: m.created_at };
+        });
+        return {
+          thread: { id: tr.id, context: tr.context, contextId: tr.context_id, title: tr.title, otherName: tr.title ?? 'Conversation', lastMessageAt: tr.last_message_at, unread: false },
+          messages,
+        };
+      },
+      async open(context: ThreadContext, contextId, recipient, firstMessage) {
+        const { data, error } = await getSupabase().rpc('open_thread', {
+          p_context: context, p_context_id: contextId, p_recipient: recipient, p_first_message: firstMessage,
+        });
+        if (error) throw error;
+        return (data as { id: string }).id;
+      },
+      async send(threadId: string, body: string) {
+        const sb = getSupabase();
+        const { data: auth } = await sb.auth.getUser();
+        const { data, error } = await sb
+          .from('messages').insert({ thread_id: threadId, sender_id: auth.user?.id, body }).select('*').single();
+        if (error) throw error;
+        const m = data as { id: string; thread_id: string; sender_id: string; body: string | null; created_at: string };
+        return { id: m.id, threadId: m.thread_id, senderId: m.sender_id, senderName: '', body: m.body, createdAt: m.created_at };
+      },
+      async markRead(threadId: string) {
+        const sb = getSupabase();
+        const { data: auth } = await sb.auth.getUser();
+        if (!auth.user) return;
+        await sb.from('thread_participants').update({ last_read_at: new Date().toISOString() })
+          .eq('thread_id', threadId).eq('profile_id', auth.user.id);
+      },
+    },
+
+    notifications: {
+      async mine(): Promise<NotificationItem[]> {
+        const { data, error } = await getSupabase()
+          .from('notifications').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        return (data ?? []).map((row) => {
+          const n = row as { id: string; category: string; title: string; body: string | null; deep_link: string | null; read_at: string | null; created_at: string };
+          return { id: n.id, category: n.category, title: n.title, body: n.body, deepLink: n.deep_link, readAt: n.read_at, createdAt: n.created_at };
+        });
+      },
+      async markAllRead() {
+        const sb = getSupabase();
+        const { data: auth } = await sb.auth.getUser();
+        if (!auth.user) return;
+        await sb.from('notifications').update({ read_at: new Date().toISOString() })
+          .eq('profile_id', auth.user.id).is('read_at', null);
       },
     },
   };

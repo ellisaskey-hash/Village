@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /**
  * M2 seeding pipeline (behavioural baseline, Law 18): join Horsmonden, run fixture
  * ingestion in the seeding console, accept a business proposal, and confirm it surfaces in
  * the directory. Runs against the mock (demo admin access); fresh context = clean mock.
  */
-async function joinHorsmonden(page: import('@playwright/test').Page) {
+async function joinHorsmonden(page: Page) {
   await page.goto('/welcome');
   await page.getByLabel('Your postcode').fill('TN12 8AA');
   await page.getByRole('button', { name: 'Find' }).click();

@@ -7,13 +7,21 @@ import type {
   CommunityCard,
   Identity,
   Invite,
+  Listing,
+  ListingStatus,
   MemberSummary,
   Membership,
+  Message,
+  NotificationItem,
   Organisation,
   Place,
   Profile,
+  RequestPost,
+  RequestStatus,
   SeedProposal,
   Session,
+  ThreadContext,
+  ThreadSummary,
 } from './types';
 
 // ---- validated inputs (Zod boundaries, spec 09) --------------------------------
@@ -109,6 +117,56 @@ export interface SeedingService {
   launch(communityId: string): Promise<void>;
 }
 
+export const listingSchema = z.object({
+  kind: z.enum(['sell', 'free', 'wanted', 'lend']),
+  title: z.string().trim().min(2, 'Give it a short title').max(120),
+  description: z.string().trim().max(2000).optional(),
+  category: z.string().trim().min(1, 'Pick a category'),
+  pricePence: z.number().int().nonnegative().optional(),
+});
+export type ListingInput = z.infer<typeof listingSchema>;
+
+export const requestSchema = z.object({
+  title: z.string().trim().min(2, 'What do you need?').max(120),
+  description: z.string().trim().max(2000).optional(),
+  category: z.enum(['trades', 'childcare', 'lifts', 'recommendations', 'borrow', 'help', 'pets', 'other']),
+  neededBy: z.string().optional(),
+});
+export type RequestInput = z.infer<typeof requestSchema>;
+
+export interface ListingService {
+  list(communityId: string): Promise<Listing[]>;
+  get(id: string): Promise<Listing | null>;
+  create(communityId: string, input: ListingInput): Promise<Listing>;
+  setStatus(id: string, status: ListingStatus): Promise<Listing>;
+}
+
+export interface RequestService {
+  list(communityId: string): Promise<RequestPost[]>;
+  get(id: string): Promise<RequestPost | null>;
+  create(communityId: string, input: RequestInput): Promise<RequestPost>;
+  setStatus(id: string, status: RequestStatus, fulfilledBy?: string): Promise<RequestPost>;
+}
+
+export interface ThreadService {
+  mine(): Promise<ThreadSummary[]>;
+  get(id: string): Promise<{ thread: ThreadSummary; messages: Message[] } | null>;
+  /** The only thread-creation path (open_thread RPC). Returns the thread id. */
+  open(
+    context: ThreadContext,
+    contextId: string | null,
+    recipient: string | null,
+    firstMessage: string,
+  ): Promise<string>;
+  send(threadId: string, body: string): Promise<Message>;
+  markRead(threadId: string): Promise<void>;
+}
+
+export interface NotificationService {
+  mine(): Promise<NotificationItem[]>;
+  markAllRead(): Promise<void>;
+}
+
 export interface Services {
   /** True when running on the in-memory mock (no database). Screens surface a labelled banner. */
   readonly isMock: boolean;
@@ -121,4 +179,8 @@ export interface Services {
   directory: DirectoryService;
   claims: ClaimService;
   seeding: SeedingService;
+  listings: ListingService;
+  requests: RequestService;
+  threads: ThreadService;
+  notifications: NotificationService;
 }

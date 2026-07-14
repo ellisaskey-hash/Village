@@ -5,6 +5,8 @@ import { screenEnter } from '@/lib/motion';
 import { EmptyState, SegmentedControl } from '@/components/ui';
 import { useActiveMembership } from '@/app/state/session';
 import { DirectoryView } from '@/screens/directory/DirectoryView';
+import { ListingsView } from '@/screens/content/ListingsView';
+import { RequestsView } from '@/screens/content/RequestsView';
 
 type Section = 'listings' | 'requests' | 'events' | 'directory';
 
@@ -50,6 +52,10 @@ export function ExploreScreen() {
 
       {section === 'directory' ? (
         <DirectoryView />
+      ) : section === 'listings' ? (
+        <ListingsView />
+      ) : section === 'requests' ? (
+        <RequestsView />
       ) : (
         <EmptyState icon={e.icon} title={e.title} body={e.body} />
       )}

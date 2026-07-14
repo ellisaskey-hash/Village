@@ -5,6 +5,10 @@ import { cx } from '@/lib/cx';
 import { pressable } from '@/lib/motion';
 import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, useToasts, type IconName } from '@/components/ui';
 import { useActiveMembership } from '@/app/state/session';
+import { RequestComposer } from '@/screens/compose/RequestComposer';
+import { ListingComposer } from '@/screens/compose/ListingComposer';
+
+type Composer = 'none' | 'request' | 'sell' | 'lend';
 
 interface Tab {
   to: string;
@@ -30,9 +34,23 @@ const POST_OPTIONS = [
 export function AppShell() {
   const [postOpen, setPostOpen] = useState(false);
   const [postChoice, setPostChoice] = useState('request');
+  const [composer, setComposer] = useState<Composer>('none');
   const active = useActiveMembership();
   const navigate = useNavigate();
   const push = useToasts();
+
+  function startPost() {
+    setPostOpen(false);
+    if (postChoice === 'request' || postChoice === 'sell' || postChoice === 'lend') {
+      setComposer(postChoice);
+    } else {
+      push({
+        title: 'That composer arrives soon',
+        body: 'Events, alerts and services land in the next milestones.',
+        variant: 'info',
+      });
+    }
+  }
 
   return (
     <div className="min-h-dvh lg:flex">
@@ -93,20 +111,17 @@ export function AppShell() {
           />
           <button
             type="button"
-            onClick={() => {
-              setPostOpen(false);
-              push({
-                title: 'Composers arrive with listings and requests',
-                body: 'The create flows land in the next milestone.',
-                variant: 'info',
-              });
-            }}
+            onClick={startPost}
             className="w-full rounded-md bg-brand px-4 py-3 font-display font-semibold text-textOnAccent shadow-glowAccent"
           >
             Continue
           </button>
         </div>
       </Sheet>
+
+      <RequestComposer open={composer === 'request'} onClose={() => setComposer('none')} />
+      <ListingComposer open={composer === 'sell'} onClose={() => setComposer('none')} />
+      <ListingComposer open={composer === 'lend'} onClose={() => setComposer('none')} fixedKind="lend" />
     </div>
   );
 }

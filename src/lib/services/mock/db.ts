@@ -6,12 +6,49 @@ import {
   type Business,
   type Community,
   type Invite,
+  type Listing,
   type Membership,
   type Organisation,
   type Place,
   type Profile,
+  type RequestPost,
   type SeedProposal,
+  type ThreadContext,
 } from '../types';
+
+export interface MockThread {
+  id: string;
+  communityId: string;
+  context: ThreadContext;
+  contextId: string | null;
+  title: string | null;
+  createdBy: string;
+  lastMessageAt: string;
+  createdAt: string;
+}
+export interface MockParticipant {
+  threadId: string;
+  profileId: string;
+  lastReadAt: string;
+  leftAt: string | null;
+}
+export interface MockMessage {
+  id: string;
+  threadId: string;
+  senderId: string;
+  body: string | null;
+  createdAt: string;
+}
+export interface MockNotification {
+  id: string;
+  profileId: string;
+  category: string;
+  title: string;
+  body: string | null;
+  deepLink: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
 
 interface AuthRow {
   id: string;
@@ -35,6 +72,12 @@ export interface MockDb {
   businesses: Business[];
   organisations: Organisation[];
   seedProposals: SeedProposal[];
+  listings: Listing[];
+  requests: RequestPost[];
+  threads: MockThread[];
+  participants: MockParticipant[];
+  messages: MockMessage[];
+  notifications: MockNotification[];
 }
 
 const DB_KEY = 'local:mock-db';
@@ -85,6 +128,12 @@ function seed(): MockDb {
     businesses: [],
     organisations: [],
     seedProposals: [],
+    listings: [],
+    requests: [],
+    threads: [],
+    participants: [],
+    messages: [],
+    notifications: [],
   };
 }
 
