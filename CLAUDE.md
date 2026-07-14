@@ -19,11 +19,11 @@ You are building **Local**, a location-centric community platform (working name;
 
 ## Current state
 
-**M0–M5 complete; database live; security + behaviour proven.** Foundation/design system, auth/communities/trust, directory/seeding, content/messaging, events/RSVPs/equipment/skills/services, and tiered alerts/notifications/push are all built. All migrations are applied to the real Supabase project (eu-north-1) and RLS is proven **live 53/53** across `scripts/db/verify-security.mjs` (26), `verify-m4.mjs` (12), `verify-m5.mjs` (15). The app runs on real Postgres when `.env` is present, and falls back to a labelled mock without it (so CI/mock e2e still work). Verified locally: lint / typecheck / 32 unit tests / build / 14 mock e2e all green.
+**M0–M6 complete; database live; security proven (53/53); DEPLOYED.** Everything through global search + public landing is built. All migrations applied to the real Supabase project (**eu-north-1**); RLS proven live 53/53 (`verify-security` 26, `verify-m4` 12, `verify-m5` 15). Deployed at **https://village-tau-mauve.vercel.app** (real Postgres); custom push service worker shipped; landing Lighthouse mobile 96/96/100/91. The app uses real Supabase when `.env` is present, else a labelled mock (CI/mock e2e stay green). Local: lint / typecheck / 32 unit tests / build / 14 mock e2e all green; 21 commits on GitHub.
 
-**Open (needs founder):** push to GitHub is BLOCKED (cached creds are a different account, no access to `ellisaskey-hash/Village` — needs a PAT); Vercel deploy + real-device push are AWAITING-ELLIS (gate 3). See `/docs/PROGRESS.md` top (GATES + MORNING REVIEW). The next buildable milestone is **M6 (global search + Home assembly)**.
+**Open (needs founder):** (1) CI is off — the PAT lacks the `workflow` scope, so the workflow is parked at `docs/ci/github-actions-ci.yml` (add the scope + `git mv` it into `.github/workflows/`). (2) Gate 3's real-device push confirmation — one on-phone test (steps in `/docs/PROGRESS.md` MORNING REVIEW). Next buildable milestone: **M7 (moderation, safety, admin console)**.
 
-Run it: `npm install` then `npm run dev`, open `http://localhost:3005`. Sign in as `rlstest+alice@example.com` / `password123`.
+Run it: deployed URL above, or `npm install` + `npm run dev`. Sign in `rlstest+alice@example.com` / `password123`.
 
 ## Commands (once scaffolded — keep this section updated)
 

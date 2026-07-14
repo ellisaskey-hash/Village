@@ -3,8 +3,8 @@
 ## 🚦 GATES
 
 - **M0 gallery ✓ passed** (founder-approved).
-- **Gate 2 — M3 + DB security proof ✓ MET.** M0–M3 built; DB wired; RLS proven live (26/26).
-- **Gate 3 — M5 deployed PWA on your phone (real-device push). PARTIAL — this is the current position.** M4 and M5 are built and proven against the live DB (M4 12/12, M5 15/15). What remains for the gate, and needs you: **(a) deploy to Vercel** (I can't log into your Vercel), and **(b) real-device push test** — the VAPID keypair is generated and the subscribe flow is wired, but delivering a push needs the custom injectManifest service worker (an M8 item) plus a physical phone. AWAITING-ELLIS.
+- **Gate 2 — M3 + DB security proof ✓ MET.** M0–M3 built; DB wired; RLS proven live (53/53 incl. M4/M5).
+- **Gate 3 — M5 deployed PWA on your phone (real-device push). ← CURRENT — one hands-on step left (you, on your phone).** Deployed live at **https://village-tau-mauve.vercel.app**; PWA is installable (manifest + SW + icons verified); custom push service worker shipped; landing Lighthouse (mobile) perf 96 / a11y 96 / best-practices 100 / SEO 91 (all ≥90). The only thing I can't do headlessly is confirm a push actually lands on a physical device — see the phone test steps below. AWAITING-ELLIS.
 - Gate 4 — M7 real Horsmonden ingestion review. Not yet.
 - Gate 5 — M8 launch checklist. Not yet.
 
@@ -12,24 +12,33 @@
 
 ## ⭐ MORNING REVIEW (read this first)
 
-**M0–M5 are built; the database is live and the whole security + behaviour model is proven against real Postgres.** All migrations applied to the real Supabase project; the app runs on real Postgres (not the mock). Live verification totals **53/53** across three scripts (M1–M3: 26, M4: 12, M5: 15). Six migration/policy bugs were caught by running against real Postgres and fixed (see "Migration fixes").
+**M0–M6 are built, the database is live, the security model is proven (53/53), and the app is DEPLOYED.** Live at **https://village-tau-mauve.vercel.app**, running on real Postgres. All 21 commits are on GitHub (`ellisaskey-hash/Village`).
 
-### What to look at
+### 📱 Gate 3 — test on your phone (this is the one hands-on step left)
 
-- **The app runs on the real database.** `.env` is set (gitignored). Sign in with a seeded account `rlstest+alice@example.com` / `password123` (trust-2 member of Dev Village). Post requests/listings/events/alerts/equipment/services via the **+** button; RSVP to an event; check **Inbox** threads + notifications; **Home** shows the alerts strip + "Happening soon"; **Me → Settings → Notifications** for per-category prefs + push enable.
-- **Proof scripts (all re-runnable, idempotent):**
-  - `node scripts/db/verify-security.mjs` → **26/26** (M1–M3: four isolation assertions, trust-0 caps via direct API, cold-DM, full realtime loop, P4).
-  - `node scripts/db/verify-m4.mjs` → **12/12** (capacity waitlist+promotion, DST-correct recurrence, ask-to-borrow, isolation).
-  - `node scripts/db/verify-m5.mjs` → **15/15** (tier gating, verified-alert forgery blocked at RLS, opted-in-only, emergency bypasses quiet hours, resolution, 200-sub fan-out).
-- `/dev/gallery` still works (M0).
+1. On your phone, open **https://village-tau-mauve.vercel.app**.
+2. Sign in with a seeded account: **`rlstest+alice@example.com`** / **`password123`** (or `rlstest+ben@example.com` / `password123`). (UI signup is fiddly in this test project — Supabase rejects `@example.com`/`+alias` emails and email-confirm may be on — so use these seeded accounts.)
+3. **Install the PWA:** iOS Safari → Share → *Add to Home Screen*; Android Chrome → menu → *Install app*. Open it from the home-screen icon (standalone, no browser chrome).
+4. **Turn on push:** in the app, **Me → Settings → Notifications → Enable push notifications**, and allow when prompted. (iOS needs the app installed to your home screen first; iOS 16.4+.)
+5. **Trigger a push to your device** (from this machine, with `.env` present):
+   - Targeted: `node scripts/db/push-send.mjs "Lost cat near the green" "Ginger tom, answers to Milo" "/home" rlstest+alice@example.com`
+   - Or to everyone subscribed: `node scripts/db/push-send.mjs "Village fete Saturday" "On the green from 11am" "/explore?tab=events"`
+6. **Expect:** a notification with that title/body. **Tapping it** opens the app at the deep link (Home, or Explore→Events). The sender also auto-cleans any expired subscriptions (404/410).
+   - You can also exercise the real fan-out end-to-end: as an admin, post an alert in-app → it enqueues; the delivery half is `push-send.mjs` (a Vercel cron will call it in M8).
+
+### What else to look at
+
+- **The deployed app** (or locally: `.env` present → `npm run dev`). Post requests/listings/events/alerts/equipment/services via **+**; RSVP an event; **search** (header icon or `/` key) returns ranked mixed-kind results; **Home** shows live alerts, events, requests, listings; **Me → Settings** for the 6 axes + notification prefs.
+- **Proof scripts (re-runnable, idempotent, against live DB):** `verify-security.mjs` → 26/26 · `verify-m4.mjs` → 12/12 · `verify-m5.mjs` → 15/15.
+- **Public landing** at `/` (logged out) — Lighthouse mobile: perf 96 · a11y 96 · best-practices 100 · SEO 91.
 
 ### AWAITING-ELLIS / open items
 
-- **Push to GitHub + CI: BLOCKED.** The machine's cached GitHub credential is account `ellis-askey`, denied access to `ellisaskey-hash/Village` (403). I can't mint a token for the repo-owner account. **Add a PAT for `ellisaskey-hash` (or push once yourself).** 15 commits are ready locally.
-- **Gate 3 remainder:** deploy to Vercel (needs your login) + real-device push (custom SW is an M8 item + a phone). VAPID keypair is generated and the subscribe flow is wired.
-- **UI signup email validation:** Supabase's anon signup rejects `@example.com`/`+alias` as invalid and email-confirm may be on. Seeded accounts (created via admin API) are confirmed; for UI signup, relax email validation / turn off "Confirm email" in the dashboard.
+- **CI is BLOCKED on one token scope.** Your PAT (`ellis-askey`) has write access (push works) but **lacks the `workflow` scope**, so GitHub rejects pushing `.github/workflows/*`. I parked the workflow at **`docs/ci/github-actions-ci.yml`**. To turn CI on: add `workflow` scope to the token, then `git mv docs/ci/github-actions-ci.yml .github/workflows/ci.yml && git push` (or paste it into the repo via the GitHub web UI). It self-seeds the Linux screenshot baselines on its first run — so **Linux baseline seeding is blocked with it**.
+- **Real-device push confirmation** (gate 3, step above) — everything server-side is wired + deployed; only a physical device can confirm delivery (headless Chromium has no push service).
+- **Vercel region:** the deploy defaults to `iad1`/auto; the **Supabase DB is in eu-north-1** (Stockholm). At launch, set the Vercel project + any functions region to `arn1` (Stockholm) to sit next to the database. (Spec said lhr1/eu-west-2, but the actual DB is eu-north-1.)
+- **UI signup email validation** (test project): relax email validation / turn off "Confirm email" in the Supabase dashboard if you want to create accounts through the UI.
 - **Map view** (M2) and **real ingestion APIs** (AWAITING-KEYS) still deferred.
-- Visual/feel review of the M1–M5 screens.
 
 ---
 
@@ -53,11 +62,24 @@ These are forward migrations (applied ones are never edited except #1 which was 
 
 ---
 
-## Current milestone: M5 complete. Runway to gate 3 is deploy + real-device push (needs you). M6 (search + Home assembly) is the next buildable milestone.
+## Current milestone: M0–M6 complete + deployed. Gate 3 is one on-phone push test away (see Morning Review). M7 (moderation/safety/admin) is the next buildable milestone.
 
 ---
 
 ## Done
+
+### Deploy + PWA/push (gate 3 infrastructure) ✅
+
+- Pushed all commits to `ellisaskey-hash/Village`. CI workflow parked (token lacks `workflow` scope) — see AWAITING-ELLIS.
+- Vercel project **village** created; env vars set via CLI; **deployed → https://village-tau-mauve.vercel.app** (SPA rewrite added; empty functions block removed). App verified against the real DB on the deployed URL.
+- **Custom injectManifest service worker** (`src/sw.ts`, pulled forward from M8 — DECISION-MADE): precache 1.45 MiB (< 2 MiB cap), CacheFirst fonts/media, prompt-based update (UpdatePrompt toast), OfflinePill, `push` → notification, `notificationclick` → deep link. Registered via `virtual:pwa-register` (CSP-safe). `scripts/db/push-send.mjs` is the VAPID web-push sender (with 404/410 cleanup).
+- PWA installability verified on the deployed URL (manifest/SW/icons all serve; SW registers). Real-device delivery is the on-phone step (AWAITING-ELLIS).
+
+### M6 — Global search + Home assembly + public landing ✅
+
+- **Acceptance:** search returns mixed-kind ranked results respecting RLS + hidden flags — ✅ (`global_search` is SECURITY INVOKER, tested live); Home renders valuably for a new member (live alerts/events/requests/listings + seeded empties) — ✅; **landing Lighthouse ≥ 90** — ✅ (mobile: perf 96 · a11y 96 · best-practices 100 · SEO 91).
+- **Shipped:** `global_search` RPC (FTS + pg_trgm fuzzy + kind weighting, applied live); search service (mock + Supabase); SearchSheet (header icon + rail + `/` hotkey); public LandingScreen at `/` with root routing (members → /home); Home live cards.
+- Verified: tsc/lint clean, 32 unit tests, build, mock e2e 14/14, live search.
 
 ### M5 — Alerts, Notifications, Push ✅ (proven live 15/15; real-device push AWAITING-ELLIS)
 
