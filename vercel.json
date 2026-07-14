@@ -3,9 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "functions": {
-    "api/*.mjs": { "runtime": "@vercel/node@5", "regions": ["lhr1"] }
-  },
+  "rewrites": [{ "source": "/((?!assets/|icons/|theme-boot.js|favicon.svg|sw.js|workbox-|manifest).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/(.*)",
