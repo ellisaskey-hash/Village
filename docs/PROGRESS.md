@@ -8,9 +8,14 @@
 
 ### What to look at
 
-- Run the app: `npm install` then `npm run dev`, open `http://localhost:3005`. Sign-in is mock (labelled) because there is no database yet — see BLOCKED below.
+- Run the app: `npm install` then `npm run dev`, open `http://localhost:3005`. It runs in **labelled demo mode** (in-memory data) because there is no database yet — see BLOCKED below.
+- **M1 is reviewable end-to-end:** `/welcome` (enter `DV1 1AA` to find the seeded Dev Village, or `TN12` for Horsmonden) → sign up (try a DOB under 16 — it's refused) → onboarding → the 5-tab shell. Visit **Me → Settings** and flip theme / accent / text size / font / contrast / motion; all work live. Explore + Inbox show designed empty states (content lands M2/M3).
 - `/dev/gallery` still works (M0).
-- New screens land as milestones complete; this section will list exactly which routes are reviewable and which are still stubs.
+- Milestones completed so far: **M0 ✅, M1 ✅ (functionally; RLS execution BLOCKED).** M2 in progress.
+
+### AWAITING-ELLIS (needs your review)
+
+- M1 visual/feel review of the auth + shell screens (optional; unit + e2e cover behaviour).
 
 ### Decisions / accounts I need from you
 
@@ -37,19 +42,25 @@
 
 ---
 
-## Current milestone: M1 — Auth, communities, membership & trust rails (IN PROGRESS)
+## Current milestone: M2 — Places, Businesses, Organisations, Directory, Seeding (IN PROGRESS)
 
-Reading done: spec 03 (data model + RLS patterns), 04 (trust), 07 (onboarding/screens), 09 (auth). Building test-first per CLAUDE.md rule 4.
-
-- [ ] RLS tests written (cross-community isolation, DOB refusal, invite grants trust 1)
-- [ ] Migrations (extensions + helpers, structural tables, RLS policies, RPCs)
-- [ ] Seed horsmonden + dev fixture
-- [ ] Data layer (Supabase client + mock services + TanStack Query + session store)
-- [ ] Screens (shell + 5 tabs, welcome/auth/onboarding, Me + settings axes)
+Building test-first. Ingestion runs in fixture mode (no API keys; AWAITING-KEYS).
 
 ---
 
 ## Done
+
+### M1 — Auth, communities, membership & trust rails ✅ (RLS execution BLOCKED)
+
+Reading: spec 03/04/07/09. Test-first per CLAUDE.md rule 4.
+
+- **Acceptance:**
+  - two users in different communities cannot read each other's memberships — RLS test written (`supabase/tests/rls_m1.sql`), **BLOCKED** (no DB to run it).
+  - 15-year-old DOB refused — ✅ unit-tested (Zod gate) + DB `adults_only` check written.
+  - invite path grants trust 1 — ✅ unit-tested (mock mirrors `join_community`).
+  - theme/density/font/contrast/motion settings function — ✅ (Settings screen, verified).
+- **Shipped:** structural schema + RLS + helpers + `join_community`/`vouch_for`/`discover_communities` RPCs (checked in, not executed); service layer (mock + Supabase seam); welcome/auth/onboarding; 5-tab shell; Me + Settings; guards; invite deep link.
+- Verified: tsc/lint clean, 20 unit tests, build, e2e 8/8 (gallery + M1 happy path).
 
 ### M0 — Foundation & design system ✅ (founder-approved)
 
