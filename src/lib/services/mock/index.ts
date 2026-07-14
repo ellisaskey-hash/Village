@@ -1,20 +1,28 @@
 // Mock Services — the no-DB implementation. Mirrors the RPC/RLS behaviour so screens behave
 // as they will against Postgres. Every mutation persists to localStorage.
 import {
+  equipmentSchema,
+  eventSchema,
   joinSchema,
   listingSchema,
   requestSchema,
+  serviceSchema,
   signUpSchema,
+  type EquipmentInput,
+  type EventInput,
   type JoinInput,
   type ListingInput,
   type ProfilePatch,
   type RequestInput,
+  type ServiceInput,
   type Services,
   type SignUpInput,
 } from '../contracts';
 import type {
   Community,
   CommunityCard,
+  EquipmentItem,
+  Event,
   Identity,
   Invite,
   Listing,
@@ -29,7 +37,10 @@ import type {
   Profile,
   RequestPost,
   RequestStatus,
+  RsvpStatus,
+  Service,
   Session,
+  Skill,
   ThreadContext,
   ThreadSummary,
   TrustLevel,
@@ -42,6 +53,7 @@ import {
   postcodeDistrict,
   setCurrentProfileId,
   uid,
+  type MockEvent,
 } from './db';
 
 function nowIso(): string {
@@ -123,6 +135,30 @@ function fanOutMessage(threadId: string, senderId: string, body: string): void {
         readAt: null,
         createdAt: nowIso(),
       });
+    }
+  }
+}
+
+function toEvent(e: MockEvent): Event {
+  const d = db();
+  const goingCount = d.eventRsvps.filter((x) => x.eventId === e.id && x.status === 'going').reduce((s, x) => s + x.partySize, 0);
+  const me = getCurrentProfileId();
+  const myRsvp = me ? (d.eventRsvps.find((x) => x.eventId === e.id && x.profileId === me)?.status ?? null) : null;
+  return { ...e, goingCount, myRsvp };
+}
+
+/** Mirrors promote_waitlist: fill freed capacity from the waitlist, oldest first. */
+function promoteWaitlistMock(eventId: string): void {
+  const d = db();
+  const e = d.events.find((x) => x.id === eventId);
+  if (!e) return;
+  let used = d.eventRsvps.filter((x) => x.eventId === eventId && x.status === 'going').reduce((s, x) => s + x.partySize, 0);
+  const wl = d.eventRsvps.filter((x) => x.eventId === eventId && x.status === 'waitlist').sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  for (const r of wl) {
+    if (used + r.partySize <= (e.capacity ?? 0)) {
+      r.status = 'going';
+      used += r.partySize;
+      d.notifications.push({ id: uid(), profileId: r.profileId, category: 'event.reminder', title: 'A spot opened up', body: e.title, deepLink: `/events/${eventId}`, readAt: null, createdAt: nowIso() });
     }
   }
 }
@@ -347,6 +383,70 @@ export function createMockServices(): Services {
       },
       async organisation(id) {
         return db().organisations.find((o) => o.id === id) ?? null;
+      },
+      async services(communityId) {
+        return db().services.filter((s) => s.communityId === communityId && s.active);
+      },
+      async skills(communityId) {
+        return db().skills.filter((s) => s.communityId === communityId);
+      },
+      async equipment(communityId) {
+        return db().equipment.filter((e) => e.communityId === communityId);
+      },
+      async equipmentItem(id) {
+        return db().equipment.find((e) => e.id === id) ?? null;
+      },
+      async addService(communityId, input: ServiceInput) {
+        const parsed = serviceSchema.parse(input);
+        const profileId = requireProfileId();
+        if (trustInMock(profileId, communityId) < 1) throw new Error('you need trust level 1 to add a service');
+        const s: Service = {
+          id: uid(),
+          communityId,
+          createdBy: profileId,
+          authorName: profileName(profileId),
+          title: parsed.title,
+          category: parsed.category,
+          description: parsed.description ?? null,
+          active: true,
+        };
+        db().services.push(s);
+        persist();
+        return s;
+      },
+      async addSkill(communityId, skill: string, note?: string) {
+        const profileId = requireProfileId();
+        if (trustInMock(profileId, communityId) < 1) throw new Error('you need trust level 1 to add a skill');
+        const s: Skill = {
+          id: uid(),
+          communityId,
+          profileId,
+          personName: profileName(profileId),
+          skill,
+          note: note ?? null,
+        };
+        db().skills.push(s);
+        persist();
+        return s;
+      },
+      async addEquipment(communityId, input: EquipmentInput) {
+        const parsed = equipmentSchema.parse(input);
+        const profileId = requireProfileId();
+        if (trustInMock(profileId, communityId) < 1) throw new Error('you need trust level 1 to add equipment');
+        const e: EquipmentItem = {
+          id: uid(),
+          communityId,
+          ownerProfileId: profileId,
+          ownerName: profileName(profileId),
+          name: parsed.name,
+          category: parsed.category,
+          note: parsed.note ?? null,
+          lendTerms: parsed.lendTerms ?? null,
+          available: true,
+        };
+        db().equipment.push(e);
+        persist();
+        return e;
       },
     },
 
@@ -731,6 +831,60 @@ export function createMockServices(): Services {
         const now = nowIso();
         for (const n of db().notifications) {
           if (n.profileId === me && n.readAt === null) n.readAt = now;
+        }
+        persist();
+      },
+    },
+
+    events: {
+      async list(communityId) {
+        return db()
+          .events.filter((e) => e.communityId === communityId)
+          .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+          .map(toEvent);
+      },
+      async get(id) {
+        const e = db().events.find((x) => x.id === id);
+        return e ? toEvent(e) : null;
+      },
+      async create(communityId, input: EventInput) {
+        const parsed = eventSchema.parse(input);
+        const profileId = requireProfileId();
+        if (trustInMock(profileId, communityId) < 1) throw new Error('you need trust level 1 to create an event');
+        const e: MockEvent = {
+          id: uid(),
+          communityId,
+          createdBy: profileId,
+          authorName: profileName(profileId),
+          title: parsed.title,
+          description: parsed.description ?? null,
+          category: parsed.category,
+          locationText: parsed.locationText ?? null,
+          startsAt: parsed.startsAt,
+          endsAt: parsed.endsAt ?? null,
+          rsvpMode: parsed.rsvpMode,
+          capacity: parsed.capacity ?? null,
+        };
+        db().events.push(e);
+        persist();
+        return toEvent(e);
+      },
+      async rsvp(eventId, status: RsvpStatus, partySize = 1) {
+        const profileId = requireProfileId();
+        const d = db();
+        const e = d.events.find((x) => x.id === eventId);
+        if (!e) throw new Error('event not found');
+        if (e.rsvpMode === 'none') throw new Error('this event does not take RSVPs');
+        const size = Math.max(partySize, 1);
+        let r = d.eventRsvps.find((x) => x.eventId === eventId && x.profileId === profileId);
+        if (r) { r.status = status; r.partySize = size; }
+        else { r = { eventId, profileId, status, partySize: size, createdAt: nowIso() }; d.eventRsvps.push(r); }
+        if (e.rsvpMode === 'capacity' && status === 'going') {
+          const going = d.eventRsvps.filter((x) => x.eventId === eventId && x.status === 'going' && x.profileId !== profileId).reduce((s, x) => s + x.partySize, 0);
+          if (going + size > (e.capacity ?? 0)) r.status = 'waitlist';
+        }
+        if (e.rsvpMode === 'capacity' && (status === 'cancelled' || status === 'maybe' || status === 'waitlist')) {
+          promoteWaitlistMock(eventId);
         }
         persist();
       },

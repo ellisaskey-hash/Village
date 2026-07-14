@@ -249,6 +249,61 @@ export interface NotificationItem {
   createdAt: string;
 }
 
+// ---- M4 events / services / skills / equipment ---------------------------------
+
+export type EventCategory = 'community' | 'school' | 'sport' | 'club' | 'church' | 'market' | 'other';
+export type RsvpMode = 'none' | 'open' | 'capacity';
+export type RsvpStatus = 'going' | 'maybe' | 'waitlist' | 'cancelled';
+
+export interface Event {
+  id: string;
+  communityId: string;
+  createdBy: string;
+  authorName: string;
+  title: string;
+  description: string | null;
+  category: EventCategory;
+  locationText: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  rsvpMode: RsvpMode;
+  capacity: number | null;
+  goingCount: number;
+  myRsvp: RsvpStatus | null;
+}
+
+export interface Service {
+  id: string;
+  communityId: string;
+  createdBy: string;
+  authorName: string;
+  title: string;
+  category: string;
+  description: string | null;
+  active: boolean;
+}
+
+export interface Skill {
+  id: string;
+  communityId: string;
+  profileId: string;
+  personName: string;
+  skill: string;
+  note: string | null;
+}
+
+export interface EquipmentItem {
+  id: string;
+  communityId: string;
+  ownerProfileId: string;
+  ownerName: string;
+  name: string;
+  category: string;
+  note: string | null;
+  lendTerms: string | null;
+  available: boolean;
+}
+
 export const DEFAULT_CONFIG: CommunityConfig = {
   coldDmMinTrust: 1,
   listingCapT0: 2,

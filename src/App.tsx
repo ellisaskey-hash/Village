@@ -15,6 +15,8 @@ import { OrganisationDetail } from '@/screens/directory/OrganisationDetail';
 import { ListingDetail } from '@/screens/content/ListingDetail';
 import { RequestDetail } from '@/screens/content/RequestDetail';
 import { ThreadScreen } from '@/screens/content/ThreadScreen';
+import { EventDetail } from '@/screens/events/EventDetail';
+import { EquipmentDetail } from '@/screens/directory/EquipmentDetail';
 import { SeedingConsole } from '@/screens/admin/SeedingConsole';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { SignInScreen } from '@/screens/auth/SignInScreen';
@@ -77,6 +79,8 @@ export function App() {
               <Route path="/organisations/:id" element={<OrganisationDetail />} />
               <Route path="/listings/:id" element={<ListingDetail />} />
               <Route path="/requests/:id" element={<RequestDetail />} />
+              <Route path="/events/:id" element={<EventDetail />} />
+              <Route path="/equipment/:id" element={<EquipmentDetail />} />
               <Route path="/inbox/t/:id" element={<ThreadScreen />} />
             </Route>
           </Route>

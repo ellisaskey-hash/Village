@@ -5,6 +5,8 @@ import type {
   Business,
   Community,
   CommunityCard,
+  EquipmentItem,
+  Event,
   Identity,
   Invite,
   Listing,
@@ -18,8 +20,11 @@ import type {
   Profile,
   RequestPost,
   RequestStatus,
+  RsvpStatus,
   SeedProposal,
+  Service,
   Session,
+  Skill,
   ThreadContext,
   ThreadSummary,
 } from './types';
@@ -102,6 +107,48 @@ export interface DirectoryService {
   business(id: string): Promise<Business | null>;
   place(id: string): Promise<Place | null>;
   organisation(id: string): Promise<Organisation | null>;
+  // M4 directory
+  services(communityId: string): Promise<Service[]>;
+  skills(communityId: string): Promise<Skill[]>;
+  equipment(communityId: string): Promise<EquipmentItem[]>;
+  equipmentItem(id: string): Promise<EquipmentItem | null>;
+  addService(communityId: string, input: ServiceInput): Promise<Service>;
+  addSkill(communityId: string, skill: string, note?: string): Promise<Skill>;
+  addEquipment(communityId: string, input: EquipmentInput): Promise<EquipmentItem>;
+}
+
+export const eventSchema = z.object({
+  title: z.string().trim().min(2).max(140),
+  description: z.string().trim().max(2000).optional(),
+  category: z.enum(['community', 'school', 'sport', 'club', 'church', 'market', 'other']),
+  startsAt: z.string().min(1, 'Pick a date and time'),
+  endsAt: z.string().optional(),
+  locationText: z.string().trim().max(200).optional(),
+  rsvpMode: z.enum(['none', 'open', 'capacity']),
+  capacity: z.number().int().positive().optional(),
+});
+export type EventInput = z.infer<typeof eventSchema>;
+
+export const serviceSchema = z.object({
+  title: z.string().trim().min(2).max(140),
+  category: z.string().trim().min(1),
+  description: z.string().trim().max(2000).optional(),
+});
+export type ServiceInput = z.infer<typeof serviceSchema>;
+
+export const equipmentSchema = z.object({
+  name: z.string().trim().min(2).max(140),
+  category: z.enum(['garden', 'diy', 'transport', 'kitchen', 'events', 'sports', 'other']),
+  note: z.string().trim().max(500).optional(),
+  lendTerms: z.string().trim().max(300).optional(),
+});
+export type EquipmentInput = z.infer<typeof equipmentSchema>;
+
+export interface EventService {
+  list(communityId: string): Promise<Event[]>;
+  get(id: string): Promise<Event | null>;
+  create(communityId: string, input: EventInput): Promise<Event>;
+  rsvp(eventId: string, status: RsvpStatus, partySize?: number): Promise<void>;
 }
 
 export interface ClaimService {
@@ -183,4 +230,5 @@ export interface Services {
   requests: RequestService;
   threads: ThreadService;
   notifications: NotificationService;
+  events: EventService;
 }

@@ -3,7 +3,7 @@ import { cx } from '@/lib/cx';
 
 interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix' | 'type'> {
   label: string;
-  type?: 'text' | 'email' | 'number' | 'password' | 'tel' | 'date';
+  type?: 'text' | 'email' | 'number' | 'password' | 'tel' | 'date' | 'datetime-local';
   helper?: ReactNode;
   error?: ReactNode;
   prefixSlot?: ReactNode;

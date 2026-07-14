@@ -5,6 +5,8 @@ import {
   DEFAULT_CONFIG,
   type Business,
   type Community,
+  type EquipmentItem,
+  type EventCategory,
   type Invite,
   type Listing,
   type Membership,
@@ -12,9 +14,35 @@ import {
   type Place,
   type Profile,
   type RequestPost,
+  type RsvpMode,
+  type RsvpStatus,
   type SeedProposal,
+  type Service,
+  type Skill,
   type ThreadContext,
 } from '../types';
+
+export interface MockEvent {
+  id: string;
+  communityId: string;
+  createdBy: string;
+  authorName: string;
+  title: string;
+  description: string | null;
+  category: EventCategory;
+  locationText: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  rsvpMode: RsvpMode;
+  capacity: number | null;
+}
+export interface MockRsvp {
+  eventId: string;
+  profileId: string;
+  status: RsvpStatus;
+  partySize: number;
+  createdAt: string;
+}
 
 export interface MockThread {
   id: string;
@@ -78,6 +106,11 @@ export interface MockDb {
   participants: MockParticipant[];
   messages: MockMessage[];
   notifications: MockNotification[];
+  events: MockEvent[];
+  eventRsvps: MockRsvp[];
+  services: Service[];
+  skills: Skill[];
+  equipment: EquipmentItem[];
 }
 
 const DB_KEY = 'local:mock-db';
@@ -134,6 +167,11 @@ function seed(): MockDb {
     participants: [],
     messages: [],
     notifications: [],
+    events: [],
+    eventRsvps: [],
+    services: [],
+    skills: [],
+    equipment: [],
   };
 }
 

@@ -7,8 +7,11 @@ import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, useToasts, type IconNam
 import { useActiveMembership } from '@/app/state/session';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
 import { ListingComposer } from '@/screens/compose/ListingComposer';
+import { EventComposer } from '@/screens/compose/EventComposer';
+import { ServiceComposer } from '@/screens/compose/ServiceComposer';
+import { EquipmentComposer } from '@/screens/compose/EquipmentComposer';
 
-type Composer = 'none' | 'request' | 'sell' | 'lend';
+type Composer = 'none' | 'request' | 'sell' | 'equipment' | 'event' | 'service';
 
 interface Tab {
   to: string;
@@ -41,15 +44,16 @@ export function AppShell() {
 
   function startPost() {
     setPostOpen(false);
-    if (postChoice === 'request' || postChoice === 'sell' || postChoice === 'lend') {
-      setComposer(postChoice);
-    } else {
-      push({
-        title: 'That composer arrives soon',
-        body: 'Events, alerts and services land in the next milestones.',
-        variant: 'info',
-      });
-    }
+    const map: Record<string, Composer> = {
+      request: 'request',
+      sell: 'sell',
+      lend: 'equipment',
+      event: 'event',
+      service: 'service',
+    };
+    const next = map[postChoice];
+    if (next) setComposer(next);
+    else push({ title: 'Alerts arrive in the next update', variant: 'info' }); // alert -> M5
   }
 
   return (
@@ -121,7 +125,9 @@ export function AppShell() {
 
       <RequestComposer open={composer === 'request'} onClose={() => setComposer('none')} />
       <ListingComposer open={composer === 'sell'} onClose={() => setComposer('none')} />
-      <ListingComposer open={composer === 'lend'} onClose={() => setComposer('none')} fixedKind="lend" />
+      <EquipmentComposer open={composer === 'equipment'} onClose={() => setComposer('none')} />
+      <EventComposer open={composer === 'event'} onClose={() => setComposer('none')} />
+      <ServiceComposer open={composer === 'service'} onClose={() => setComposer('none')} />
     </div>
   );
 }

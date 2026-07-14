@@ -1,8 +1,11 @@
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
 import { useActiveMembership, useSession } from '@/app/state/session';
-import { Card, EmptyState, IconBadge, StaggeredBody, type IconName } from '@/components/ui';
+import { useServices } from '@/lib/services/provider';
+import { formatWhen } from '@/lib/ics';
+import { Card, EmptyState, IconBadge, ListRow, StaggeredBody, type IconName } from '@/components/ui';
 
 const QUICK: { icon: IconName; label: string; to: string }[] = [
   { icon: 'requests', label: 'Ask for a hand', to: '/explore?tab=requests' },
@@ -14,7 +17,18 @@ export function HomeScreen() {
   const session = useSession();
   const active = useActiveMembership();
   const navigate = useNavigate();
+  const services = useServices();
+  const communityId = active?.communityId ?? '';
   const firstName = session?.profile.displayName.split(' ')[0] ?? 'neighbour';
+
+  const eventsQ = useQuery({
+    queryKey: ['events', communityId],
+    queryFn: () => services.events.list(communityId),
+    enabled: Boolean(communityId),
+  });
+  const soon = (eventsQ.data ?? [])
+    .filter((e) => new Date(e.startsAt) >= new Date(Date.now() - 3600e3))
+    .slice(0, 3);
 
   return (
     <motion.div
@@ -44,6 +58,23 @@ export function HomeScreen() {
           ))}
         </StaggeredBody>
       </section>
+
+      {soon.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-h3 font-semibold text-text">Happening soon</h2>
+          <div className="space-y-2">
+            {soon.map((ev) => (
+              <ListRow
+                key={ev.id}
+                leading={<IconBadge icon="events" tone="warn" />}
+                title={ev.title}
+                subtitle={formatWhen(ev.startsAt)}
+                onClick={() => navigate(`/events/${ev.id}`)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-h3 font-semibold text-text">Needs a hand</h2>

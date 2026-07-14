@@ -3,14 +3,25 @@
 // exist. Until then the app selects the mock (see provider). RLS does the security; these
 // methods never re-implement it.
 import type {
+  EquipmentInput,
+  EventInput,
   JoinInput,
   ListingInput,
   ProfilePatch,
   RequestInput,
+  ServiceInput,
   Services,
   SignUpInput,
 } from '../contracts';
-import { joinSchema, listingSchema, requestSchema, signUpSchema } from '../contracts';
+import {
+  equipmentSchema,
+  eventSchema,
+  joinSchema,
+  listingSchema,
+  requestSchema,
+  serviceSchema,
+  signUpSchema,
+} from '../contracts';
 import {
   DEFAULT_CONFIG,
   type Business,
@@ -21,6 +32,8 @@ import {
   type MemberSummary,
   type Membership,
   type MembershipSummary,
+  type EquipmentItem,
+  type Event,
   type Listing,
   type ListingStatus,
   type Message,
@@ -30,8 +43,11 @@ import {
   type Profile,
   type RequestPost,
   type RequestStatus,
+  type RsvpStatus,
   type SeedProposal,
+  type Service,
   type Session,
+  type Skill,
   type ThreadContext,
   type ThreadSummary,
   type TrustLevel,
@@ -176,6 +192,38 @@ function mapRequest(r: DbRequest): RequestPost {
 }
 const LISTING_SELECT = '*, profiles!listings_created_by_fkey(display_name)';
 const REQUEST_SELECT = '*, profiles!requests_created_by_fkey(display_name)';
+
+interface DbEvent {
+  id: string; community_id: string; created_by: string; title: string; description: string | null;
+  category: Event['category']; location_text: string | null; starts_at: string; ends_at: string | null;
+  rsvp_mode: Event['rsvpMode']; capacity: number | null; profiles?: { display_name: string } | null;
+}
+interface DbRsvp { event_id: string; profile_id: string; status: RsvpStatus; party_size: number }
+function mapEvent(r: DbEvent, rsvps: DbRsvp[], me: string | undefined): Event {
+  const going = rsvps.filter((x) => x.event_id === r.id && x.status === 'going').reduce((s, x) => s + (x.party_size || 0), 0);
+  const mine = me ? (rsvps.find((x) => x.event_id === r.id && x.profile_id === me)?.status ?? null) : null;
+  return {
+    id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
+    title: r.title, description: r.description, category: r.category, locationText: r.location_text,
+    startsAt: r.starts_at, endsAt: r.ends_at, rsvpMode: r.rsvp_mode, capacity: r.capacity,
+    goingCount: going, myRsvp: mine,
+  };
+}
+interface DbService { id: string; community_id: string; created_by: string; title: string; category: string; description: string | null; active: boolean; profiles?: { display_name: string } | null }
+function mapService(r: DbService): Service {
+  return { id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '', title: r.title, category: r.category, description: r.description, active: r.active };
+}
+interface DbSkill { id: string; community_id: string; profile_id: string; skill: string; note: string | null; profiles?: { display_name: string } | null }
+function mapSkill(r: DbSkill): Skill {
+  return { id: r.id, communityId: r.community_id, profileId: r.profile_id, personName: r.profiles?.display_name ?? '', skill: r.skill, note: r.note };
+}
+interface DbEquip { id: string; community_id: string; owner_profile_id: string; name: string; category: string; note: string | null; lend_terms: string | null; available: boolean; profiles?: { display_name: string } | null }
+function mapEquip(r: DbEquip): EquipmentItem {
+  return { id: r.id, communityId: r.community_id, ownerProfileId: r.owner_profile_id, ownerName: r.profiles?.display_name ?? '', name: r.name, category: r.category, note: r.note, lendTerms: r.lend_terms, available: r.available };
+}
+const SVC_SEL = '*, profiles!services_created_by_fkey(display_name)';
+const EQ_SEL = '*, profiles!equipment_items_owner_profile_id_fkey(display_name)';
+const EV_SEL = '*, profiles!events_created_by_fkey(display_name)';
 
 function mapMembership(r: DbMembership): Membership {
   return {
@@ -438,6 +486,43 @@ export function createSupabaseServices(): Services {
         if (error) throw error;
         return data ? mapOrganisation(data as DbOrganisation) : null;
       },
+      async services(communityId: string) {
+        const { data, error } = await getSupabase().from('services').select(SVC_SEL).eq('community_id', communityId).eq('active', true);
+        if (error) throw error;
+        return (data ?? []).map((r) => mapService(r as unknown as DbService));
+      },
+      async skills(communityId: string) {
+        const { data, error } = await getSupabase().from('skills').select('*, profiles(display_name)').eq('community_id', communityId);
+        if (error) throw error;
+        return (data ?? []).map((r) => mapSkill(r as unknown as DbSkill));
+      },
+      async equipment(communityId: string) {
+        const { data, error } = await getSupabase().from('equipment_items').select(EQ_SEL).eq('community_id', communityId);
+        if (error) throw error;
+        return (data ?? []).map((r) => mapEquip(r as unknown as DbEquip));
+      },
+      async equipmentItem(id: string) {
+        const { data, error } = await getSupabase().from('equipment_items').select(EQ_SEL).eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data ? mapEquip(data as unknown as DbEquip) : null;
+      },
+      async addService(communityId: string, input: ServiceInput) {
+        const p = serviceSchema.parse(input);
+        const { data, error } = await getSupabase().from('services').insert({ community_id: communityId, title: p.title, category: p.category, description: p.description ?? null }).select(SVC_SEL).single();
+        if (error) throw error;
+        return mapService(data as unknown as DbService);
+      },
+      async addSkill(communityId: string, skill: string, note?: string) {
+        const { data, error } = await getSupabase().from('skills').insert({ community_id: communityId, skill, note: note ?? null }).select('*, profiles(display_name)').single();
+        if (error) throw error;
+        return mapSkill(data as unknown as DbSkill);
+      },
+      async addEquipment(communityId: string, input: EquipmentInput) {
+        const p = equipmentSchema.parse(input);
+        const { data, error } = await getSupabase().from('equipment_items').insert({ community_id: communityId, name: p.name, category: p.category, note: p.note ?? null, lend_terms: p.lendTerms ?? null }).select(EQ_SEL).single();
+        if (error) throw error;
+        return mapEquip(data as unknown as DbEquip);
+      },
     },
 
     claims: {
@@ -640,6 +725,47 @@ export function createSupabaseServices(): Services {
         if (!auth.user) return;
         await sb.from('notifications').update({ read_at: new Date().toISOString() })
           .eq('profile_id', auth.user.id).is('read_at', null);
+      },
+    },
+
+    events: {
+      async list(communityId: string) {
+        const sb = getSupabase();
+        const { data: evs, error } = await sb.from('events').select(EV_SEL).eq('community_id', communityId).order('starts_at');
+        if (error) throw error;
+        const ids = (evs ?? []).map((e) => (e as { id: string }).id);
+        let rsvps: DbRsvp[] = [];
+        if (ids.length) {
+          const { data } = await sb.from('event_rsvps').select('event_id,profile_id,status,party_size').in('event_id', ids);
+          rsvps = (data ?? []) as DbRsvp[];
+        }
+        const { data: auth } = await sb.auth.getUser();
+        return (evs ?? []).map((e) => mapEvent(e as unknown as DbEvent, rsvps, auth.user?.id));
+      },
+      async get(id: string) {
+        const sb = getSupabase();
+        const { data, error } = await sb.from('events').select(EV_SEL).eq('id', id).maybeSingle();
+        if (error) throw error;
+        if (!data) return null;
+        const { data: rsvps } = await sb.from('event_rsvps').select('event_id,profile_id,status,party_size').eq('event_id', id);
+        const { data: auth } = await sb.auth.getUser();
+        return mapEvent(data as unknown as DbEvent, (rsvps ?? []) as DbRsvp[], auth.user?.id);
+      },
+      async create(communityId: string, input: EventInput) {
+        const p = eventSchema.parse(input);
+        const sb = getSupabase();
+        const { data, error } = await sb.from('events').insert({
+          community_id: communityId, title: p.title, description: p.description ?? null, category: p.category,
+          starts_at: p.startsAt, ends_at: p.endsAt ?? null, location_text: p.locationText ?? null,
+          rsvp_mode: p.rsvpMode, capacity: p.capacity ?? null,
+        }).select(EV_SEL).single();
+        if (error) throw error;
+        const { data: auth } = await sb.auth.getUser();
+        return mapEvent(data as unknown as DbEvent, [], auth.user?.id);
+      },
+      async rsvp(eventId: string, status: RsvpStatus, partySize = 1) {
+        const { error } = await getSupabase().rpc('set_rsvp', { p_event_id: eventId, p_status: status, p_party_size: partySize });
+        if (error) throw error;
       },
     },
   };

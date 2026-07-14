@@ -7,6 +7,7 @@ import { useActiveMembership } from '@/app/state/session';
 import { DirectoryView } from '@/screens/directory/DirectoryView';
 import { ListingsView } from '@/screens/content/ListingsView';
 import { RequestsView } from '@/screens/content/RequestsView';
+import { EventsView } from '@/screens/events/EventsView';
 
 type Section = 'listings' | 'requests' | 'events' | 'directory';
 
@@ -56,6 +57,8 @@ export function ExploreScreen() {
         <ListingsView />
       ) : section === 'requests' ? (
         <RequestsView />
+      ) : section === 'events' ? (
+        <EventsView />
       ) : (
         <EmptyState icon={e.icon} title={e.title} body={e.body} />
       )}
