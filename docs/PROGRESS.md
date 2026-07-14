@@ -4,20 +4,24 @@
 
 ## ⭐ MORNING REVIEW (read this first)
 
-**Overnight run: M1 → M2 → M3, autonomous.** Started after M0 sign-off.
+**Overnight run: M1 → M2 → M3, autonomous. All three are done** (functionally, on the mock; DB execution BLOCKED). Started after M0 sign-off. Every commit is green: lint, typecheck, 27 unit tests, build, 14 Playwright e2e.
 
 ### What to look at
 
-- Run the app: `npm install` then `npm run dev`, open `http://localhost:3005`. It runs in **labelled demo mode** (in-memory data) because there is no database yet — see BLOCKED below.
-- **M1 is reviewable end-to-end:** `/welcome` (enter `DV1 1AA` to find the seeded Dev Village, or `TN12` for Horsmonden) → sign up (try a DOB under 16 — it's refused) → onboarding → the 5-tab shell. Visit **Me → Settings** and flip theme / accent / text size / font / contrast / motion; all work live. Explore + Inbox show designed empty states (content lands M2/M3).
+- Run the app: `npm install` then `npm run dev`, open `http://localhost:3005`. It runs in **labelled demo mode** (in-memory data, persisted to your browser) because there is no database yet — see BLOCKED below. Data resets if you clear site storage.
+- **Full happy path is reviewable now:**
+  1. `/welcome` — enter `TN12` (Horsmonden) or `DV1` (seeded Dev Village) → sign up (try a DOB under 16, it's refused) → onboarding → the 5-tab shell.
+  2. **Post** (centre +): post a **request** or a **listing** (sell/free/wanted, or lend). It appears in **Explore → Requests / Listings** and opens its detail.
+  3. On someone else's request, **I can help** opens a thread; on a listing, **Message about this**. Threads + notifications live in **Inbox**. The author gets status controls (mark sorted / reserved / done).
+  4. **Me → Seeding console** (demo-admin): **Run fixture ingestion**, accept proposals, then **Explore → Directory** shows the businesses/places/orgs. Unclaimed businesses show "Is this yours?" → claim sheet.
+  5. **Me → Settings**: theme / accent / text size / font / contrast / motion all work live.
 - `/dev/gallery` still works (M0).
-- Milestones so far: **M0 ✅, M1 ✅, M2 ✅** (all RLS execution BLOCKED, tests written). M3 in progress.
-- **M2 reviewable:** Me → "Seeding console" (visible in demo mode). Click **Run fixture ingestion**, accept a few proposals, then Explore → Directory → Businesses to see them. Unclaimed businesses show "Is this yours? Claim it" → claim sheet.
 
 ### AWAITING-ELLIS (needs your review)
 
-- M1/M2 visual/feel review of the auth, shell, directory, and seeding screens (unit + e2e cover behaviour).
-- **Map view not built** (M2 partial): the seeding console's "map of accepted places" and map pins on place detail need a map surface. Deferred in this offline run — external map tiles are blocked by the CSP and there's no coordinate data without live Overpass. Flagging rather than faking it. Decide later whether to add a self-hosted/vector map.
+- Visual/feel review of all the M1–M3 screens (unit + e2e cover behaviour, but not aesthetics).
+- **Map view not built** (M2 partial): the seeding console's "map of accepted places" and map pins on place detail need a map surface. Deferred in this offline run — external map tiles are blocked by the CSP and there's no coordinate data without live Overpass. Flagged, not faked. Decide later whether to add a self-hosted/vector map.
+- **Two-device realtime not demonstrable on the mock** (M3): the respond→thread→fulfil loop is unit-tested and works single-user; genuine two-device realtime needs Supabase (BLOCKED).
 
 ### Decisions / accounts I need from you
 
@@ -44,13 +48,19 @@
 
 ---
 
-## Current milestone: M3 — Threads, Messages, Listings, Requests (IN PROGRESS)
+## Current milestone: none in progress — M1, M2, M3 complete. Next up: M4 (events, RSVPs, equipment, skills, services), not started.
 
-Building test-first. Realtime is a seam (mock has no live channel); open_thread is the single point of thread-creation truth.
+The requested run (M1→M2→M3) is finished. Before M4 or any launch, the gating item is standing up the database (see BLOCKED) and running the checked-in RLS tests.
 
 ---
 
 ## Done
+
+### M3 — Threads, Messages, Listings, Requests ✅ (RLS BLOCKED; two-device realtime needs DB)
+
+- **Acceptance:** post → respond → thread → mark fulfilled loop works (unit-tested end to end; single-user in the UI) ✅; trust-0 caps enforced in RPCs + RLS + mock ✅ (server-side curl test BLOCKED, no DB); cold DM from trust-0 refused, in-context thread allowed ✅ (unit-tested); two-device realtime BLOCKED (needs Supabase).
+- **Shipped:** listings/requests schema + status machines + RLS (trust-0 caps) + `open_thread`/`set_listing_status`/`set_request_status` RPCs + triggers (thread bump + notification fan-out + request first-response) + realtime publication (checked in, not executed); services (mock + Supabase seam); composers (request, sell/free/wanted, lend); Explore Listings/Requests; listing/request detail with respond + status controls; Inbox (threads + notifications); thread screen.
+- Verified: tsc/lint clean, 27 unit tests, build, e2e 14/14 (adds M3 content lifecycle).
 
 ### M2 — Places, Businesses, Organisations, Directory, Seeding ✅ (RLS BLOCKED; real-API AWAITING-KEYS; map view deferred)
 

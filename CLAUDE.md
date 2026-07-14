@@ -19,9 +19,11 @@ You are building **Local**, a location-centric community platform (working name;
 
 ## Current state
 
-**M0 complete, awaiting founder review of `/dev/gallery`.** Foundation, seven-axis theming cascade, motion library, hearth ambient, and the full primitive set are built and verified (lint / typecheck / test / build / e2e all green locally). See `/docs/PROGRESS.md` for detail and the one open CI item (Linux screenshot baselines). No feature screens, auth, or database work yet — those begin at M1. Do not start M1 until the founder signs off on the gallery.
+**M0, M1, M2, M3 complete** (M0 founder-approved; M1–M3 built autonomously on the mock data layer). Foundation + design system, auth/communities/trust, directory/seeding, and content/messaging are in place and verified (lint / typecheck / 27 unit tests / build / 14 e2e all green locally).
 
-Run the gallery: `npm install` then `npm run dev`, open `http://localhost:3005/dev/gallery`.
+**The one gating item before anything ships or M4 starts: there is no database.** No cloud Supabase project and Docker is unavailable, so all migrations, RLS policies, RLS tests, and RPCs are written to spec and checked into `supabase/` but **not executed** — the app runs on a labelled in-memory mock. See `/docs/PROGRESS.md` (top) for the full state, blockers, and what to review. Do not report any RLS/integration test as passing until the DB exists and the tests are run.
+
+Run it: `npm install` then `npm run dev`, open `http://localhost:3005`.
 
 ## Commands (once scaffolded — keep this section updated)
 
