@@ -24,6 +24,23 @@ Every Postgres RPC: name, input schema, output schema, side effects. Updated wit
 - **Out:** none.
 - **Side effects:** inserts a `vouches` row (idempotent); promotes the vouched member's `trust_level` — 1 vouch → trust 1, 2+ vouches → trust 2 (spec 04).
 
+## M2 (migration 20260714010003)
+
+### `issue_claim_link(business_id uuid) → text`
+Admin only. Stamps a random `claim_link_token` on the business and returns it. Powers the seeding console's pre-launch claim links.
+
+### `claim_business(business_id uuid, evidence text, link_token text default null) → business_claims`
+Authenticated, trust 1+ in the business's community, business unclaimed. Inserts a claim. If `link_token` matches the business's `claim_link_token`, the claim is auto-approved and ownership is set in one step (the "sign up, tap claim, done" pre-launch flow, spec 08). DECISION-MADE: claim links are a token column, not a separate table.
+
+### `decide_claim(claim_id uuid, approve boolean) → void`
+Admin only. Marks the claim approved/rejected; on approval sets `owner_profile_id` + `claimed_at`. (Claimant notify lands with the M3 notifications table.)
+
+### `accept_seed_proposal(proposal_id uuid) → uuid`
+Admin only. Materialises a pending `seed_proposals` row into `places` / `businesses` / `organisations` (events land in M4), marks it accepted, links `merged_into`. Returns the new row id.
+
+### `launch_community(id uuid) → void`
+Admin only. Flips a `seeding` community to `launched`, stamps `launched_at`. (Welcome notice lands with M3 notifications.)
+
 ## Planned (later milestones)
 
-`open_thread` · `set_listing_status` · `set_request_status` · `post_alert` · `claim_business` · `decide_claim` · `report_target` · `admin_moderate` · `global_search` · `seed_community` · `launch_community`.
+`open_thread` · `set_listing_status` · `set_request_status` · `post_alert` · `report_target` · `admin_moderate` · `global_search`.
