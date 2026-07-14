@@ -60,6 +60,7 @@ export interface Profile {
   platformRole: 'admin' | 'support' | null;
   dmPrivacy: DmPrivacy;
   peopleDirectoryOptIn: boolean;
+  notificationPrefs?: Record<string, boolean>;
   createdAt: string;
 }
 
@@ -302,6 +303,26 @@ export interface EquipmentItem {
   note: string | null;
   lendTerms: string | null;
   available: boolean;
+}
+
+// ---- M5 alerts -----------------------------------------------------------------
+
+export type AlertTier = 'community' | 'verified' | 'platform';
+export type AlertCategory =
+  | 'lostPet' | 'foundItem' | 'lostItem' | 'roadClosure' | 'utilityOutage'
+  | 'weather' | 'safety' | 'notice' | 'emergency';
+
+export interface Alert {
+  id: string;
+  communityId: string;
+  createdBy: string | null;
+  tier: AlertTier;
+  category: AlertCategory;
+  title: string;
+  body: string | null;
+  resolvedAt: string | null;
+  expiresAt: string;
+  createdAt: string;
 }
 
 export const DEFAULT_CONFIG: CommunityConfig = {

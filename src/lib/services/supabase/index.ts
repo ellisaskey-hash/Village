@@ -14,6 +14,7 @@ import type {
   SignUpInput,
 } from '../contracts';
 import {
+  alertSchema,
   equipmentSchema,
   eventSchema,
   joinSchema,
@@ -21,9 +22,11 @@ import {
   requestSchema,
   serviceSchema,
   signUpSchema,
+  type AlertInput,
 } from '../contracts';
 import {
   DEFAULT_CONFIG,
+  type Alert,
   type Business,
   type Community,
   type CommunityCard,
@@ -67,6 +70,7 @@ interface DbProfile {
   platform_role: 'admin' | 'support' | null;
   dm_privacy: Profile['dmPrivacy'];
   people_directory_opt_in: boolean;
+  notification_prefs: Record<string, boolean> | null;
   created_at: string;
 }
 interface DbCommunity {
@@ -102,6 +106,7 @@ function mapProfile(r: DbProfile): Profile {
     platformRole: r.platform_role,
     dmPrivacy: r.dm_privacy,
     peopleDirectoryOptIn: r.people_directory_opt_in,
+    notificationPrefs: r.notification_prefs ?? {},
     createdAt: r.created_at,
   };
 }
@@ -220,6 +225,24 @@ function mapSkill(r: DbSkill): Skill {
 interface DbEquip { id: string; community_id: string; owner_profile_id: string; name: string; category: string; note: string | null; lend_terms: string | null; available: boolean; profiles?: { display_name: string } | null }
 function mapEquip(r: DbEquip): EquipmentItem {
   return { id: r.id, communityId: r.community_id, ownerProfileId: r.owner_profile_id, ownerName: r.profiles?.display_name ?? '', name: r.name, category: r.category, note: r.note, lendTerms: r.lend_terms, available: r.available };
+}
+interface DbAlert {
+  id: string; community_id: string; created_by: string | null; tier: Alert['tier']; category: Alert['category'];
+  title: string; body: string | null; resolved_at: string | null; expires_at: string; created_at: string;
+}
+function mapAlert(r: DbAlert): Alert {
+  return {
+    id: r.id, communityId: r.community_id, createdBy: r.created_by, tier: r.tier, category: r.category,
+    title: r.title, body: r.body, resolvedAt: r.resolved_at, expiresAt: r.expires_at, createdAt: r.created_at,
+  };
+}
+function urlBase64ToUint8Array(base64: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+  const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
 }
 const SVC_SEL = '*, profiles!services_created_by_fkey(display_name)';
 const EQ_SEL = '*, profiles!equipment_items_owner_profile_id_fkey(display_name)';
@@ -346,6 +369,7 @@ export function createSupabaseServices(): Services {
         if (patch.dmPrivacy !== undefined) dbPatch.dm_privacy = patch.dmPrivacy;
         if (patch.peopleDirectoryOptIn !== undefined)
           dbPatch.people_directory_opt_in = patch.peopleDirectoryOptIn;
+        if (patch.notificationPrefs !== undefined) dbPatch.notification_prefs = patch.notificationPrefs;
         const { data, error } = await sb
           .from('profiles')
           .update(dbPatch)
@@ -726,6 +750,28 @@ export function createSupabaseServices(): Services {
         await sb.from('notifications').update({ read_at: new Date().toISOString() })
           .eq('profile_id', auth.user.id).is('read_at', null);
       },
+      async enablePush() {
+        if (typeof navigator === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+        const vapid = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+        if (!vapid) return false;
+        if ((await Notification.requestPermission()) !== 'granted') return false;
+        let reg: ServiceWorkerRegistration | undefined;
+        try {
+          reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register('/sw.js'));
+        } catch {
+          return false;
+        }
+        const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapid) as unknown as BufferSource });
+        const json = sub.toJSON();
+        const sb = getSupabase();
+        const { data: auth } = await sb.auth.getUser();
+        if (!auth.user || !json.endpoint) return false;
+        const { error } = await sb.from('push_subscriptions').upsert(
+          { profile_id: auth.user.id, endpoint: json.endpoint, keys: json.keys, user_agent: navigator.userAgent },
+          { onConflict: 'endpoint' },
+        );
+        return !error;
+      },
     },
 
     events: {
@@ -765,6 +811,27 @@ export function createSupabaseServices(): Services {
       },
       async rsvp(eventId: string, status: RsvpStatus, partySize = 1) {
         const { error } = await getSupabase().rpc('set_rsvp', { p_event_id: eventId, p_status: status, p_party_size: partySize });
+        if (error) throw error;
+      },
+    },
+
+    alerts: {
+      async list(communityId: string) {
+        const { data, error } = await getSupabase().from('alerts').select('*').eq('community_id', communityId).is('resolved_at', null).order('created_at', { ascending: false });
+        if (error) throw error;
+        return (data ?? []).map((r) => mapAlert(r as DbAlert));
+      },
+      async post(communityId: string, input: AlertInput) {
+        const p = alertSchema.parse(input);
+        const { data, error } = await getSupabase().rpc('post_alert', {
+          p_community: communityId, p_tier: p.tier, p_category: p.category, p_title: p.title,
+          p_body: p.body ?? null, p_as_org: p.asOrganisationId ?? null,
+        });
+        if (error) throw error;
+        return mapAlert(data as DbAlert);
+      },
+      async resolve(id: string) {
+        const { error } = await getSupabase().rpc('resolve_alert', { p_id: id });
         if (error) throw error;
       },
     },

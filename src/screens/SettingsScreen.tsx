@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
@@ -13,8 +13,15 @@ import {
 } from '@/app/state/a11y';
 import { useServices } from '@/lib/services/provider';
 import { useSession, useSessionStore } from '@/app/state/session';
-import { Card, IconButton, SegmentedControl, Toggle, useToasts } from '@/components/ui';
+import { Button, Card, IconButton, SegmentedControl, Toggle, useToasts } from '@/components/ui';
 import type { DmPrivacy } from '@/lib/services/types';
+
+const NOTIF_PREFS: { key: string; label: string }[] = [
+  { key: 'alert.community', label: 'Community alerts (lost pets, notices)' },
+  { key: 'alert.verified', label: 'Official alerts (road closures, safety)' },
+  { key: 'message', label: 'Messages' },
+  { key: 'event.reminder', label: 'Event reminders' },
+];
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -46,13 +53,33 @@ export function SettingsScreen() {
     setMotion,
   } = useA11yStore();
 
-  async function patchProfile(patch: { dmPrivacy?: DmPrivacy; peopleDirectoryOptIn?: boolean }) {
+  const [pushBusy, setPushBusy] = useState(false);
+  const prefs = session?.profile.notificationPrefs ?? {};
+
+  async function patchProfile(patch: {
+    dmPrivacy?: DmPrivacy;
+    peopleDirectoryOptIn?: boolean;
+    notificationPrefs?: Record<string, boolean>;
+  }) {
     if (!session) return;
     try {
       const updated = await services.profiles.update(patch);
       setSession({ ...session, profile: updated });
     } catch {
       push({ title: 'Could not save that setting', variant: 'error' });
+    }
+  }
+
+  async function enablePush() {
+    setPushBusy(true);
+    try {
+      const ok = await services.notifications.enablePush();
+      push({
+        title: ok ? "You're set for push notifications" : 'Push needs the installed app on a supported device',
+        variant: ok ? 'success' : 'info',
+      });
+    } finally {
+      setPushBusy(false);
     }
   }
 
@@ -166,6 +193,29 @@ export function SettingsScreen() {
               onChange={(v) => patchProfile({ peopleDirectoryOptIn: v })}
             />
           </Row>
+        </Card>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-h3 font-semibold text-text">Notifications</h2>
+        <Card className="divide-y divide-border">
+          {NOTIF_PREFS.map((p) => (
+            <Row key={p.key} label={p.label}>
+              <Toggle
+                srLabel={p.label}
+                checked={prefs[p.key] ?? true}
+                onChange={(v) => patchProfile({ notificationPrefs: { ...prefs, [p.key]: v } })}
+              />
+            </Row>
+          ))}
+          <div className="pt-3">
+            <Button variant="secondary" size="sm" leadingIcon="bell" loading={pushBusy} onClick={enablePush}>
+              Enable push notifications
+            </Button>
+            <p className="mt-1.5 text-small text-textFaint">
+              Emergency alerts always come through. Everything else follows the switches above.
+            </p>
+          </div>
         </Card>
       </section>
     </motion.div>

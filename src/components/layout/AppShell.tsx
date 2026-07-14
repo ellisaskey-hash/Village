@@ -3,15 +3,16 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
 import { pressable } from '@/lib/motion';
-import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, useToasts, type IconName } from '@/components/ui';
+import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
 import { useActiveMembership } from '@/app/state/session';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
 import { ListingComposer } from '@/screens/compose/ListingComposer';
 import { EventComposer } from '@/screens/compose/EventComposer';
 import { ServiceComposer } from '@/screens/compose/ServiceComposer';
 import { EquipmentComposer } from '@/screens/compose/EquipmentComposer';
+import { AlertComposer } from '@/screens/compose/AlertComposer';
 
-type Composer = 'none' | 'request' | 'sell' | 'equipment' | 'event' | 'service';
+type Composer = 'none' | 'request' | 'sell' | 'equipment' | 'event' | 'service' | 'alert';
 
 interface Tab {
   to: string;
@@ -40,7 +41,6 @@ export function AppShell() {
   const [composer, setComposer] = useState<Composer>('none');
   const active = useActiveMembership();
   const navigate = useNavigate();
-  const push = useToasts();
 
   function startPost() {
     setPostOpen(false);
@@ -50,10 +50,9 @@ export function AppShell() {
       lend: 'equipment',
       event: 'event',
       service: 'service',
+      alert: 'alert',
     };
-    const next = map[postChoice];
-    if (next) setComposer(next);
-    else push({ title: 'Alerts arrive in the next update', variant: 'info' }); // alert -> M5
+    setComposer(map[postChoice] ?? 'none');
   }
 
   return (
@@ -128,6 +127,7 @@ export function AppShell() {
       <EquipmentComposer open={composer === 'equipment'} onClose={() => setComposer('none')} />
       <EventComposer open={composer === 'event'} onClose={() => setComposer('none')} />
       <ServiceComposer open={composer === 'service'} onClose={() => setComposer('none')} />
+      <AlertComposer open={composer === 'alert'} onClose={() => setComposer('none')} />
     </div>
   );
 }

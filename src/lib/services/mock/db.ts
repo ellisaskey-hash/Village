@@ -3,6 +3,7 @@
 // the Postgres schema + RPC behaviour closely enough to exercise every M1 screen.
 import {
   DEFAULT_CONFIG,
+  type Alert,
   type Business,
   type Community,
   type EquipmentItem,
@@ -111,6 +112,7 @@ export interface MockDb {
   services: Service[];
   skills: Skill[];
   equipment: EquipmentItem[];
+  alerts: Alert[];
 }
 
 const DB_KEY = 'local:mock-db';
@@ -172,6 +174,7 @@ function seed(): MockDb {
     services: [],
     skills: [],
     equipment: [],
+    alerts: [],
   };
 }
 

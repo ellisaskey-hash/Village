@@ -1,6 +1,7 @@
 // Mock Services — the no-DB implementation. Mirrors the RPC/RLS behaviour so screens behave
 // as they will against Postgres. Every mutation persists to localStorage.
 import {
+  alertSchema,
   equipmentSchema,
   eventSchema,
   joinSchema,
@@ -8,6 +9,7 @@ import {
   requestSchema,
   serviceSchema,
   signUpSchema,
+  type AlertInput,
   type EquipmentInput,
   type EventInput,
   type JoinInput,
@@ -19,6 +21,7 @@ import {
   type SignUpInput,
 } from '../contracts';
 import type {
+  Alert,
   Community,
   CommunityCard,
   EquipmentItem,
@@ -832,6 +835,61 @@ export function createMockServices(): Services {
         for (const n of db().notifications) {
           if (n.profileId === me && n.readAt === null) n.readAt = now;
         }
+        persist();
+      },
+      async enablePush() {
+        // Web-push needs the deployed app + service worker; the mock cannot subscribe.
+        return false;
+      },
+    },
+
+    alerts: {
+      async list(communityId) {
+        const now = Date.now();
+        return db()
+          .alerts.filter((a) => a.communityId === communityId && a.resolvedAt === null && new Date(a.expiresAt).getTime() > now)
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      },
+      async post(communityId, input: AlertInput) {
+        const parsed = alertSchema.parse(input);
+        const profileId = requireProfileId();
+        if (parsed.tier === 'community') {
+          if (trustInMock(profileId, communityId) < 1) throw new Error('you need trust level 1 to post an alert');
+        } else if (parsed.tier === 'verified') {
+          throw new Error('verified alerts require a verified organisation');
+        } else {
+          throw new Error('platform alerts are for admins only');
+        }
+        const a: Alert = {
+          id: uid(),
+          communityId,
+          createdBy: profileId,
+          tier: parsed.tier,
+          category: parsed.category,
+          title: parsed.title,
+          body: parsed.body ?? null,
+          resolvedAt: null,
+          expiresAt: new Date(Date.now() + 3 * 864e5).toISOString(),
+          createdAt: nowIso(),
+        };
+        const d = db();
+        d.alerts.push(a);
+        // mock supports the community tier only, so the in-app fan-out key is alert.community
+        const key = 'alert.community';
+        for (const m of d.memberships.filter((x) => x.communityId === communityId && x.status === 'active' && x.profileId !== profileId)) {
+          const p = d.profiles.find((pp) => pp.id === m.profileId);
+          const on = p?.notificationPrefs?.[key] ?? true;
+          if (on) d.notifications.push({ id: uid(), profileId: m.profileId, category: key, title: parsed.title, body: parsed.body ?? null, deepLink: '/', readAt: null, createdAt: nowIso() });
+        }
+        persist();
+        return a;
+      },
+      async resolve(id) {
+        const d = db();
+        const a = d.alerts.find((x) => x.id === id);
+        if (!a) throw new Error('alert not found');
+        if (a.createdBy !== requireProfileId()) throw new Error('not your alert');
+        a.resolvedAt = nowIso();
         persist();
       },
     },

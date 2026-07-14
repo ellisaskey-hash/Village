@@ -6,6 +6,7 @@ import { useActiveMembership, useSession } from '@/app/state/session';
 import { useServices } from '@/lib/services/provider';
 import { formatWhen } from '@/lib/ics';
 import { Card, EmptyState, IconBadge, ListRow, StaggeredBody, type IconName } from '@/components/ui';
+import { AlertsStrip } from '@/screens/AlertsStrip';
 
 const QUICK: { icon: IconName; label: string; to: string }[] = [
   { icon: 'requests', label: 'Ask for a hand', to: '/explore?tab=requests' },
@@ -41,6 +42,8 @@ export function HomeScreen() {
         <p className="text-eyebrow uppercase text-textMuted">{active?.name ?? 'Your community'}</p>
         <h1 className="font-display text-h1 font-bold text-text">Good to see you, {firstName}</h1>
       </header>
+
+      <AlertsStrip />
 
       <section>
         <h2 className="mb-2 text-h3 font-semibold text-text">Quick actions</h2>

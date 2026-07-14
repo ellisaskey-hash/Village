@@ -2,6 +2,7 @@
 // Supabase-backed implementation are interchangeable behind one flag (spec 09 §Server state).
 import { z } from 'zod';
 import type {
+  Alert,
   Business,
   Community,
   CommunityCard,
@@ -64,6 +65,22 @@ export interface ProfilePatch {
   avatarUrl?: string | null;
   dmPrivacy?: Profile['dmPrivacy'];
   peopleDirectoryOptIn?: boolean;
+  notificationPrefs?: Record<string, boolean>;
+}
+
+export const alertSchema = z.object({
+  tier: z.enum(['community', 'verified', 'platform']),
+  category: z.enum(['lostPet', 'foundItem', 'lostItem', 'roadClosure', 'utilityOutage', 'weather', 'safety', 'notice', 'emergency']),
+  title: z.string().trim().min(2).max(140),
+  body: z.string().trim().max(1000).optional(),
+  asOrganisationId: z.string().optional(),
+});
+export type AlertInput = z.infer<typeof alertSchema>;
+
+export interface AlertService {
+  list(communityId: string): Promise<Alert[]>;
+  post(communityId: string, input: AlertInput): Promise<Alert>;
+  resolve(id: string): Promise<void>;
 }
 
 // ---- services ------------------------------------------------------------------
@@ -212,6 +229,8 @@ export interface ThreadService {
 export interface NotificationService {
   mine(): Promise<NotificationItem[]>;
   markAllRead(): Promise<void>;
+  /** Requests permission, subscribes to web-push, saves the subscription. Returns success. */
+  enablePush(): Promise<boolean>;
 }
 
 export interface Services {
@@ -231,4 +250,5 @@ export interface Services {
   threads: ThreadService;
   notifications: NotificationService;
   events: EventService;
+  alerts: AlertService;
 }

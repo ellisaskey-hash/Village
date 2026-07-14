@@ -49,13 +49,26 @@ These are forward migrations (applied ones are never edited except #1 which was 
 
 ---
 
-## Current milestone: none in progress — M1, M2, M3 complete. Next up: M4 (events, RSVPs, equipment, skills, services), not started.
+## Current milestone: M5 — Alerts, Notifications, Push (IN PROGRESS)
 
-The requested run (M1→M2→M3) is finished. Before M4 or any launch, the gating item is standing up the database (see BLOCKED) and running the checked-in RLS tests.
+M0–M4 complete; database live; RLS proven. M5 adds tiered alerts, the notification/push
+preference chain, and VAPID web-push (real-device push testing is AWAITING-ELLIS at gate 3).
 
 ---
 
 ## Done
+
+### M4 — Events, RSVPs, Equipment, Skills, Services ✅ (proven live 12/12)
+
+- **Acceptance:** recurring event expands correctly across DST (19:00 local held across the
+  29 Mar 2026 boundary) ✅; capacity event waitlists then promotes on cancellation ✅;
+  "Ask to borrow" opens a thread ✅. All proven live (`scripts/db/verify-m4.mjs`).
+- **Shipped:** events (+recurrence/capacity), event_rsvps, services, skills, equipment_items
+  schema + RLS + set_rsvp/expand_recurrence/promote_waitlist RPCs (applied live); services
+  (mock + Supabase); Events list/detail (RSVP, waitlist, ICS), Directory Services/Equipment/
+  Skills sub-chips, equipment ask-to-borrow, event/service/equipment composers, Home
+  "Happening soon".
+- Verified: tsc/lint clean, 29 unit tests, build, mock e2e 14/14, live DB 12/12.
 
 ### M3 — Threads, Messages, Listings, Requests ✅ (RLS BLOCKED; two-device realtime needs DB)
 
