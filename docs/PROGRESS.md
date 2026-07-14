@@ -3,8 +3,8 @@
 ## 🚦 GATES
 
 - **M0 gallery ✓ passed** (founder-approved).
-- **Gate 2 — M3 + DB security proof ✓ MET.** M0–M3 built; database wired and every migration applied to the real Supabase project; RLS security model proven live (26/26 checks, all four isolation assertions + trust-0 caps + cold-DM + full loop + realtime). ← **current position: just cleared. Next up is M4/M5 toward gate 3.**
-- Gate 3 — M5 deployed PWA on your phone (real-device push). Not yet.
+- **Gate 2 — M3 + DB security proof ✓ MET.** M0–M3 built; DB wired; RLS proven live (26/26).
+- **Gate 3 — M5 deployed PWA on your phone (real-device push). PARTIAL — this is the current position.** M4 and M5 are built and proven against the live DB (M4 12/12, M5 15/15). What remains for the gate, and needs you: **(a) deploy to Vercel** (I can't log into your Vercel), and **(b) real-device push test** — the VAPID keypair is generated and the subscribe flow is wired, but delivering a push needs the custom injectManifest service worker (an M8 item) plus a physical phone. AWAITING-ELLIS.
 - Gate 4 — M7 real Horsmonden ingestion review. Not yet.
 - Gate 5 — M8 launch checklist. Not yet.
 
@@ -12,20 +12,24 @@
 
 ## ⭐ MORNING REVIEW (read this first)
 
-**Database is now live and the security model is proven.** M0–M3 are built; all migrations are applied to the real Supabase project; the app runs against real Postgres (not the mock). Five migration/policy bugs were caught by running the tests against real Postgres and fixed (see "Migration fixes" below).
+**M0–M5 are built; the database is live and the whole security + behaviour model is proven against real Postgres.** All migrations applied to the real Supabase project; the app runs on real Postgres (not the mock). Live verification totals **53/53** across three scripts (M1–M3: 26, M4: 12, M5: 15). Six migration/policy bugs were caught by running against real Postgres and fixed (see "Migration fixes").
 
 ### What to look at
 
-- **The app now runs on the real database.** `.env` is set (gitignored) with the project URL + anon key, so `npm run dev` (restart it if it was already running) or a production build uses Supabase, not the mock. Sign in with a seeded test account: `rlstest+alice@example.com` / `password123` (alice is a trust-2 member of Dev Village with a request + a business already posted). Explore → Requests shows her "Borrow a ladder" request; Inbox shows the thread from the loop test.
-- **Security proof:** `node scripts/db/verify-security.mjs` → **26/26 checks passed** against the live DB. It drives the real RLS through PostgREST as five separate authenticated users. Covers all four isolation assertions (cross-community, hidden-invisible, acting-as-forgery) across M1–M3 tables, trust-0 caps rejecting over-posting via direct API, cold-DM refusal, the full post→respond→realtime-thread-both-ways→fulfil→notifications loop, and P4 participant-only reads. Re-runnable and idempotent.
+- **The app runs on the real database.** `.env` is set (gitignored). Sign in with a seeded account `rlstest+alice@example.com` / `password123` (trust-2 member of Dev Village). Post requests/listings/events/alerts/equipment/services via the **+** button; RSVP to an event; check **Inbox** threads + notifications; **Home** shows the alerts strip + "Happening soon"; **Me → Settings → Notifications** for per-category prefs + push enable.
+- **Proof scripts (all re-runnable, idempotent):**
+  - `node scripts/db/verify-security.mjs` → **26/26** (M1–M3: four isolation assertions, trust-0 caps via direct API, cold-DM, full realtime loop, P4).
+  - `node scripts/db/verify-m4.mjs` → **12/12** (capacity waitlist+promotion, DST-correct recurrence, ask-to-borrow, isolation).
+  - `node scripts/db/verify-m5.mjs` → **15/15** (tier gating, verified-alert forgery blocked at RLS, opted-in-only, emergency bypasses quiet hours, resolution, 200-sub fan-out).
 - `/dev/gallery` still works (M0).
 
 ### AWAITING-ELLIS / open items
 
-- **Push + CI still BLOCKED** — the machine's cached GitHub credential is for account `ellis-askey`, which is denied access to `ellisaskey-hash/Village` (403). I can't mint a token for the repo-owner account. **You need to add a Personal Access Token (or push once yourself).** Everything is committed locally; nothing is lost.
-- **UI signup email validation:** Supabase's anon signup rejects `@example.com` / `+alias` addresses as invalid, and email-confirmation may be on. Test accounts were created via the admin API (confirmed). For frictionless UI signup in this test project, toggle "Confirm email" off / relax email validation in the dashboard, or just use the seeded accounts.
-- **Map view** (M2) and **real ingestion APIs** (AWAITING-KEYS) still deferred as before.
-- Visual/feel review of the M1–M3 screens.
+- **Push to GitHub + CI: BLOCKED.** The machine's cached GitHub credential is account `ellis-askey`, denied access to `ellisaskey-hash/Village` (403). I can't mint a token for the repo-owner account. **Add a PAT for `ellisaskey-hash` (or push once yourself).** 15 commits are ready locally.
+- **Gate 3 remainder:** deploy to Vercel (needs your login) + real-device push (custom SW is an M8 item + a phone). VAPID keypair is generated and the subscribe flow is wired.
+- **UI signup email validation:** Supabase's anon signup rejects `@example.com`/`+alias` as invalid and email-confirm may be on. Seeded accounts (created via admin API) are confirmed; for UI signup, relax email validation / turn off "Confirm email" in the dashboard.
+- **Map view** (M2) and **real ingestion APIs** (AWAITING-KEYS) still deferred.
+- Visual/feel review of the M1–M5 screens.
 
 ---
 
@@ -49,14 +53,22 @@ These are forward migrations (applied ones are never edited except #1 which was 
 
 ---
 
-## Current milestone: M5 — Alerts, Notifications, Push (IN PROGRESS)
-
-M0–M4 complete; database live; RLS proven. M5 adds tiered alerts, the notification/push
-preference chain, and VAPID web-push (real-device push testing is AWAITING-ELLIS at gate 3).
+## Current milestone: M5 complete. Runway to gate 3 is deploy + real-device push (needs you). M6 (search + Home assembly) is the next buildable milestone.
 
 ---
 
 ## Done
+
+### M5 — Alerts, Notifications, Push ✅ (proven live 15/15; real-device push AWAITING-ELLIS)
+
+- **Acceptance:** community alert pushes only to opted-in members ✅; verified alert requires
+  acting-as a verified org (forgery fails at RLS) ✅; emergency bypasses quiet hours ✅;
+  resolution push fires ✅; 200-subscription fan-out completes via the queue in ~200ms (no
+  timeout) ✅. All proven live (`scripts/db/verify-m5.mjs`).
+- **Shipped:** alerts (tiered, category trigger) + push tables + RLS + post_alert/resolve_alert/
+  drain_fanout RPCs (applied live); alerts service (mock + Supabase); AlertComposer, Home
+  alerts strip, Settings notification prefs + push-subscribe. VAPID keypair generated.
+- Verified: tsc/lint clean, 32 unit tests, build, mock e2e 14/14, live DB 15/15.
 
 ### M4 — Events, RSVPs, Equipment, Skills, Services ✅ (proven live 12/12)
 

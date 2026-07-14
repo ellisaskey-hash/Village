@@ -19,11 +19,11 @@ You are building **Local**, a location-centric community platform (working name;
 
 ## Current state
 
-**M0, M1, M2, M3 complete** (M0 founder-approved; M1–M3 built autonomously on the mock data layer). Foundation + design system, auth/communities/trust, directory/seeding, and content/messaging are in place and verified (lint / typecheck / 27 unit tests / build / 14 e2e all green locally).
+**M0–M5 complete; database live; security + behaviour proven.** Foundation/design system, auth/communities/trust, directory/seeding, content/messaging, events/RSVPs/equipment/skills/services, and tiered alerts/notifications/push are all built. All migrations are applied to the real Supabase project (eu-north-1) and RLS is proven **live 53/53** across `scripts/db/verify-security.mjs` (26), `verify-m4.mjs` (12), `verify-m5.mjs` (15). The app runs on real Postgres when `.env` is present, and falls back to a labelled mock without it (so CI/mock e2e still work). Verified locally: lint / typecheck / 32 unit tests / build / 14 mock e2e all green.
 
-**The one gating item before anything ships or M4 starts: there is no database.** No cloud Supabase project and Docker is unavailable, so all migrations, RLS policies, RLS tests, and RPCs are written to spec and checked into `supabase/` but **not executed** — the app runs on a labelled in-memory mock. See `/docs/PROGRESS.md` (top) for the full state, blockers, and what to review. Do not report any RLS/integration test as passing until the DB exists and the tests are run.
+**Open (needs founder):** push to GitHub is BLOCKED (cached creds are a different account, no access to `ellisaskey-hash/Village` — needs a PAT); Vercel deploy + real-device push are AWAITING-ELLIS (gate 3). See `/docs/PROGRESS.md` top (GATES + MORNING REVIEW). The next buildable milestone is **M6 (global search + Home assembly)**.
 
-Run it: `npm install` then `npm run dev`, open `http://localhost:3005`.
+Run it: `npm install` then `npm run dev`, open `http://localhost:3005`. Sign in as `rlstest+alice@example.com` / `password123`.
 
 ## Commands (once scaffolded — keep this section updated)
 
