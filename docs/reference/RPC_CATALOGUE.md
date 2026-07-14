@@ -41,6 +41,17 @@ Admin only. Materialises a pending `seed_proposals` row into `places` / `busines
 ### `launch_community(id uuid) → void`
 Admin only. Flips a `seeding` community to `launched`, stamps `launched_at`. (Welcome notice lands with M3 notifications.)
 
+## M3 (migration 20260714020004)
+
+### `open_thread(p_context text, p_context_id uuid, p_recipient uuid, p_first_message text) → threads`
+The single point of thread-creation truth (D5) — no client thread inserts anywhere. Derives the community + other party from the context row (listing/request/business/organisation) or, for `direct`, from a shared community. Enforces the cold-DM gate (trust ≥ `coldDmMinTrust` and recipient `dm_privacy` allows) unless the pair already share a thread. Dedupes to an existing thread. Inserts participants + the first message. The request-first-response trigger flips the request `open → answered`.
+
+### `set_listing_status(p_id uuid, p_status text, p_completed_with uuid default null) → listings`
+Author/admin only. Legal transitions only (closed listings are terminal). Sets `completed_with` on completion.
+
+### `set_request_status(p_id uuid, p_status text, p_fulfilled_by uuid default null) → requests`
+Author/admin only. Legal transitions only. Sets `fulfilled_by` on fulfilment (the mutual-aid loop).
+
 ## Planned (later milestones)
 
-`open_thread` · `set_listing_status` · `set_request_status` · `post_alert` · `report_target` · `admin_moderate` · `global_search`.
+`post_alert` · `report_target` · `admin_moderate` · `global_search`.
