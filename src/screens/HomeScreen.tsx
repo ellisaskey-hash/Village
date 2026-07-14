@@ -27,9 +27,21 @@ export function HomeScreen() {
     queryFn: () => services.events.list(communityId),
     enabled: Boolean(communityId),
   });
+  const requestsQ = useQuery({
+    queryKey: ['requests', communityId],
+    queryFn: () => services.requests.list(communityId),
+    enabled: Boolean(communityId),
+  });
+  const listingsQ = useQuery({
+    queryKey: ['listings', communityId],
+    queryFn: () => services.listings.list(communityId),
+    enabled: Boolean(communityId),
+  });
   const soon = (eventsQ.data ?? [])
     .filter((e) => new Date(e.startsAt) >= new Date(Date.now() - 3600e3))
     .slice(0, 3);
+  const openRequests = (requestsQ.data ?? []).filter((r) => r.status === 'open' || r.status === 'answered').slice(0, 3);
+  const freshListings = (listingsQ.data ?? []).filter((l) => l.status === 'active').slice(0, 4);
 
   return (
     <motion.div
@@ -81,22 +93,50 @@ export function HomeScreen() {
 
       <section className="space-y-3">
         <h2 className="text-h3 font-semibold text-text">Needs a hand</h2>
-        <EmptyState
-          icon="requests"
-          title="Nobody needs a hand right now"
-          body="Be the first to ask. Neighbours are quick to help with lifts, tools and recommendations."
-          action={{ label: 'Ask for a hand', onClick: () => navigate('/explore?tab=requests'), leadingIcon: 'plus' }}
-        />
+        {openRequests.length > 0 ? (
+          <div className="space-y-2">
+            {openRequests.map((r) => (
+              <ListRow
+                key={r.id}
+                leading={<IconBadge icon="requests" tone="accent" />}
+                title={r.title}
+                subtitle={`${r.category} · ${r.authorName}`}
+                onClick={() => navigate(`/requests/${r.id}`)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon="requests"
+            title="Nobody needs a hand right now"
+            body="Be the first to ask. Neighbours are quick to help with lifts, tools and recommendations."
+            action={{ label: 'Ask for a hand', onClick: () => navigate('/explore?tab=requests'), leadingIcon: 'plus' }}
+          />
+        )}
       </section>
 
       <section className="space-y-3">
         <h2 className="text-h3 font-semibold text-text">New in the village</h2>
-        <Card>
-          <p className="text-body text-textMuted">
-            We're still setting up {active?.name ?? 'your community'}. Listings, events and the
-            directory land as we finish seeding.
-          </p>
-        </Card>
+        {freshListings.length > 0 ? (
+          <div className="space-y-2">
+            {freshListings.map((l) => (
+              <ListRow
+                key={l.id}
+                leading={<IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} />}
+                title={l.title}
+                subtitle={`${l.kind === 'free' ? 'Free' : l.kind === 'wanted' ? 'Wanted' : l.kind === 'lend' ? 'To borrow' : l.pricePence != null ? `£${(l.pricePence / 100).toFixed(2)}` : 'For sale'} · ${l.authorName}`}
+                onClick={() => navigate(`/listings/${l.id}`)}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <p className="text-body text-textMuted">
+              Nothing listed yet in {active?.name ?? 'your community'}. Got something to sell, give
+              away or lend? Tap the plus.
+            </p>
+          </Card>
+        )}
       </section>
     </motion.div>
   );
