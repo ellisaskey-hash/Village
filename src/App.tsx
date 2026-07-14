@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react';
-import {
-  BrowserRouter,
-  Link,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppBootstrap } from '@/app/AppBootstrap';
+import {
+  AnonOnlyLayout,
+  InviteRedirect,
+  RequireAuthLayout,
+  RequireMembershipLayout,
+} from '@/app/Guards';
+import { AppShell } from '@/components/layout/AppShell';
+import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
+import { SignInScreen } from '@/screens/auth/SignInScreen';
+import { SignUpScreen } from '@/screens/auth/SignUpScreen';
+import { OnboardingScreen } from '@/screens/auth/OnboardingScreen';
+import { HomeScreen } from '@/screens/HomeScreen';
+import { ExploreScreen } from '@/screens/ExploreScreen';
+import { InboxScreen } from '@/screens/InboxScreen';
+import { MeScreen } from '@/screens/MeScreen';
+import { SettingsScreen } from '@/screens/SettingsScreen';
 import { GalleryScreen } from '@/dev/gallery/GalleryScreen';
-import { BrandLogo, Button } from '@/components/ui';
 import { readStore } from '@/lib/storage';
 
-/** /dev/* routes are gated: dev build, `?dev=1`, or a stored unlock (TECH_STACK feature flags). */
 function devEnabled(): boolean {
   if (import.meta.env.DEV) return true;
   if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('dev')) return true;
@@ -33,36 +40,33 @@ function RouteAnnouncer() {
   );
 }
 
-function Home() {
-  const dev = devEnabled();
-  return (
-    <main id="main" className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center gap-6 px-screenX text-center">
-      <BrandLogo size={72} />
-      <div className="space-y-2">
-        <h1 className="font-display text-display font-bold text-text">Local</h1>
-        <p className="text-body text-textMuted">
-          Your community, in one place. Foundation and design system are in place; the first
-          screens land next.
-        </p>
-      </div>
-      {dev && (
-        <Link to="/dev/gallery">
-          <Button variant="primary" size="xl" trailingIcon="chevron-right">
-            Open the primitive gallery
-          </Button>
-        </Link>
-      )}
-    </main>
-  );
-}
-
 export function App() {
   return (
     <BrowserRouter>
       <AppBootstrap>
         <RouteAnnouncer />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route element={<AnonOnlyLayout />}>
+            <Route path="/welcome" element={<WelcomeScreen />} />
+            <Route path="/j/:code" element={<InviteRedirect />} />
+            <Route path="/auth/sign-in" element={<SignInScreen />} />
+            <Route path="/auth/sign-up" element={<SignUpScreen />} />
+          </Route>
+
+          <Route element={<RequireAuthLayout />}>
+            <Route path="/onboarding" element={<OnboardingScreen />} />
+          </Route>
+
+          <Route element={<RequireMembershipLayout />}>
+            <Route element={<AppShell />}>
+              <Route index element={<HomeScreen />} />
+              <Route path="/explore" element={<ExploreScreen />} />
+              <Route path="/inbox" element={<InboxScreen />} />
+              <Route path="/me" element={<MeScreen />} />
+              <Route path="/me/settings" element={<SettingsScreen />} />
+            </Route>
+          </Route>
+
           <Route
             path="/dev/gallery"
             element={devEnabled() ? <GalleryScreen /> : <Navigate to="/" replace />}
