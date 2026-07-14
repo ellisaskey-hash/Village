@@ -1,0 +1,64 @@
+# CI workflow (parked here because the current PAT lacks the `workflow` scope)
+#
+# To enable GitHub Actions: grant the token `workflow` scope, then move this file to
+#   .github/workflows/ci.yml
+# and push. It self-seeds the Linux screenshot baselines on the first run.
+
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+# Required checks blocking merge (Elevra fix #32): lint, typecheck, test, e2e.
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to seed Linux screenshot baselines on first run
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      # First run on a fresh OS has no *-linux.png baselines; generate + commit them once,
+      # then the compare below (and every future run) does real visual regression.
+      - name: Seed Linux screenshot baselines if missing
+        if: github.event_name == 'push'
+        run: |
+          if ! ls e2e/__screenshots__/**/*-linux.png >/dev/null 2>&1; then
+            echo "No Linux baselines found — seeding."
+            npx playwright test --update-snapshots || true
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add e2e/__screenshots__
+            git commit -m "ci: seed Linux screenshot baselines [skip ci]" || echo "nothing to commit"
+            git push || echo "push skipped"
+          else
+            echo "Linux baselines present."
+          fi
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
