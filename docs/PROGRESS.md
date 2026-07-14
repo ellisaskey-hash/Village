@@ -1,37 +1,58 @@
 # PROGRESS
 
-## Current milestone: M0 — Foundation & design system ✅ (awaiting founder review of /dev/gallery)
+---
 
-**What's done**
+## ⭐ MORNING REVIEW (read this first)
 
-- **Scaffold.** Vite + React 18 + TypeScript strict with `exactOptionalPropertyTypes: true`; standard Tailwind spacing scale and breakpoints (Elevra fixes #1/#8); ESLint (`--max-warnings 0`) plus custom greps; Prettier; Vitest (happy-dom); Playwright + axe; Sentry wired from M0 (no-ops without a DSN); GitHub Actions with lint/typecheck/test/e2e as required checks; CSP + HSTS + security headers in `vercel.json`; PWA manifest generated from tokens.
-- **Tokens.** `design/tokens.ts` implements spec 06 (the Local identity: leaf + honey on warm charcoal-green, warm-chalk light theme).
-- **Theming cascade.** `src/index.css` implements all seven axes in the documented cascade order (theme × skin × accent × density × font × contrast × motion) with the cold-boot script at `public/theme-boot.js` (external, so the strict CSP holds without a nonce).
-- **Motion.** `src/lib/motion.ts` ports every named choreography from MOTION_AND_ANIMATION.md verbatim, plus the one new `alertArrival` choreography from spec 05. Reduced motion is honoured three ways (CSS, MotionConfig, `useMotionSafe`).
-- **Hearth ambient.** `AppBackground` paints the warm ember glow from the `--bg-ambient-*` variables; its slow drift pauses entirely under reduced motion.
-- **Primitives (33).** Button, IconButton, Chip (44px), Badge, Card, IconBadge, Avatar, ListRow (with `surface` prop, fix #7), Sheet, Modal, Toast, EmptyState, Skeleton (+ListRow/+Card), SegmentedControl, Tabs, SearchBar, Field, Textarea, Select, Checkbox, Toggle, RadioGroup, Banner, InfoCallout, TextLink, PullToRefresh, SwipeAction, StaggeredBody, MetricStat, StatCard, BrandLogo, Icon. No hex literals in components (SVGs use `var(--…)` stops); every string voice-passed (no em-dashes); 44px touch targets; every input at the 16px floor.
-- **Gallery.** `/dev/gallery` renders every primitive in every state with a live control bar for all seven axes. Reviewable at desktop 1280px and mobile 375px, dark and light.
+**Overnight run: M1 → M2 → M3, autonomous.** Started after M0 sign-off.
 
-**Verification (this machine)**
+### What to look at
 
-- `npm run lint` — clean (ESLint + check-voice + check-hex).
-- `npm run typecheck` — clean.
-- `npm test` — 14 passing (AA token-contrast over both themes; `useMotionSafe` + motion tokens).
-- `npm run build` — green; main JS 357 KB (112 KB gzip), well under the 800 KB budget.
-- `npm run e2e` — 4 passing (gallery screenshot baseline + axe, dark & light, desktop & mobile).
+- Run the app: `npm install` then `npm run dev`, open `http://localhost:3005`. Sign-in is mock (labelled) because there is no database yet — see BLOCKED below.
+- `/dev/gallery` still works (M0).
+- New screens land as milestones complete; this section will list exactly which routes are reviewable and which are still stubs.
 
-**Acceptance criteria**
+### Decisions / accounts I need from you
 
-- Gallery screenshot suite green in dark + light — ✅
-- axe clean — ✅ (`color-contrast` and `region` rules disabled with cause; AA covered by the token contrast unit test)
-- Token contrast AA — ✅ (`tests/tokens.contrast.test.ts`)
-- "Feels like the same family" — awaiting founder review of `/dev/gallery`.
+1. **Supabase project.** There is no cloud Supabase project and Docker is not installed on this machine, so I could not stand up a local database. Everything that needs a DB is written to spec and checked in, but **not executed**. To go live you need to: create a Supabase project (eu-west-2), run the migrations in `supabase/migrations/`, run the RLS tests in `supabase/tests/`, and put the URL + anon key in `.env`. Until then the app runs on a clearly-labelled in-memory mock service layer.
+2. **Git remote.** This repo has no remote configured, so I could not push. All work is committed locally. Add a remote (`git remote add origin …`) and I (or you) can push.
+3. **API keys** for M2 ingestion (Overpass is keyless; Companies House + Anthropic need keys) — logged AWAITING-KEYS; M2 ingestion runs in fixture mode without them.
 
-**Open items / what's next**
+### Status line
 
-- Screenshot baselines were captured on this Windows machine (`*-win32.png`). CI runs on Linux, so the Linux baselines (`*-linux.png`) must be generated once in that environment (run `npm run e2e:update` in the Playwright Linux container or via a one-off CI job) before the e2e check is meaningful on CI.
-- Next milestone: **M1 — Auth, communities, membership & trust rails.** Strictly sequential after M0. Do not start until the founder signs off on the gallery.
+- Milestone in progress: **see "Current milestone" below.**
+- Green at every commit: lint, typecheck, unit tests. Integration/RLS tests are BLOCKED (no DB) with the tests written.
 
-**Open questions**
+---
 
-- None blocking. M0 built strictly to spec; no feature screens, auth, or database work (correctly deferred to M1+).
+## BLOCKED (environment, not spec)
+
+- `BLOCKED: needs Supabase project` — no cloud project, and Docker is unavailable so `supabase start` (local stack) is not possible. All migrations, RLS policies, RLS tests, and RPCs are written per spec 03 and checked into `supabase/` but have **not** been executed. No integration or RLS test has been run; none are reported as passing.
+- `BLOCKED: no git remote` — cannot push; committing locally only.
+- `AWAITING-KEYS` — Companies House + Anthropic keys for M2 real ingestion; fixture mode covers the pipeline meanwhile.
+
+## DECISION-MADE (spec-consistent choices made without stopping)
+
+- **Mock service layer for no-DB dev.** Spec 09 mandates the `buildXService` + `useServices()` shape with Zod boundaries behind TanStack Query. With no DB, each service has a clearly-labelled in-memory implementation returning production-shaped data, selected at runtime when `VITE_SUPABASE_URL` is absent. The Supabase-backed implementation is written behind the same interface so the swap is one flag. Rationale: keeps every screen real and reviewable now (Law: no half-build), and makes the DB swap a single seam.
+
+---
+
+## Current milestone: M1 — Auth, communities, membership & trust rails (IN PROGRESS)
+
+Reading done: spec 03 (data model + RLS patterns), 04 (trust), 07 (onboarding/screens), 09 (auth). Building test-first per CLAUDE.md rule 4.
+
+- [ ] RLS tests written (cross-community isolation, DOB refusal, invite grants trust 1)
+- [ ] Migrations (extensions + helpers, structural tables, RLS policies, RPCs)
+- [ ] Seed horsmonden + dev fixture
+- [ ] Data layer (Supabase client + mock services + TanStack Query + session store)
+- [ ] Screens (shell + 5 tabs, welcome/auth/onboarding, Me + settings axes)
+
+---
+
+## Done
+
+### M0 — Foundation & design system ✅ (founder-approved)
+
+Scaffold, `design/tokens.ts` (spec 06), seven-axis theming cascade, motion library, hearth ambient, 33 primitives with mandatory fixes, `/dev/gallery`. Verified: lint / typecheck / 14 unit tests / build (112 KB gz) / e2e 4/4 (screenshots + axe, dark+light, desktop+mobile). Gallery reviewed and approved.
+
+_Note: the M0 e2e screenshot baselines are `*-win32.png` (this machine). CI on Linux needs `*-linux.png` generated once (`npm run e2e:update` in the Playwright Linux container)._
