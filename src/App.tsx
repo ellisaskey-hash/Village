@@ -4,10 +4,15 @@ import { AppBootstrap } from '@/app/AppBootstrap';
 import {
   AnonOnlyLayout,
   InviteRedirect,
+  RequireAdminLayout,
   RequireAuthLayout,
   RequireMembershipLayout,
 } from '@/app/Guards';
 import { AppShell } from '@/components/layout/AppShell';
+import { BusinessDetail } from '@/screens/directory/BusinessDetail';
+import { PlaceDetail } from '@/screens/directory/PlaceDetail';
+import { OrganisationDetail } from '@/screens/directory/OrganisationDetail';
+import { SeedingConsole } from '@/screens/admin/SeedingConsole';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { SignInScreen } from '@/screens/auth/SignInScreen';
 import { SignUpScreen } from '@/screens/auth/SignUpScreen';
@@ -64,7 +69,14 @@ export function App() {
               <Route path="/inbox" element={<InboxScreen />} />
               <Route path="/me" element={<MeScreen />} />
               <Route path="/me/settings" element={<SettingsScreen />} />
+              <Route path="/businesses/:id" element={<BusinessDetail />} />
+              <Route path="/places/:id" element={<PlaceDetail />} />
+              <Route path="/organisations/:id" element={<OrganisationDetail />} />
             </Route>
+          </Route>
+
+          <Route element={<RequireAdminLayout />}>
+            <Route path="/admin/seeding" element={<SeedingConsole />} />
           </Route>
 
           <Route

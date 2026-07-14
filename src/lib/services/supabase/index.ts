@@ -11,6 +11,7 @@ import type {
 import { joinSchema, signUpSchema } from '../contracts';
 import {
   DEFAULT_CONFIG,
+  type Business,
   type Community,
   type CommunityCard,
   type Identity,
@@ -18,10 +19,14 @@ import {
   type MemberSummary,
   type Membership,
   type MembershipSummary,
+  type Organisation,
+  type Place,
   type Profile,
+  type SeedProposal,
   type Session,
   type TrustLevel,
 } from '../types';
+import { horsmondenDrafts } from '@/lib/ingest/horsmondenFixture';
 import { getSupabase } from './client';
 
 // ---- row shapes + mappers ------------------------------------------------------
@@ -87,6 +92,54 @@ function mapCommunity(r: DbCommunity): Community {
     config: { ...DEFAULT_CONFIG, ...(r.config ?? {}) },
   };
 }
+interface DbPlace {
+  id: string; community_id: string; name: string; kind: Place['kind'];
+  description: string | null; address: string | null; photos: string[];
+  business_id: string | null; organisation_id: string | null; source: Place['source'];
+}
+interface DbBusiness {
+  id: string; community_id: string; owner_profile_id: string | null; name: string;
+  categories: string[]; description: string | null; contact: Business['contact'];
+  photos: string[]; is_home_business: boolean; serves_adjacent: boolean;
+  source: Business['source']; claimed_at: string | null; verified_at: string | null;
+}
+interface DbOrganisation {
+  id: string; community_id: string; name: string; kind: Organisation['kind'];
+  description: string | null; verified_source: boolean; source: Organisation['source'];
+}
+interface DbSeedProposal {
+  id: string; community_id: string; kind: SeedProposal['kind']; source: string;
+  payload: Record<string, unknown>; status: SeedProposal['status']; created_at: string;
+}
+
+function mapPlace(r: DbPlace): Place {
+  return {
+    id: r.id, communityId: r.community_id, name: r.name, kind: r.kind,
+    description: r.description, address: r.address, photos: r.photos ?? [],
+    businessId: r.business_id, organisationId: r.organisation_id, source: r.source,
+  };
+}
+function mapBusiness(r: DbBusiness): Business {
+  return {
+    id: r.id, communityId: r.community_id, ownerProfileId: r.owner_profile_id, name: r.name,
+    categories: r.categories ?? [], description: r.description, contact: r.contact ?? {},
+    photos: r.photos ?? [], isHomeBusiness: r.is_home_business, servesAdjacent: r.serves_adjacent,
+    source: r.source, claimedAt: r.claimed_at, verifiedAt: r.verified_at,
+  };
+}
+function mapOrganisation(r: DbOrganisation): Organisation {
+  return {
+    id: r.id, communityId: r.community_id, name: r.name, kind: r.kind,
+    description: r.description, verifiedSource: r.verified_source, source: r.source,
+  };
+}
+function mapProposal(r: DbSeedProposal): SeedProposal {
+  return {
+    id: r.id, communityId: r.community_id, kind: r.kind, source: r.source,
+    payload: r.payload, status: r.status, createdAt: r.created_at,
+  };
+}
+
 function mapMembership(r: DbMembership): Membership {
   return {
     id: r.id,
@@ -313,6 +366,93 @@ export function createSupabaseServices(): Services {
           vouched: profileId,
           community: communityId,
         });
+        if (error) throw error;
+      },
+    },
+
+    directory: {
+      async places(communityId: string) {
+        const { data, error } = await getSupabase().from('places').select('*').eq('community_id', communityId);
+        if (error) throw error;
+        return (data ?? []).map((r) => mapPlace(r as DbPlace));
+      },
+      async businesses(communityId: string) {
+        const { data, error } = await getSupabase().from('businesses').select('*').eq('community_id', communityId);
+        if (error) throw error;
+        return (data ?? []).map((r) => mapBusiness(r as DbBusiness));
+      },
+      async organisations(communityId: string) {
+        const { data, error } = await getSupabase().from('organisations').select('*').eq('community_id', communityId);
+        if (error) throw error;
+        return (data ?? []).map((r) => mapOrganisation(r as DbOrganisation));
+      },
+      async business(id: string) {
+        const { data, error } = await getSupabase().from('businesses').select('*').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data ? mapBusiness(data as DbBusiness) : null;
+      },
+      async place(id: string) {
+        const { data, error } = await getSupabase().from('places').select('*').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data ? mapPlace(data as DbPlace) : null;
+      },
+      async organisation(id: string) {
+        const { data, error } = await getSupabase().from('organisations').select('*').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data ? mapOrganisation(data as DbOrganisation) : null;
+      },
+    },
+
+    claims: {
+      async claim(businessId: string, evidence: string, linkToken?: string) {
+        const { error } = await getSupabase().rpc('claim_business', {
+          business_id: businessId,
+          evidence,
+          link_token: linkToken ?? null,
+        });
+        if (error) throw error;
+      },
+    },
+
+    seeding: {
+      async proposals(communityId: string) {
+        const { data, error } = await getSupabase()
+          .from('seed_proposals')
+          .select('*')
+          .eq('community_id', communityId)
+          .order('created_at', { ascending: true });
+        if (error) throw error;
+        return (data ?? []).map((r) => mapProposal(r as DbSeedProposal));
+      },
+      async runFixtureIngestion(communityId: string) {
+        // Fixture ingestion writes proposals only (spec 08). The live api/seed-ingest
+        // function does the same from real sources (AWAITING-KEYS).
+        const drafts = horsmondenDrafts();
+        const rows = drafts.map((d) => ({
+          community_id: communityId,
+          kind: d.kind,
+          source: d.source,
+          payload: d.payload,
+        }));
+        const { error } = await getSupabase().from('seed_proposals').insert(rows);
+        if (error) throw error;
+        return drafts.length;
+      },
+      async decide(proposalId: string, accept: boolean) {
+        const sb = getSupabase();
+        if (accept) {
+          const { error } = await sb.rpc('accept_seed_proposal', { proposal_id: proposalId });
+          if (error) throw error;
+        } else {
+          const { error } = await sb
+            .from('seed_proposals')
+            .update({ status: 'rejected', decided_at: new Date().toISOString() })
+            .eq('id', proposalId);
+          if (error) throw error;
+        }
+      },
+      async launch(communityId: string) {
+        const { error } = await getSupabase().rpc('launch_community', { id: communityId });
         if (error) throw error;
       },
     },

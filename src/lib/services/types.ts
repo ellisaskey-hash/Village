@@ -111,6 +111,76 @@ export interface Session {
   activeCommunityId: string | null;
 }
 
+// ---- M2 directory entities -----------------------------------------------------
+
+export type PlaceKind =
+  | 'shop' | 'pub' | 'cafe' | 'church' | 'hall' | 'school' | 'green' | 'sports'
+  | 'health' | 'service' | 'landmark' | 'transport' | 'utility' | 'other';
+export type OrganisationKind =
+  | 'council' | 'school' | 'pta' | 'church' | 'club' | 'charity' | 'group' | 'other';
+
+export interface Place {
+  id: string;
+  communityId: string;
+  name: string;
+  kind: PlaceKind;
+  description: string | null;
+  address: string | null;
+  photos: string[];
+  businessId: string | null;
+  organisationId: string | null;
+  source: 'seed' | 'member' | 'claimed';
+}
+
+export interface Business {
+  id: string;
+  communityId: string;
+  ownerProfileId: string | null;
+  name: string;
+  categories: string[];
+  description: string | null;
+  contact: { phone?: string; email?: string; website?: string };
+  photos: string[];
+  isHomeBusiness: boolean;
+  servesAdjacent: boolean;
+  source: 'seed' | 'self';
+  claimedAt: string | null;
+  verifiedAt: string | null;
+}
+
+export interface BusinessItem {
+  id: string;
+  businessId: string;
+  kind: 'product' | 'service' | 'offer';
+  title: string;
+  description: string | null;
+  pricePence: number | null;
+  active: boolean;
+}
+
+export interface Organisation {
+  id: string;
+  communityId: string;
+  name: string;
+  kind: OrganisationKind;
+  description: string | null;
+  verifiedSource: boolean;
+  source: 'seed' | 'self';
+}
+
+export type ProposalKind = 'place' | 'business' | 'organisation' | 'event';
+export type ProposalStatus = 'pending' | 'accepted' | 'rejected' | 'merged';
+
+export interface SeedProposal {
+  id: string;
+  communityId: string;
+  kind: ProposalKind;
+  source: string;
+  payload: Record<string, unknown>;
+  status: ProposalStatus;
+  createdAt: string;
+}
+
 export const DEFAULT_CONFIG: CommunityConfig = {
   coldDmMinTrust: 1,
   listingCapT0: 2,

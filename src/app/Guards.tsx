@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useParams } from 'react-router-dom';
 import { BrandLogo } from '@/components/ui';
 import { useSession, useSessionStore } from '@/app/state/session';
+import { useServices } from '@/lib/services/provider';
 
 function Splash() {
   return (
@@ -34,6 +35,21 @@ export function AnonOnlyLayout() {
   const session = useSession();
   if (status === 'loading') return <Splash />;
   if (session && session.memberships.length > 0) return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
+/**
+ * Platform admin routes (spec 07 — admin is a route tree, not the shell). Access needs
+ * `platform_role='admin'`; in demo mode (no DB) it's open so the seeding console is
+ * reviewable. The real gate is enforced by RLS + Edge middleware regardless.
+ */
+export function RequireAdminLayout() {
+  const status = useSessionStore((s) => s.status);
+  const session = useSession();
+  const { isMock } = useServices();
+  if (status === 'loading') return <Splash />;
+  if (status === 'anonymous' || !session) return <Navigate to="/welcome" replace />;
+  if (!isMock && session.profile.platformRole !== 'admin') return <Navigate to="/" replace />;
   return <Outlet />;
 }
 

@@ -2,13 +2,17 @@
 // Supabase-backed implementation are interchangeable behind one flag (spec 09 §Server state).
 import { z } from 'zod';
 import type {
+  Business,
   Community,
   CommunityCard,
   Identity,
   Invite,
   MemberSummary,
   Membership,
+  Organisation,
+  Place,
   Profile,
+  SeedProposal,
   Session,
 } from './types';
 
@@ -83,6 +87,28 @@ export interface VouchService {
   vouchFor(profileId: string, communityId: string): Promise<void>;
 }
 
+export interface DirectoryService {
+  places(communityId: string): Promise<Place[]>;
+  businesses(communityId: string): Promise<Business[]>;
+  organisations(communityId: string): Promise<Organisation[]>;
+  business(id: string): Promise<Business | null>;
+  place(id: string): Promise<Place | null>;
+  organisation(id: string): Promise<Organisation | null>;
+}
+
+export interface ClaimService {
+  /** Self-serve claim; a valid `linkToken` auto-approves (pre-launch claim link, spec 08). */
+  claim(businessId: string, evidence: string, linkToken?: string): Promise<void>;
+}
+
+export interface SeedingService {
+  proposals(communityId: string): Promise<SeedProposal[]>;
+  /** Runs the checked-in fixture ingestion; returns the number of proposals created. */
+  runFixtureIngestion(communityId: string): Promise<number>;
+  decide(proposalId: string, accept: boolean): Promise<void>;
+  launch(communityId: string): Promise<void>;
+}
+
 export interface Services {
   /** True when running on the in-memory mock (no database). Screens surface a labelled banner. */
   readonly isMock: boolean;
@@ -92,4 +118,7 @@ export interface Services {
   memberships: MembershipService;
   invites: InviteService;
   vouches: VouchService;
+  directory: DirectoryService;
+  claims: ClaimService;
+  seeding: SeedingService;
 }

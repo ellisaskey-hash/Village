@@ -16,10 +16,13 @@ import type {
   MemberSummary,
   Membership,
   MembershipSummary,
+  OrganisationKind,
+  PlaceKind,
   Profile,
   Session,
   TrustLevel,
 } from '../types';
+import { horsmondenDrafts } from '@/lib/ingest/horsmondenFixture';
 import {
   db,
   getCurrentProfileId,
@@ -277,6 +280,125 @@ export function createMockServices(): Services {
         }
         const count = d.vouches.filter((v) => v.vouchedId === profileId && v.communityId === communityId).length;
         target.trustLevel = Math.max(target.trustLevel, count >= 2 ? 2 : 1) as TrustLevel;
+        persist();
+      },
+    },
+
+    directory: {
+      async places(communityId) {
+        return db().places.filter((p) => p.communityId === communityId);
+      },
+      async businesses(communityId) {
+        return db().businesses.filter((b) => b.communityId === communityId);
+      },
+      async organisations(communityId) {
+        return db().organisations.filter((o) => o.communityId === communityId);
+      },
+      async business(id) {
+        return db().businesses.find((b) => b.id === id) ?? null;
+      },
+      async place(id) {
+        return db().places.find((p) => p.id === id) ?? null;
+      },
+      async organisation(id) {
+        return db().organisations.find((o) => o.id === id) ?? null;
+      },
+    },
+
+    claims: {
+      async claim(businessId, _evidence, _linkToken) {
+        const profileId = requireProfileId();
+        const d = db();
+        const b = d.businesses.find((x) => x.id === businessId);
+        if (!b) throw new Error('business not found');
+        if (b.ownerProfileId) throw new Error('this page is already claimed');
+        // Demo: no admin exists in the mock, so a claim auto-approves. The real path is
+        // claim_business -> admin decide_claim (or link auto-approve).
+        b.ownerProfileId = profileId;
+        b.claimedAt = nowIso();
+        b.source = 'self';
+        persist();
+      },
+    },
+
+    seeding: {
+      async proposals(communityId) {
+        return db().seedProposals.filter((p) => p.communityId === communityId);
+      },
+      async runFixtureIngestion(communityId) {
+        const d = db();
+        const drafts = horsmondenDrafts();
+        for (const draft of drafts) {
+          d.seedProposals.push({
+            id: uid(),
+            communityId,
+            kind: draft.kind,
+            source: draft.source,
+            payload: draft.payload,
+            status: 'pending',
+            createdAt: nowIso(),
+          });
+        }
+        persist();
+        return drafts.length;
+      },
+      async decide(proposalId, accept) {
+        const d = db();
+        const p = d.seedProposals.find((x) => x.id === proposalId);
+        if (!p) throw new Error('proposal not found');
+        if (p.status !== 'pending') throw new Error('proposal already decided');
+        const pay = p.payload;
+        const str = (k: string): string | null => (pay[k] != null ? String(pay[k]) : null);
+        if (accept) {
+          if (p.kind === 'place') {
+            d.places.push({
+              id: uid(),
+              communityId: p.communityId,
+              name: String(pay.name),
+              kind: (str('kind') as PlaceKind) ?? 'other',
+              description: str('description'),
+              address: str('address'),
+              photos: [],
+              businessId: null,
+              organisationId: null,
+              source: 'seed',
+            });
+          } else if (p.kind === 'business') {
+            d.businesses.push({
+              id: uid(),
+              communityId: p.communityId,
+              ownerProfileId: null,
+              name: String(pay.name),
+              categories: Array.isArray(pay.categories) ? (pay.categories as string[]) : [],
+              description: str('description'),
+              contact: {},
+              photos: [],
+              isHomeBusiness: false,
+              servesAdjacent: true,
+              source: 'seed',
+              claimedAt: null,
+              verifiedAt: null,
+            });
+          } else if (p.kind === 'organisation') {
+            d.organisations.push({
+              id: uid(),
+              communityId: p.communityId,
+              name: String(pay.name),
+              kind: (str('kind') as OrganisationKind) ?? 'group',
+              description: str('description'),
+              verifiedSource: Boolean(pay.verified_source),
+              source: 'seed',
+            });
+          }
+          p.status = 'accepted';
+        } else {
+          p.status = 'rejected';
+        }
+        persist();
+      },
+      async launch(communityId) {
+        const c = db().communities.find((x) => x.id === communityId);
+        if (c) c.status = 'launched';
         persist();
       },
     },

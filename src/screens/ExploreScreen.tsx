@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
 import { EmptyState, SegmentedControl } from '@/components/ui';
 import { useActiveMembership } from '@/app/state/session';
+import { DirectoryView } from '@/screens/directory/DirectoryView';
 
 type Section = 'listings' | 'requests' | 'events' | 'directory';
 
@@ -14,7 +16,11 @@ const EMPTY: Record<Section, { icon: 'listings' | 'requests' | 'events' | 'place
 };
 
 export function ExploreScreen() {
-  const [section, setSection] = useState<Section>('listings');
+  const [params] = useSearchParams();
+  const initial = (params.get('tab') as Section | null) ?? 'listings';
+  const [section, setSection] = useState<Section>(
+    ['listings', 'requests', 'events', 'directory'].includes(initial) ? initial : 'listings',
+  );
   const active = useActiveMembership();
   const e = EMPTY[section];
 
@@ -42,7 +48,11 @@ export function ExploreScreen() {
         ]}
       />
 
-      <EmptyState icon={e.icon} title={e.title} body={e.body} />
+      {section === 'directory' ? (
+        <DirectoryView />
+      ) : (
+        <EmptyState icon={e.icon} title={e.title} body={e.body} />
+      )}
     </motion.div>
   );
 }

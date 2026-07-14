@@ -1,7 +1,17 @@
 // In-memory mock database, persisted to localStorage so a review session survives reloads.
 // This is the clearly-labelled no-DB implementation (PROGRESS.md DECISION-MADE). It mirrors
 // the Postgres schema + RPC behaviour closely enough to exercise every M1 screen.
-import { DEFAULT_CONFIG, type Community, type Invite, type Membership, type Profile } from '../types';
+import {
+  DEFAULT_CONFIG,
+  type Business,
+  type Community,
+  type Invite,
+  type Membership,
+  type Organisation,
+  type Place,
+  type Profile,
+  type SeedProposal,
+} from '../types';
 
 interface AuthRow {
   id: string;
@@ -21,6 +31,10 @@ export interface MockDb {
   memberships: Membership[];
   invites: Invite[];
   vouches: VouchRow[];
+  places: Place[];
+  businesses: Business[];
+  organisations: Organisation[];
+  seedProposals: SeedProposal[];
 }
 
 const DB_KEY = 'local:mock-db';
@@ -67,6 +81,10 @@ function seed(): MockDb {
     memberships: [],
     invites: [],
     vouches: [],
+    places: [],
+    businesses: [],
+    organisations: [],
+    seedProposals: [],
   };
 }
 
