@@ -63,6 +63,20 @@ Author/admin. Generates `p_count` future instances from the parent's `recurrence
 ### `promote_waitlist(p_event_id uuid) → void`
 Internal (called by `set_rsvp`). Promotes earliest waitlisted RSVPs into freed capacity and notifies them.
 
+## M5 (migration 20260714050002)
+
+### `post_alert(p_community, p_tier, p_category, p_title, p_body?, p_as_org?) → alerts`
+Tier-validated: community by trust; verified requires acting-as an officer of a `verified_source` org; platform requires admin. Inserts the alert, fans out in-app notifications with a single set-based INSERT (respecting per-member category prefs; emergency ignores prefs), and enqueues a `push_fanout_queue` row. Proven live 15/15 (`scripts/db/verify-m5.mjs`).
+
+### `resolve_alert(p_id) → void`
+Author / org-officer / admin. Stamps `resolved_at`, enqueues a resolution push ("… — resolved").
+
+### `drain_fanout(p_batch=100) → int`
+Admin/cron. Drains pending queue rows; per row, a set-based insert into `push_dispatch_log` for every subscription of opted-in members, skipping quiet-hours unless the alert bypasses (emergency). 200-subscription fan-out completes in ~200ms (no per-send loop).
+
+### `in_quiet_hours(qh) → boolean` / `alert_notif_key(tier, category) → text`
+Helpers used by the fan-out.
+
 ## Planned (later milestones)
 
-`post_alert` · `report_target` · `admin_moderate` · `global_search`.
+`report_target` · `admin_moderate` · `global_search`.
