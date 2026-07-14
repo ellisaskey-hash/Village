@@ -18,6 +18,12 @@ import { ThreadScreen } from '@/screens/content/ThreadScreen';
 import { EventDetail } from '@/screens/events/EventDetail';
 import { EquipmentDetail } from '@/screens/directory/EquipmentDetail';
 import { SeedingConsole } from '@/screens/admin/SeedingConsole';
+import { AdminLayout } from '@/screens/admin/AdminLayout';
+import { AdminDashboard } from '@/screens/admin/AdminDashboard';
+import { ReportsQueue } from '@/screens/admin/ReportsQueue';
+import { HiddenQueue, DelaysQueue, ModerationLog } from '@/screens/admin/AdminQueues';
+import { MembersQueue } from '@/screens/admin/MembersQueue';
+import { CommunityConfig } from '@/screens/admin/CommunityConfig';
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { SignInScreen } from '@/screens/auth/SignInScreen';
 import { SignUpScreen } from '@/screens/auth/SignUpScreen';
@@ -108,6 +114,15 @@ export function App() {
           </Route>
 
           <Route element={<RequireAdminLayout />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/reports" element={<ReportsQueue />} />
+              <Route path="/admin/hidden" element={<HiddenQueue />} />
+              <Route path="/admin/delays" element={<DelaysQueue />} />
+              <Route path="/admin/members" element={<MembersQueue />} />
+              <Route path="/admin/log" element={<ModerationLog />} />
+              <Route path="/admin/config" element={<CommunityConfig />} />
+            </Route>
             <Route path="/admin/seeding" element={<SeedingConsole />} />
           </Route>
 

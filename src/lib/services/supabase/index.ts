@@ -55,8 +55,19 @@ import {
   type ThreadContext,
   type ThreadSummary,
   type TrustLevel,
+  type AdminDashboard,
+  type AdminMember,
+  type FirstPostDelay,
+  type HiddenItem,
+  type ModerationAction,
+  type ModerationLogEntry,
+  type ModerationTargetKind,
+  type Report,
+  type TriageSuggestion,
 } from '../types';
+import { reportSchema } from '../contracts';
 import { horsmondenDrafts } from '@/lib/ingest/horsmondenFixture';
+import { triageReport } from '@/lib/moderation/triage';
 import { getSupabase } from './client';
 
 // ---- row shapes + mappers ------------------------------------------------------
@@ -93,6 +104,7 @@ interface DbMembership {
   joined_via: Membership['joinedVia'];
   identities: Identity[];
   status: Membership['status'];
+  suspended_until: string | null;
   created_at: string;
 }
 
@@ -175,25 +187,25 @@ function mapProposal(r: DbSeedProposal): SeedProposal {
 interface DbListing {
   id: string; community_id: string; created_by: string; kind: Listing['kind']; title: string;
   description: string | null; category: string; price_pence: number | null; status: ListingStatus;
-  created_at: string; profiles?: { display_name: string } | null;
+  created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null;
 }
 interface DbRequest {
   id: string; community_id: string; created_by: string; title: string; description: string | null;
   category: RequestPost['category']; status: RequestStatus; needed_by: string | null;
-  fulfilled_by: string | null; created_at: string; profiles?: { display_name: string } | null;
+  fulfilled_by: string | null; created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null;
 }
 function mapListing(r: DbListing): Listing {
   return {
     id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
     kind: r.kind, title: r.title, description: r.description, category: r.category,
-    pricePence: r.price_pence, status: r.status, createdAt: r.created_at,
+    pricePence: r.price_pence, status: r.status, hidden: Boolean(r.hidden_at), createdAt: r.created_at,
   };
 }
 function mapRequest(r: DbRequest): RequestPost {
   return {
     id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
     title: r.title, description: r.description, category: r.category, status: r.status,
-    neededBy: r.needed_by, fulfilledBy: r.fulfilled_by, createdAt: r.created_at,
+    neededBy: r.needed_by, fulfilledBy: r.fulfilled_by, hidden: Boolean(r.hidden_at), createdAt: r.created_at,
   };
 }
 const LISTING_SELECT = '*, profiles!listings_created_by_fkey(display_name)';
@@ -258,6 +270,7 @@ function mapMembership(r: DbMembership): Membership {
     joinedVia: r.joined_via,
     identities: r.identities ?? [],
     status: r.status,
+    suspendedUntil: r.suspended_until ?? null,
     createdAt: r.created_at,
   };
 }
@@ -852,5 +865,127 @@ export function createSupabaseServices(): Services {
         });
       },
     },
+
+    moderation: {
+      async report(input) {
+        const p = reportSchema.parse(input);
+        const { error } = await getSupabase().rpc('report_target', {
+          p_kind: p.targetKind, p_id: p.targetId, p_reason: p.reason, p_note: p.note ?? null,
+        });
+        if (error) throw error;
+      },
+      async reports(communityId): Promise<Report[]> {
+        const { data, error } = await getSupabase().rpc('admin_reports', { p_cid: communityId });
+        if (error) throw error;
+        return ((data ?? []) as DbAdminReport[]).map((r) => ({
+          id: r.id, communityId: r.community_id, reporterId: r.reporter_id, reporterName: r.reporter_name,
+          targetKind: r.target_kind as ModerationTargetKind, targetId: r.target_id, targetLabel: r.target_label,
+          reason: r.reason as Report['reason'], note: r.note, priority: r.priority, status: r.status as Report['status'],
+          reportCount: Number(r.report_count), createdAt: r.created_at,
+        }));
+      },
+      async decide(reportId, uphold) {
+        const { error } = await getSupabase().rpc('decide_report', { p_report_id: reportId, p_uphold: uphold });
+        if (error) throw error;
+      },
+      async moderate(action, targetKind, targetId, detail = {}) {
+        const { error } = await getSupabase().rpc('admin_moderate', {
+          p_action: action, p_kind: targetKind, p_id: targetId, p_detail: detail,
+        });
+        if (error) throw error;
+      },
+      async log(communityId): Promise<ModerationLogEntry[]> {
+        const { data, error } = await getSupabase().rpc('admin_moderation_log', { p_cid: communityId });
+        if (error) throw error;
+        return ((data ?? []) as DbAdminLog[]).map((a) => ({
+          id: a.id, communityId: a.community_id, actorId: a.actor_id, actorName: a.actor_name,
+          targetKind: a.target_kind, targetId: a.target_id, action: a.action as ModerationAction,
+          detail: a.detail ?? {}, createdAt: a.created_at,
+        }));
+      },
+      async hidden(communityId): Promise<HiddenItem[]> {
+        const { data, error } = await getSupabase().rpc('admin_hidden', { p_cid: communityId });
+        if (error) throw error;
+        return ((data ?? []) as DbHidden[]).map((h) => ({
+          kind: h.kind as ModerationTargetKind, id: h.id, title: h.title, reason: h.reason, hiddenAt: h.hidden_at,
+        }));
+      },
+      async delays(communityId): Promise<FirstPostDelay[]> {
+        const { data, error } = await getSupabase().rpc('admin_delays', { p_cid: communityId });
+        if (error) throw error;
+        return ((data ?? []) as DbDelay[]).map((d) => ({
+          id: d.id, profileId: d.profile_id, profileName: d.profile_name, contentKind: d.content_kind,
+          contentId: d.content_id, releaseAt: d.release_at, releasedAt: d.released_at,
+        }));
+      },
+      async releaseDelay(delayId) {
+        const { error } = await getSupabase().rpc('release_delay', { p_id: delayId });
+        if (error) throw error;
+      },
+      async members(communityId): Promise<AdminMember[]> {
+        const { data, error } = await getSupabase().rpc('admin_members', { p_cid: communityId });
+        if (error) throw error;
+        return ((data ?? []) as DbAdminMember[]).map((m) => ({
+          profileId: m.profile_id, displayName: m.display_name, avatarUrl: m.avatar_url,
+          trustLevel: m.trust_level as TrustLevel, status: m.status as AdminMember['status'],
+          suspendedUntil: m.suspended_until, joinedAt: m.joined_at, upheldReports: Number(m.upheld_reports),
+        }));
+      },
+      async dashboard(communityId): Promise<AdminDashboard> {
+        const { data, error } = await getSupabase().rpc('admin_dashboard', { p_cid: communityId });
+        if (error) throw error;
+        const d = (data ?? {}) as Partial<AdminDashboard>;
+        return {
+          openReports: d.openReports ?? 0, priorityReports: d.priorityReports ?? 0, hiddenItems: d.hiddenItems ?? 0,
+          pendingClaims: d.pendingClaims ?? 0, delayedPosts: d.delayedPosts ?? 0,
+          newMembersToday: d.newMembersToday ?? 0, activeAlerts: d.activeAlerts ?? 0,
+        };
+      },
+      async config(communityId, patch): Promise<Community> {
+        const { data, error } = await getSupabase().rpc('admin_set_config', {
+          p_cid: communityId, p_config: patch as Record<string, unknown>,
+        });
+        if (error) throw error;
+        return mapCommunity(data as DbCommunity);
+      },
+      async triage(reportId): Promise<TriageSuggestion> {
+        const rows = await getSupabase().from('reports').select('reason,note').eq('id', reportId).maybeSingle();
+        const r = rows.data as { reason: string; note: string | null } | null;
+        return triageReport({ reason: r?.reason ?? 'other', note: r?.note ?? null });
+      },
+    },
+
+    account: {
+      async export(): Promise<Record<string, unknown>> {
+        const { data, error } = await getSupabase().rpc('export_account');
+        if (error) throw error;
+        return (data ?? {}) as Record<string, unknown>;
+      },
+      async delete() {
+        const sb = getSupabase();
+        const { error } = await sb.rpc('delete_account');
+        if (error) throw error;
+        await sb.auth.signOut();
+      },
+    },
   };
+}
+
+interface DbAdminReport {
+  id: string; community_id: string; reporter_id: string; reporter_name: string; target_kind: string;
+  target_id: string; target_label: string | null; reason: string; note: string | null; priority: boolean;
+  status: string; report_count: number | string; created_at: string;
+}
+interface DbAdminLog {
+  id: string; community_id: string; actor_id: string | null; actor_name: string; target_kind: string;
+  target_id: string; action: string; detail: Record<string, unknown> | null; created_at: string;
+}
+interface DbHidden { kind: string; id: string; title: string; reason: string | null; hidden_at: string }
+interface DbDelay {
+  id: string; profile_id: string; profile_name: string; content_kind: string; content_id: string;
+  release_at: string; released_at: string | null;
+}
+interface DbAdminMember {
+  profile_id: string; display_name: string; avatar_url: string | null; trust_level: number; status: string;
+  suspended_until: string | null; joined_at: string; upheld_reports: number | string;
 }

@@ -16,6 +16,7 @@ async function joinHorsmonden(page: Page) {
   await page.getByLabel('Date of birth').fill('1980-01-01');
   await page.getByLabel('I agree to the community standard').check({ force: true });
   await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: /good neighbour/ }).click();
   await page.getByRole('button', { name: /Enter Horsmonden/ }).click();
   await expect(page.getByRole('heading', { name: /Good to see you/ })).toBeVisible();
 }

@@ -13,7 +13,8 @@ import {
 } from '@/app/state/a11y';
 import { useServices } from '@/lib/services/provider';
 import { useSession, useSessionStore } from '@/app/state/session';
-import { Button, Card, IconButton, SegmentedControl, Toggle, useToasts } from '@/components/ui';
+import { Button, Card, IconButton, Modal, SegmentedControl, Toggle, useToasts } from '@/components/ui';
+import { errorMessage } from '@/lib/errors';
 import type { DmPrivacy } from '@/lib/services/types';
 
 const NOTIF_PREFS: { key: string; label: string }[] = [
@@ -54,7 +55,41 @@ export function SettingsScreen() {
   } = useA11yStore();
 
   const [pushBusy, setPushBusy] = useState(false);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const [removeBusy, setRemoveBusy] = useState(false);
   const prefs = session?.profile.notificationPrefs ?? {};
+
+  async function exportData() {
+    setExportBusy(true);
+    try {
+      const data = await services.account.export();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'my-local-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      push({ title: 'Your data is downloading', variant: 'success' });
+    } catch (e) {
+      push({ title: errorMessage(e), variant: 'error' });
+    } finally {
+      setExportBusy(false);
+    }
+  }
+
+  async function removeAccount() {
+    setRemoveBusy(true);
+    try {
+      await services.account.delete();
+      setSession(null);
+      navigate('/welcome');
+    } catch (e) {
+      push({ title: errorMessage(e), variant: 'error' });
+      setRemoveBusy(false);
+    }
+  }
 
   async function patchProfile(patch: {
     dmPrivacy?: DmPrivacy;
@@ -218,6 +253,40 @@ export function SettingsScreen() {
           </div>
         </Card>
       </section>
+
+      <section>
+        <h2 className="mb-2 text-h3 font-semibold text-text">Your data</h2>
+        <Card className="space-y-3">
+          <p className="text-small text-textMuted">
+            Take a copy of your data at any time, or close your account. When you close it, your
+            name and details are removed and your posts show as from a former neighbour, so
+            conversations others took part in still make sense.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" leadingIcon="image" loading={exportBusy} onClick={exportData}>
+              Download my data
+            </Button>
+            <Button variant="ghost" size="sm" leadingIcon="remove" onClick={() => setRemoveOpen(true)}>
+              Remove my account
+            </Button>
+          </div>
+        </Card>
+      </section>
+
+      <Modal
+        open={removeOpen}
+        onClose={() => setRemoveOpen(false)}
+        title="Remove your account?"
+        hero={{ icon: 'alert', tone: 'warn' }}
+        destructive
+        secondary={{ label: 'Keep my account', onClick: () => setRemoveOpen(false) }}
+        primary={{ label: 'Remove account', onClick: removeAccount, loading: removeBusy, leadingIcon: 'remove' }}
+      >
+        <p className="text-body text-textMuted">
+          This signs you out and removes your name, email and profile. It cannot be undone. Your
+          posts stay so conversations make sense, but they will no longer show your name.
+        </p>
+      </Modal>
     </motion.div>
   );
 }

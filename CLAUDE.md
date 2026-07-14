@@ -19,9 +19,11 @@ You are building **Local**, a location-centric community platform (working name;
 
 ## Current state
 
-**M0–M6 complete; database live; security proven (53/53); DEPLOYED.** Everything through global search + public landing is built. All migrations applied to the real Supabase project (**eu-north-1**); RLS proven live 53/53 (`verify-security` 26, `verify-m4` 12, `verify-m5` 15). Deployed at **https://village-tau-mauve.vercel.app** (real Postgres); custom push service worker shipped; landing Lighthouse mobile 96/96/100/91. The app uses real Supabase when `.env` is present, else a labelled mock (CI/mock e2e stay green). Local: lint / typecheck / 32 unit tests / build / 14 mock e2e all green; 21 commits on GitHub.
+**M0–M7 complete; database live; security proven (66/66); DEPLOYED.** Everything through moderation + the admin console is built. All migrations applied to the real Supabase project (**eu-north-1**); RLS/behaviour proven live 66/66 (`verify-security` 26, `verify-m4` 12, `verify-m5` 15, `verify-m7` 13). Deployed at **https://village-tau-mauve.vercel.app** (real Postgres); custom push service worker shipped; landing Lighthouse mobile 96/96/100/91. The app uses real Supabase when `.env` is present, else a labelled mock (CI/mock e2e stay green). Local: lint / typecheck / 35 unit tests / build all green.
 
-**Open (needs founder):** (1) CI is off — the PAT lacks the `workflow` scope, so the workflow is parked at `docs/ci/github-actions-ci.yml` (add the scope + `git mv` it into `.github/workflows/`). (2) Gate 3's real-device push confirmation — one on-phone test (steps in `/docs/PROGRESS.md` MORNING REVIEW). Next buildable milestone: **M7 (moderation, safety, admin console)**.
+**M7 recap:** reports + auto-hide, `admin_moderate` (suspension blocks writes not reads — the live run caught a reads-stripped bug and it was fixed forward), first-post delay queue, advisory moderation-triage (fixture mode, AWAITING-KEYS), full `/admin` console, shared ReportSheet + UK escalation signposting, community-standard onboarding screen, GDPR export/delete. Admin test account `admin@thelocal.test` / `Local-admin-2026` provisioned live with a seeded scenario.
+
+**Open (needs founder):** (1) CI is off — the PAT lacks the `workflow` scope, so the workflow is parked at `docs/ci/github-actions-ci.yml` (add the scope + `git mv` it into `.github/workflows/`). (2) Gate 3's real-device push confirmation — one on-phone test (steps in `/docs/PROGRESS.md` MORNING REVIEW). (3) `ANTHROPIC_API_KEY` in Vercel to flip moderation-triage from fixture to live AI. Next buildable milestone: **M8 (offline/PWA hardening + launch checklist)**.
 
 Run it: deployed URL above, or `npm install` + `npm run dev`. Sign in `rlstest+alice@example.com` / `password123`.
 

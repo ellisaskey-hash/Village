@@ -42,3 +42,13 @@ The living reference is `/dev/gallery` (dark + light, all states). Screenshot ba
 | BrandLogo | BrandLogo.tsx | The Local mark | SVG stops read `var(--c-accent/…)` — re-colours with theme/skin/accent |
 
 Shared: `tones.ts` (badge tone → CSS-var classes), `primitiveProps.ts` (framer-safe native prop omissions).
+
+## M7 domain — moderation (`components/moderation/`, see its README)
+
+| Component | File | Role | Notes |
+|---|---|---|---|
+| ReportSheet | ReportSheet.tsx | The one shared Report affordance | seven reasons; `unsafe` surfaces `EscalationNotice`; posts via `services.moderation.report` |
+| ReportButton | ReportButton.tsx | Opens ReportSheet from a row/detail | `icon` or `text` variant; self-contained open state |
+| EscalationNotice | ReportSheet.tsx | UK duty-of-care signposting | 999 / 112 / 101 / Childline / Samaritans; reused anywhere safety copy is needed |
+
+Admin console screens (`screens/admin/`, platform-role gated): `AdminLayout` (header + section nav + Outlet), `AdminDashboard`, `ReportsQueue` (+ advisory triage), `HiddenQueue` / `DelaysQueue` / `ModerationLog` (`AdminQueues.tsx`), `MembersQueue`, `CommunityConfig`. Plain-English enum labels in `moderationCopy.ts`. Onboarding `CommunityStandard` (`screens/auth/`) is the one-screen standard shown before identity setup.

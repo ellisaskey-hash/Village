@@ -4,8 +4,9 @@
 
 - **M0 gallery ✓ passed** (founder-approved).
 - **Gate 2 — M3 + DB security proof ✓ MET.** M0–M3 built; DB wired; RLS proven live (53/53 incl. M4/M5).
-- **Gate 3 — M5 deployed PWA on your phone (real-device push). ← CURRENT — one hands-on step left (you, on your phone).** Deployed live at **https://village-tau-mauve.vercel.app**; PWA is installable (manifest + SW + icons verified); custom push service worker shipped; landing Lighthouse (mobile) perf 96 / a11y 96 / best-practices 100 / SEO 91 (all ≥90). The only thing I can't do headlessly is confirm a push actually lands on a physical device — see the phone test steps below. AWAITING-ELLIS.
-- Gate 4 — M7 real Horsmonden ingestion review. Not yet.
+- **Gate 3 — M5 deployed PWA on your phone (real-device push). ← one hands-on step left (you, on your phone).** Deployed live at **https://village-tau-mauve.vercel.app**; PWA is installable (manifest + SW + icons verified); custom push service worker shipped; landing Lighthouse (mobile) perf 96 / a11y 96 / best-practices 100 / SEO 91 (all ≥90). The only thing I can't do headlessly is confirm a push actually lands on a physical device — see the phone test steps below. AWAITING-ELLIS.
+- **M7 — moderation, safety, admin console ✓ BUILT + proven live (13/13, `scripts/db/verify-m7.mjs`).** Reports + auto-hide, admin_moderate, suspension (writes-blocked/reads-kept), first-post delay queue, moderation-triage (advisory, fixture mode — AWAITING-KEYS), full `/admin` console, ReportSheet + escalation signposting, community-standard onboarding screen, GDPR export/delete. Admin walkthrough + creds in Morning Review.
+- Gate 4 — M7 real Horsmonden ingestion review. Not yet (needs live ingestion keys).
 - Gate 5 — M8 launch checklist. Not yet.
 
 ---
@@ -26,6 +27,21 @@
 6. **Expect:** a notification with that title/body. **Tapping it** opens the app at the deep link (Home, or Explore→Events). The sender also auto-cleans any expired subscriptions (404/410).
    - You can also exercise the real fan-out end-to-end: as an admin, post an alert in-app → it enqueues; the delivery half is `push-send.mjs` (a Vercel cron will call it in M8).
 
+### 🛡️ M7 — walk the admin console (live, on the deployed URL)
+
+**Admin account (already provisioned live):** **`admin@thelocal.test`** / **`Local-admin-2026`** — platform admin, and steward of Dev Village. I seeded a real scenario for you to act on (re-runnable any time with `node scripts/db/seed-admin.mjs`): one listing, *"DEMO Cheap iPhones, cash only"*, reported 3 times → auto-hidden.
+
+1. Sign in as the admin above, then **Me → Admin console** (or go straight to **`/admin`**).
+2. **Dashboard:** the tiles show today's numbers — Open reports, Priority, Hidden, and so on. Tap a tile to jump to its queue.
+3. **Reports:** you'll see the DEMO listing (3 reports). Tap it → detail with the reporter's note and an **advisory triage suggestion** (rule-based today; it says so — it flips to AI when an `ANTHROPIC_API_KEY` is set). Choose **Dismiss** or **Uphold and hide**.
+4. **Hidden:** the auto-hidden listing is here with **Restore** / **Keep hidden**. Restore un-hides it (and logs the action).
+5. **Members:** tap a member → set their **trust** level, or **Pause** their posting (7 or 30 days). Pausing blocks posting but not reading — that's proven live. Every change is logged.
+6. **Action log:** every action, automatic or human, most recent first — including the auto-hide from step 3. This is the audit trail.
+7. **First posts:** the trust-0 delay queue. Empty by design (it's config-gated off; turn it on per community with `firstPostDelayMinutes` in **Config**).
+8. **Config:** edit the community's thresholds (reports-before-auto-hide, trust gates). Saves live.
+9. **Report affordance (member side):** as any non-author member, open a listing or request → the **Report** button (top-right) opens the shared sheet. Pick **"Someone may be at risk"** to see the 999/101/Childline/Samaritans escalation banner appear before you send.
+10. **GDPR (member side):** **Me → Settings → Your data** → **Download my data** (JSON) and **Remove my account** (confirm → your name is anonymised, posts survive, you're signed out).
+
 ### What else to look at
 
 - **The deployed app** (or locally: `.env` present → `npm run dev`). Post requests/listings/events/alerts/equipment/services via **+**; RSVP an event; **search** (header icon or `/` key) returns ranked mixed-kind results; **Home** shows live alerts, events, requests, listings; **Me → Settings** for the 6 axes + notification prefs.
@@ -38,6 +54,7 @@
 - **Real-device push confirmation** (gate 3, step above) — everything server-side is wired + deployed; only a physical device can confirm delivery (headless Chromium has no push service).
 - **Vercel region:** the deploy defaults to `iad1`/auto; the **Supabase DB is in eu-north-1** (Stockholm). At launch, set the Vercel project + any functions region to `arn1` (Stockholm) to sit next to the database. (Spec said lhr1/eu-west-2, but the actual DB is eu-north-1.)
 - **UI signup email validation** (test project): relax email validation / turn off "Confirm email" in the Supabase dashboard if you want to create accounts through the UI.
+- **Moderation-triage AI (AWAITING-KEYS).** Built as a real seam: client `src/lib/moderation/triage.ts` + Vercel function `api/moderation-triage.ts` (forced tool-use, Haiku). With **no `ANTHROPIC_API_KEY`** it returns a transparent rule-based fixture marked "advisory, rule-based". Set `ANTHROPIC_API_KEY` in the Vercel env to switch it to live AI. It never auto-acts — advisory only.
 - **Map view** (M2) and **real ingestion APIs** (AWAITING-KEYS) still deferred.
 
 ---
@@ -62,11 +79,21 @@ These are forward migrations (applied ones are never edited except #1 which was 
 
 ---
 
-## Current milestone: M0–M6 complete + deployed. Gate 3 is one on-phone push test away (see Morning Review). M7 (moderation/safety/admin) is the next buildable milestone.
+## Current milestone: M0–M7 complete + proven live. Gate 3 is one on-phone push test away (see Morning Review). M8 (offline/PWA hardening + launch) is next.
 
 ---
 
 ## Done
+
+### M7 — Moderation, safety, admin console ✅ (proven live 13/13, `scripts/db/verify-m7.mjs`)
+
+- **Acceptance (proven live via the API, `verify-m7.mjs` 13/13):** 3 reports auto-hide a target — author still sees it (flagged "hidden pending review"), third parties and non-members don't; every admin action lands in `moderation_actions`; **suspension blocks writes but not reads** (the bug the live run caught: `admin_moderate` had set `status='suspended'`, which `member_communities()` filters out, stripping reads — fixed to set `suspended_until` only, migration `20260714070003`); GDPR export returns the caller's data, delete anonymises PII while content survives.
+- **DB (5 migrations, applied live):** `reports` + `moderation_actions` + `first_post_delays` + `is_suspended()`; suspension enforced by recreating the content-insert policies with `and not is_suspended(...)` (reads untouched). RPCs: `report_target` (10/day cap, threshold auto-hide, admin notify), `decide_report`, `admin_moderate`, `first_post_delay_trigger` (config-gated, inert by default), `release_delayed`/`release_delay`, `export_account`/`delete_account`, and the `can_moderate`-gated admin read RPCs (`admin_reports`/`_moderation_log`/`_hidden`/`_delays`/`_members`/`_dashboard`/`_set_config`). All in RPC_CATALOGUE.
+- **Services (mock + Supabase, one contract):** `moderation` (report/decide/moderate/log/hidden/delays/releaseDelay/members/dashboard/config/triage) + `account` (export/delete); `Listing`/`RequestPost` carry a `hidden` flag surfaced only to the author; mock mirrors auto-hide + suspension + GDPR (unit test `tests/moderation.test.ts`, 3/3).
+- **Moderation-triage AI:** advisory only, fixture mode by default (AWAITING-KEYS) — `src/lib/moderation/triage.ts` + `api/moderation-triage.ts`.
+- **UI:** full `/admin` console (Dashboard · Reports + advisory triage · Hidden · First-post delays · Members with trust/suspend · Action log · Config · Seeding), entry under Me → Admin console; shared `ReportSheet` + `ReportButton` on listing/request detail; `EscalationNotice` (999/112/101/Childline/Samaritans) on the "unsafe" reason; one-screen `CommunityStandard` as onboarding step 1; GDPR export/delete in Settings → Your data.
+- **Admin test account provisioned live** (`admin@thelocal.test` / `Local-admin-2026`) with a seeded reported-listing scenario in Dev Village (`scripts/db/seed-admin.mjs`). Walkthrough in Morning Review.
+- Verified: `tsc` clean · lint (eslint + voice + hex) clean · 35 unit tests (32 + 3 M7) · build (precache 1.49 MiB < 2 MiB) · verify-m7 13/13 live.
 
 ### Deploy + PWA/push (gate 3 infrastructure) ✅
 

@@ -84,6 +84,43 @@ interface AuthRow {
   email: string;
   password: string;
 }
+export interface MockReport {
+  id: string;
+  communityId: string;
+  reporterId: string;
+  targetKind: string;
+  targetId: string;
+  reason: string;
+  note: string | null;
+  priority: boolean;
+  status: 'open' | 'upheld' | 'dismissed';
+  createdAt: string;
+}
+export interface MockModerationAction {
+  id: string;
+  communityId: string;
+  actorId: string | null;
+  targetKind: string;
+  targetId: string;
+  action: string;
+  detail: Record<string, unknown>;
+  createdAt: string;
+}
+export interface MockHidden {
+  kind: string;
+  id: string;
+  reason: string | null;
+  hiddenAt: string;
+}
+export interface MockFirstPostDelay {
+  id: string;
+  profileId: string;
+  communityId: string;
+  contentKind: string;
+  contentId: string;
+  releaseAt: string;
+  releasedAt: string | null;
+}
 interface VouchRow {
   voucherId: string;
   vouchedId: string;
@@ -113,6 +150,10 @@ export interface MockDb {
   skills: Skill[];
   equipment: EquipmentItem[];
   alerts: Alert[];
+  reports: MockReport[];
+  moderationActions: MockModerationAction[];
+  hidden: MockHidden[];
+  firstPostDelays: MockFirstPostDelay[];
 }
 
 const DB_KEY = 'local:mock-db';
@@ -175,6 +216,10 @@ function seed(): MockDb {
     skills: [],
     equipment: [],
     alerts: [],
+    reports: [],
+    moderationActions: [],
+    hidden: [],
+    firstPostDelays: [],
   };
 }
 
@@ -188,6 +233,11 @@ export function db(): MockDb {
   } catch {
     cache = seed();
   }
+  // Fill collections added after a session's DB was first persisted (forward-compatible).
+  cache.reports ??= [];
+  cache.moderationActions ??= [];
+  cache.hidden ??= [];
+  cache.firstPostDelays ??= [];
   return cache;
 }
 

@@ -77,6 +77,28 @@ Admin/cron. Drains pending queue rows; per row, a set-based insert into `push_di
 ### `in_quiet_hours(qh) → boolean` / `alert_notif_key(tier, category) → text`
 Helpers used by the fan-out.
 
-## Planned (later milestones)
+## M7 — moderation, safety, admin (proven live 13/13, `scripts/db/verify-m7.mjs`)
 
-`report_target` · `admin_moderate` · `global_search`.
+### `report_target(p_kind, p_id, p_reason, p_note?) → reports`
+The one report path. Enforces the 10/day cap, upserts one report per reporter/target, and auto-hides at the community threshold (default 3; 2 for messages; 1 from a steward/admin), logging an `autoHide` action and notifying platform admins. `unsafe` reason flags the report priority.
+
+### `decide_report(p_report_id, p_uphold) → void`
+Platform admin or steward (trust ≥ 3). Uphold hides the target + logs `hide`; dismiss just closes the report.
+
+### `admin_moderate(p_action, p_kind, p_id, p_detail?) → void`
+Platform admin (any action) or steward (`hide`/`unhide` in their community). Actions: `hide` / `unhide` / `remove` / `suspend` / `unsuspend` / `trustChange` / `warn` / `note`. **Suspension sets `suspended_until` only, never `status` — so writes are blocked (via `is_suspended()` in the insert policies) but reads keep working** (`member_communities()` filters on `status='active'`). `hide`/`remove` upholds any open reports. Every action is logged to `moderation_actions`.
+
+### `release_delayed() → int` / `release_delay(p_id) → void`
+Cron drains all due first-post delays; the single-item form lets an admin release one early from the queue. Both un-hide + mark released + log.
+
+### `first_post_delay_trigger()` (trigger on listings + requests)
+Config-gated (`firstPostDelayMinutes`, default 0 = inert). A trust-0 member's first post of a kind is hidden + queued in `first_post_delays` for the configured minutes.
+
+### Admin read RPCs — `admin_reports` · `admin_moderation_log` · `admin_hidden` · `admin_delays` · `admin_members` · `admin_dashboard(jsonb)` · `admin_set_config`
+Each is `can_moderate`-gated (platform admin or steward), returns display-ready rows for one console queue in one round-trip. `admin_set_config` is platform-admin-only and merges a JSON patch into `communities.config`.
+
+### `export_account() → jsonb` / `delete_account() → void`
+GDPR. Export returns the caller's profile + memberships + listings + requests + messages. Delete anonymises profile PII (name → "Former neighbour", email → `deleted+<id>@removed.invalid`) and removes push subscriptions + notifications; authored content survives (authorship anonymised, not deleted).
+
+### Helpers — `is_suspended(cid)` · `can_moderate(cid)` · `mod_community(kind,id)` · `mod_set_hidden(kind,id,hide,reason)` · `mod_target_label(kind,id)`
+The moderation vocabulary the RPCs and RLS are written in terms of (all SECURITY DEFINER, search_path-pinned).

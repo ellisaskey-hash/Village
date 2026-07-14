@@ -6,6 +6,7 @@ import type {
   Business,
   Community,
   CommunityCard,
+  CommunityConfig,
   EquipmentItem,
   Event,
   Identity,
@@ -29,6 +30,15 @@ import type {
   Skill,
   ThreadContext,
   ThreadSummary,
+  AdminDashboard,
+  AdminMember,
+  FirstPostDelay,
+  HiddenItem,
+  ModerationAction,
+  ModerationLogEntry,
+  ModerationTargetKind,
+  Report,
+  TriageSuggestion,
 } from './types';
 
 // ---- validated inputs (Zod boundaries, spec 09) --------------------------------
@@ -86,6 +96,55 @@ export interface AlertService {
 
 export interface SearchService {
   search(communityId: string, query: string): Promise<SearchResult[]>;
+}
+
+export const reportSchema = z.object({
+  targetKind: z.enum([
+    'listing', 'request', 'event', 'alert', 'message', 'profile', 'business',
+    'organisation', 'place', 'service', 'equipment', 'organisation_post',
+  ]),
+  targetId: z.string().min(1),
+  reason: z.enum(['scam', 'spam', 'abuse', 'unsafe', 'wrongInfo', 'privacy', 'other']),
+  note: z.string().trim().max(1000).optional(),
+});
+export type ReportInput = z.infer<typeof reportSchema>;
+
+/** Everything the platform admin / steward console reads and acts on (spec 04 §Admin console). */
+export interface ModerationService {
+  /** The shared Report affordance on every content row and profile. */
+  report(input: ReportInput): Promise<void>;
+  /** Open reports for a community, priority first. */
+  reports(communityId: string): Promise<Report[]>;
+  /** Uphold (hide the target) or dismiss a report. */
+  decide(reportId: string, uphold: boolean): Promise<void>;
+  /** Admin/steward action on a target (hide/unhide/remove/suspend/unsuspend/trustChange/warn/note). */
+  moderate(
+    action: ModerationAction,
+    targetKind: ModerationTargetKind | 'profile',
+    targetId: string,
+    detail?: Record<string, unknown>,
+  ): Promise<void>;
+  /** The full, filterable audit trail. */
+  log(communityId: string): Promise<ModerationLogEntry[]>;
+  /** Currently auto-hidden / hidden items awaiting a decision. */
+  hidden(communityId: string): Promise<HiddenItem[]>;
+  /** Trust-0 first-post delay queue. */
+  delays(communityId: string): Promise<FirstPostDelay[]>;
+  /** Release a single delayed first post early (un-hide + mark released). */
+  releaseDelay(delayId: string): Promise<void>;
+  /** Members with trust + suspension state, for the Members queue. */
+  members(communityId: string): Promise<AdminMember[]>;
+  dashboard(communityId: string): Promise<AdminDashboard>;
+  config(communityId: string, patch: Partial<CommunityConfig>): Promise<Community>;
+  /** Advisory AI triage for a report (never auto-acts; fixture when no key). */
+  triage(reportId: string): Promise<TriageSuggestion>;
+}
+
+export interface AccountService {
+  /** GDPR export — the caller's own data as a JSON blob for download. */
+  export(): Promise<Record<string, unknown>>;
+  /** GDPR delete — anonymise authorship, remove PII + push/notifications, then sign out. */
+  delete(): Promise<void>;
 }
 
 // ---- services ------------------------------------------------------------------
@@ -257,4 +316,6 @@ export interface Services {
   events: EventService;
   alerts: AlertService;
   search: SearchService;
+  moderation: ModerationService;
+  account: AccountService;
 }

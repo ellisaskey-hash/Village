@@ -154,10 +154,10 @@ export function MeScreen() {
       <section className="space-y-2">
         {(services.isMock || session.profile.platformRole === 'admin') && (
           <ListRow
-            title="Seeding console"
-            subtitle={services.isMock ? 'Admin tools (demo)' : 'Admin tools'}
-            leading={<Icon name="sparkle" size={20} className="text-textMuted" />}
-            onClick={() => navigate('/admin/seeding')}
+            title="Admin console"
+            subtitle={services.isMock ? 'Moderation, members, config (demo)' : 'Moderation, members, config'}
+            leading={<Icon name="shield" size={20} className="text-textMuted" />}
+            onClick={() => navigate('/admin')}
           />
         )}
         <ListRow title="Settings" leading={<Icon name="settings" size={20} className="text-textMuted" />} onClick={() => navigate('/me/settings')} />

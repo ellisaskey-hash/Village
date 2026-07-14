@@ -17,6 +17,7 @@ async function join(page: Page, email: string) {
   await page.getByLabel('Date of birth').fill('1990-01-01');
   await page.getByLabel('I agree to the community standard').check({ force: true });
   await page.getByRole('button', { name: 'Create account' }).click();
+  await page.getByRole('button', { name: /good neighbour/ }).click();
   await page.getByRole('button', { name: /Enter Dev Village/ }).click();
   await expect(page.getByRole('heading', { name: /Good to see you/ })).toBeVisible();
 }

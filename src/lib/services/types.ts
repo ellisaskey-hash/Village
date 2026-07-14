@@ -72,6 +72,7 @@ export interface Membership {
   joinedVia: JoinedVia;
   identities: Identity[];
   status: 'active' | 'suspended' | 'left';
+  suspendedUntil: string | null;
   createdAt: string;
 }
 
@@ -198,6 +199,8 @@ export interface Listing {
   category: string;
   pricePence: number | null;
   status: ListingStatus;
+  /** True when the item is hidden pending review — only ever surfaced to its author. */
+  hidden?: boolean;
   createdAt: string;
 }
 
@@ -216,6 +219,8 @@ export interface RequestPost {
   status: RequestStatus;
   neededBy: string | null;
   fulfilledBy?: string | null;
+  /** True when the item is hidden pending review — only ever surfaced to its author. */
+  hidden?: boolean;
   createdAt: string;
 }
 
@@ -335,6 +340,92 @@ export interface SearchResult {
   id: string;
   title: string;
   snippet: string;
+}
+
+// ---- M7 moderation, safety, admin ----------------------------------------------
+
+export type ReportReason = 'scam' | 'spam' | 'abuse' | 'unsafe' | 'wrongInfo' | 'privacy' | 'other';
+export type ModerationTargetKind =
+  | 'listing' | 'request' | 'event' | 'alert' | 'message' | 'profile' | 'business'
+  | 'organisation' | 'place' | 'service' | 'equipment' | 'organisation_post';
+export type ReportStatus = 'open' | 'upheld' | 'dismissed';
+export type ModerationAction =
+  | 'autoHide' | 'hide' | 'unhide' | 'remove' | 'warn' | 'suspend' | 'unsuspend' | 'trustChange' | 'note';
+
+export interface Report {
+  id: string;
+  communityId: string;
+  reporterId: string;
+  reporterName: string;
+  targetKind: ModerationTargetKind;
+  targetId: string;
+  targetLabel: string | null;
+  reason: ReportReason;
+  note: string | null;
+  priority: boolean;
+  status: ReportStatus;
+  reportCount: number; // open reports on the same target
+  createdAt: string;
+}
+
+export interface ModerationLogEntry {
+  id: string;
+  communityId: string;
+  actorId: string | null;
+  actorName: string; // "Automation" when actorId is null
+  targetKind: string;
+  targetId: string;
+  action: ModerationAction;
+  detail: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface HiddenItem {
+  kind: ModerationTargetKind;
+  id: string;
+  title: string;
+  reason: string | null;
+  hiddenAt: string;
+}
+
+export interface FirstPostDelay {
+  id: string;
+  profileId: string;
+  profileName: string;
+  contentKind: string;
+  contentId: string;
+  releaseAt: string;
+  releasedAt: string | null;
+}
+
+/** A member as seen in the admin Members queue (trust + suspension state). */
+export interface AdminMember {
+  profileId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  trustLevel: TrustLevel;
+  status: 'active' | 'suspended' | 'left';
+  suspendedUntil: string | null;
+  joinedAt: string;
+  upheldReports: number;
+}
+
+export interface AdminDashboard {
+  openReports: number;
+  priorityReports: number;
+  hiddenItems: number;
+  pendingClaims: number;
+  delayedPosts: number;
+  newMembersToday: number;
+  activeAlerts: number;
+}
+
+/** Advisory triage from the moderation AI (spec 04 — never auto-acts). */
+export interface TriageSuggestion {
+  recommendation: 'hide' | 'watch' | 'dismiss';
+  confidence: number; // 0..1
+  rationale: string;
+  fixture: boolean; // true when produced without a live Anthropic key
 }
 
 export const DEFAULT_CONFIG: CommunityConfig = {

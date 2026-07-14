@@ -6,7 +6,8 @@ import { screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
-import { Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { Banner, Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { ReportButton } from '@/components/moderation/ReportButton';
 import { priceLabel } from './ListingsView';
 import type { ListingStatus } from '@/lib/services/types';
 
@@ -54,6 +55,11 @@ export function ListingDetail() {
       <header className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
         <h1 className="font-display text-h1 font-bold text-text">Listing</h1>
+        {l && !isAuthor && (
+          <span className="ml-auto">
+            <ReportButton targetKind="listing" targetId={l.id} targetLabel={l.title} />
+          </span>
+        )}
       </header>
 
       {q.isLoading ? (
@@ -62,6 +68,14 @@ export function ListingDetail() {
         <Card><p className="text-body text-textMuted">We couldn't find that listing.</p></Card>
       ) : (
         <>
+          {isAuthor && l.hidden && (
+            <Banner
+              tone="warn"
+              icon="eye"
+              title="This is hidden while we review a report"
+              body="Only you and the moderators can see it for now. We'll be in touch if anything is needed."
+            />
+          )}
           <Card>
             <div className="flex items-start gap-3">
               <IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} size="lg" />

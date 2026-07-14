@@ -6,6 +6,7 @@ import {
   eventSchema,
   joinSchema,
   listingSchema,
+  reportSchema,
   requestSchema,
   serviceSchema,
   signUpSchema,
@@ -50,6 +51,7 @@ import type {
   TrustLevel,
 } from '../types';
 import { horsmondenDrafts } from '@/lib/ingest/horsmondenFixture';
+import { triageReport } from '@/lib/moderation/triage';
 import {
   db,
   getCurrentProfileId,
@@ -119,6 +121,44 @@ function trustInMock(profileId: string, communityId: string): number {
     (x) => x.profileId === profileId && x.communityId === communityId && x.status === 'active',
   );
   return m ? m.trustLevel : -1;
+}
+
+function isMockAdmin(profileId: string): boolean {
+  return db().profiles.find((p) => p.id === profileId)?.platformRole === 'admin';
+}
+
+function isMockSuspended(profileId: string, communityId: string): boolean {
+  const m = db().memberships.find((x) => x.profileId === profileId && x.communityId === communityId);
+  return Boolean(m && ((m.suspendedUntil && m.suspendedUntil > nowIso()) || m.status === 'suspended'));
+}
+
+/** Auto-hide/hidden filter (mirrors RLS): hidden items are visible only to the author + admins.
+ * Applied to listings + requests in the mock — the primary content the review flows exercise;
+ * the live DB enforces this across every kind via RLS (proven in verify-m7). */
+function visibleToViewer(kind: string, item: { id: string; createdBy?: string }): boolean {
+  const d = db();
+  const hidden = d.hidden.some((h) => h.kind === kind && h.id === item.id);
+  if (!hidden) return true;
+  const viewer = getCurrentProfileId();
+  if (!viewer) return false;
+  return item.createdBy === viewer || isMockAdmin(viewer);
+}
+
+/** Record an auto-hide when open reports on a target reach the community threshold. */
+function maybeAutoHide(communityId: string, targetKind: string, targetId: string, reporterId: string): void {
+  const d = db();
+  const community = d.communities.find((c) => c.id === communityId);
+  let threshold = targetKind === 'message' ? 2 : community?.config.autoHideReportThreshold ?? 3;
+  if (isMockAdmin(reporterId) || trustInMock(reporterId, communityId) >= 3) threshold = 1;
+  const open = d.reports.filter((r) => r.targetKind === targetKind && r.targetId === targetId && r.status === 'open').length;
+  if (open < threshold) return;
+  if (!d.hidden.some((h) => h.kind === targetKind && h.id === targetId)) {
+    d.hidden.push({ kind: targetKind, id: targetId, reason: 'auto-hidden after reports', hiddenAt: nowIso() });
+    d.moderationActions.push({
+      id: uid(), communityId, actorId: null, targetKind, targetId,
+      action: 'autoHide', detail: { reports: open }, createdAt: nowIso(),
+    });
+  }
 }
 
 /** Mirrors the on_message_insert trigger: bump the thread + fan out notifications. */
@@ -269,6 +309,7 @@ export function createMockServices(): Services {
           joinedVia,
           identities: [],
           status: 'active',
+          suspendedUntil: null,
           createdAt: nowIso(),
         };
         d.memberships.push(membership);
@@ -556,14 +597,18 @@ export function createMockServices(): Services {
       async list(communityId) {
         return db()
           .listings.filter((l) => l.communityId === communityId && l.status !== 'withdrawn')
+          .filter((l) => visibleToViewer('listing', l))
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       },
       async get(id) {
-        return db().listings.find((l) => l.id === id) ?? null;
+        const l = db().listings.find((x) => x.id === id) ?? null;
+        if (!l || !visibleToViewer('listing', l)) return null;
+        return { ...l, hidden: db().hidden.some((h) => h.kind === 'listing' && h.id === l.id) };
       },
       async create(communityId, input: ListingInput) {
         const parsed = listingSchema.parse(input);
         const profileId = requireProfileId();
+        if (isMockSuspended(profileId, communityId)) throw new Error('your posting is paused while your account is under review');
         const d = db();
         const community = d.communities.find((c) => c.id === communityId);
         const cap = community?.config.listingCapT0 ?? 2;
@@ -608,14 +653,18 @@ export function createMockServices(): Services {
       async list(communityId) {
         return db()
           .requests.filter((r) => r.communityId === communityId && r.status !== 'withdrawn')
+          .filter((r) => visibleToViewer('request', r))
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       },
       async get(id) {
-        return db().requests.find((r) => r.id === id) ?? null;
+        const r = db().requests.find((x) => x.id === id) ?? null;
+        if (!r || !visibleToViewer('request', r)) return null;
+        return { ...r, hidden: db().hidden.some((h) => h.kind === 'request' && h.id === r.id) };
       },
       async create(communityId, input: RequestInput) {
         const parsed = requestSchema.parse(input);
         const profileId = requireProfileId();
+        if (isMockSuspended(profileId, communityId)) throw new Error('your posting is paused while your account is under review');
         const d = db();
         const community = d.communities.find((c) => c.id === communityId);
         const cap = community?.config.requestCapT0 ?? 1;
@@ -967,5 +1016,249 @@ export function createMockServices(): Services {
         return out.slice(0, 40);
       },
     },
+
+    moderation: {
+      async report(input) {
+        const p = reportSchema.parse(input);
+        const reporterId = requireProfileId();
+        const d = db();
+        const communityId = mockCommunityOf(p.targetKind, p.targetId);
+        if (!communityId) throw new Error('that item was not found');
+        if (d.reports.filter((r) => r.reporterId === reporterId && r.createdAt > new Date(Date.now() - 86400000).toISOString()).length >= 10) {
+          throw new Error('you have reached the daily report limit');
+        }
+        const existing = d.reports.find((r) => r.reporterId === reporterId && r.targetKind === p.targetKind && r.targetId === p.targetId);
+        if (existing) {
+          existing.reason = p.reason;
+          existing.note = p.note ?? null;
+        } else {
+          d.reports.push({
+            id: uid(), communityId, reporterId, targetKind: p.targetKind, targetId: p.targetId,
+            reason: p.reason, note: p.note ?? null, priority: p.reason === 'unsafe', status: 'open', createdAt: nowIso(),
+          });
+        }
+        maybeAutoHide(communityId, p.targetKind, p.targetId, reporterId);
+        persist();
+      },
+      async reports(communityId) {
+        const d = db();
+        if (!mockCanModerate(communityId)) return [];
+        return d.reports
+          .filter((r) => r.communityId === communityId && r.status === 'open')
+          .sort((a, b) => (b.priority ? 1 : 0) - (a.priority ? 1 : 0) || b.createdAt.localeCompare(a.createdAt))
+          .map((r) => ({
+            id: r.id, communityId: r.communityId, reporterId: r.reporterId, reporterName: profileName(r.reporterId),
+            targetKind: r.targetKind as never, targetId: r.targetId, targetLabel: mockTargetLabel(r.targetKind, r.targetId),
+            reason: r.reason as never, note: r.note, priority: r.priority, status: r.status,
+            reportCount: d.reports.filter((x) => x.targetKind === r.targetKind && x.targetId === r.targetId && x.status === 'open').length,
+            createdAt: r.createdAt,
+          }));
+      },
+      async decide(reportId, uphold) {
+        const d = db();
+        const rep = d.reports.find((r) => r.id === reportId);
+        if (!rep) throw new Error('report not found');
+        if (!mockCanModerate(rep.communityId)) throw new Error('not allowed');
+        rep.status = uphold ? 'upheld' : 'dismissed';
+        if (uphold) {
+          mockSetHidden(rep.targetKind, rep.targetId, true, 'upheld by moderator');
+          d.moderationActions.push({ id: uid(), communityId: rep.communityId, actorId: getCurrentProfileId(), targetKind: rep.targetKind, targetId: rep.targetId, action: 'hide', detail: { report: reportId }, createdAt: nowIso() });
+        }
+        persist();
+      },
+      async moderate(action, targetKind, targetId, detail = {}) {
+        const d = db();
+        const communityId = (action === 'suspend' || action === 'unsuspend' || action === 'trustChange')
+          ? String(detail.community_id ?? '') : mockCommunityOf(targetKind, targetId);
+        if (!communityId) throw new Error('target community unknown');
+        const viewer = getCurrentProfileId();
+        const allowed = (viewer && isMockAdmin(viewer)) || ((action === 'hide' || action === 'unhide') && trustInMock(viewer ?? '', communityId) >= 3);
+        if (!allowed) throw new Error('not allowed');
+        if (action === 'hide' || action === 'remove') mockSetHidden(targetKind, targetId, true, String(detail.reason ?? 'hidden by moderator'));
+        if (action === 'unhide') mockSetHidden(targetKind, targetId, false, null);
+        if (action === 'suspend') {
+          const m = d.memberships.find((x) => x.profileId === targetId && x.communityId === communityId);
+          if (m) m.suspendedUntil = new Date(Date.now() + (Number(detail.days ?? 7)) * 86400000).toISOString();
+        }
+        if (action === 'unsuspend') {
+          const m = d.memberships.find((x) => x.profileId === targetId && x.communityId === communityId);
+          if (m) m.suspendedUntil = null;
+        }
+        if (action === 'trustChange') {
+          const m = d.memberships.find((x) => x.profileId === targetId && x.communityId === communityId);
+          if (m && detail.level != null) m.trustLevel = Number(detail.level) as TrustLevel;
+        }
+        if (action === 'hide' || action === 'remove') {
+          d.reports.filter((r) => r.targetKind === targetKind && r.targetId === targetId && r.status === 'open').forEach((r) => { r.status = 'upheld'; });
+        }
+        d.moderationActions.push({ id: uid(), communityId, actorId: viewer, targetKind, targetId, action, detail, createdAt: nowIso() });
+        persist();
+      },
+      async log(communityId) {
+        const d = db();
+        if (!mockCanModerate(communityId)) return [];
+        return d.moderationActions
+          .filter((a) => a.communityId === communityId)
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+          .map((a) => ({
+            id: a.id, communityId: a.communityId, actorId: a.actorId, actorName: a.actorId ? profileName(a.actorId) : 'Automation',
+            targetKind: a.targetKind, targetId: a.targetId, action: a.action as never, detail: a.detail, createdAt: a.createdAt,
+          }));
+      },
+      async hidden(communityId) {
+        const d = db();
+        if (!mockCanModerate(communityId)) return [];
+        return d.hidden
+          .filter((h) => mockCommunityOf(h.kind, h.id) === communityId)
+          .sort((a, b) => b.hiddenAt.localeCompare(a.hiddenAt))
+          .map((h) => ({ kind: h.kind as never, id: h.id, title: mockTargetLabel(h.kind, h.id) ?? '(removed)', reason: h.reason, hiddenAt: h.hiddenAt }));
+      },
+      async delays(communityId) {
+        const d = db();
+        if (!mockCanModerate(communityId)) return [];
+        return d.firstPostDelays
+          .filter((x) => x.communityId === communityId)
+          .map((x) => ({ id: x.id, profileId: x.profileId, profileName: profileName(x.profileId), contentKind: x.contentKind, contentId: x.contentId, releaseAt: x.releaseAt, releasedAt: x.releasedAt }));
+      },
+      async releaseDelay(delayId) {
+        const d = db();
+        const delay = d.firstPostDelays.find((x) => x.id === delayId);
+        if (!delay) throw new Error('not found');
+        if (!mockCanModerate(delay.communityId)) throw new Error('not allowed');
+        mockSetHidden(delay.contentKind, delay.contentId, false, null);
+        delay.releasedAt = nowIso();
+        d.moderationActions.push({ id: uid(), communityId: delay.communityId, actorId: getCurrentProfileId(), targetKind: delay.contentKind, targetId: delay.contentId, action: 'unhide', detail: { firstPostRelease: true }, createdAt: nowIso() });
+        persist();
+      },
+      async members(communityId) {
+        const d = db();
+        if (!mockCanModerate(communityId)) return [];
+        return d.memberships
+          .filter((m) => m.communityId === communityId)
+          .map((m) => {
+            const p = d.profiles.find((x) => x.id === m.profileId);
+            return {
+              profileId: m.profileId, displayName: p?.displayName ?? '', avatarUrl: p?.avatarUrl ?? null,
+              trustLevel: m.trustLevel, status: m.status, suspendedUntil: m.suspendedUntil, joinedAt: m.createdAt,
+              upheldReports: d.reports.filter((r) => r.targetKind === 'profile' && r.targetId === m.profileId && r.status === 'upheld').length,
+            };
+          })
+          .sort((a, b) => a.displayName.localeCompare(b.displayName));
+      },
+      async dashboard(communityId) {
+        const d = db();
+        const rep = d.reports.filter((r) => r.communityId === communityId && r.status === 'open');
+        return {
+          openReports: rep.length,
+          priorityReports: rep.filter((r) => r.priority).length,
+          hiddenItems: d.hidden.filter((h) => mockCommunityOf(h.kind, h.id) === communityId).length,
+          pendingClaims: d.businesses.filter((b) => b.communityId === communityId && b.claimedAt && !b.verifiedAt).length,
+          delayedPosts: d.firstPostDelays.filter((x) => x.communityId === communityId && !x.releasedAt).length,
+          newMembersToday: d.memberships.filter((m) => m.communityId === communityId && m.createdAt > new Date(Date.now() - 86400000).toISOString()).length,
+          activeAlerts: d.alerts.filter((a) => a.communityId === communityId && !a.resolvedAt).length,
+        };
+      },
+      async config(communityId, patch) {
+        const d = db();
+        const viewer = getCurrentProfileId();
+        if (!viewer || !isMockAdmin(viewer)) throw new Error('admin only');
+        const c = d.communities.find((x) => x.id === communityId);
+        if (!c) throw new Error('community not found');
+        c.config = { ...c.config, ...patch };
+        persist();
+        return c;
+      },
+      async triage(reportId) {
+        const rep = db().reports.find((r) => r.id === reportId);
+        return triageReport({ reason: rep?.reason ?? 'other', note: rep?.note ?? null });
+      },
+    },
+
+    account: {
+      async export() {
+        const d = db();
+        const me = requireProfileId();
+        const p = d.profiles.find((x) => x.id === me);
+        return {
+          profile: p ? { id: p.id, display_name: p.displayName, email: p.email, bio: p.bio, date_of_birth: p.dateOfBirth, created_at: p.createdAt } : null,
+          memberships: d.memberships.filter((m) => m.profileId === me),
+          listings: d.listings.filter((l) => l.createdBy === me).map((l) => ({ id: l.id, title: l.title, created_at: l.createdAt })),
+          requests: d.requests.filter((r) => r.createdBy === me).map((r) => ({ id: r.id, title: r.title, created_at: r.createdAt })),
+          messages: d.messages.filter((m) => m.senderId === me).map((m) => ({ id: m.id, body: m.body, created_at: m.createdAt })),
+        };
+      },
+      async delete() {
+        const d = db();
+        const me = requireProfileId();
+        const p = d.profiles.find((x) => x.id === me);
+        if (p) {
+          p.displayName = 'Former neighbour';
+          p.email = `deleted+${p.id}@removed.invalid`;
+          p.bio = null;
+          p.avatarUrl = null;
+          p.peopleDirectoryOptIn = false;
+        }
+        d.notifications = d.notifications.filter((n) => n.profileId !== me);
+        persist();
+        setCurrentProfileId(null);
+      },
+    },
   };
+}
+
+/** Community of a moderatable target in the mock (mirror of mod_community). */
+function mockCommunityOf(kind: string, id: string): string {
+  const d = db();
+  const find = <T extends { id: string; communityId: string }>(rows: T[]) => rows.find((r) => r.id === id)?.communityId ?? '';
+  switch (kind) {
+    case 'listing': return find(d.listings);
+    case 'request': return find(d.requests);
+    case 'event': return find(d.events);
+    case 'alert': return find(d.alerts);
+    case 'business': return find(d.businesses);
+    case 'organisation': return find(d.organisations);
+    case 'place': return find(d.places);
+    case 'service': return find(d.services);
+    case 'equipment': return d.equipment.find((e) => e.id === id)?.communityId ?? '';
+    case 'profile': return d.memberships.find((m) => m.profileId === id)?.communityId ?? '';
+    case 'message': {
+      const msg = d.messages.find((m) => m.id === id);
+      return msg ? d.threads.find((t) => t.id === msg.threadId)?.communityId ?? '' : '';
+    }
+    default: return '';
+  }
+}
+
+function mockTargetLabel(kind: string, id: string): string | null {
+  const d = db();
+  switch (kind) {
+    case 'listing': return d.listings.find((x) => x.id === id)?.title ?? null;
+    case 'request': return d.requests.find((x) => x.id === id)?.title ?? null;
+    case 'event': return d.events.find((x) => x.id === id)?.title ?? null;
+    case 'alert': return d.alerts.find((x) => x.id === id)?.title ?? null;
+    case 'business': return d.businesses.find((x) => x.id === id)?.name ?? null;
+    case 'organisation': return d.organisations.find((x) => x.id === id)?.name ?? null;
+    case 'place': return d.places.find((x) => x.id === id)?.name ?? null;
+    case 'service': return d.services.find((x) => x.id === id)?.title ?? null;
+    case 'equipment': return d.equipment.find((x) => x.id === id)?.name ?? null;
+    case 'message': return d.messages.find((x) => x.id === id)?.body?.slice(0, 80) ?? null;
+    case 'profile': return d.profiles.find((x) => x.id === id)?.displayName ?? null;
+    default: return null;
+  }
+}
+
+function mockSetHidden(kind: string, id: string, hide: boolean, reason: string | null): void {
+  const d = db();
+  const at = d.hidden.findIndex((h) => h.kind === kind && h.id === id);
+  if (hide) {
+    if (at === -1) d.hidden.push({ kind, id, reason, hiddenAt: nowIso() });
+  } else if (at !== -1) {
+    d.hidden.splice(at, 1);
+  }
+}
+
+function mockCanModerate(communityId: string): boolean {
+  const viewer = getCurrentProfileId();
+  if (!viewer) return false;
+  return isMockAdmin(viewer) || trustInMock(viewer, communityId) >= 3;
 }

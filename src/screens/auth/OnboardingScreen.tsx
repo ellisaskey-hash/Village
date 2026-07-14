@@ -6,6 +6,7 @@ import { errorMessage } from '@/lib/errors';
 import { Button, Card, Chip, IconBadge, InfoCallout, useToasts } from '@/components/ui';
 import type { Identity } from '@/lib/services/types';
 import { AuthLayout } from './AuthLayout';
+import { CommunityStandard } from './CommunityStandard';
 
 const IDENTITIES: { value: Identity; label: string; adultOnly?: boolean }[] = [
   { value: 'resident', label: 'Resident' },
@@ -32,6 +33,7 @@ export function OnboardingScreen() {
   const active = useActiveMembership();
   const [selected, setSelected] = useState<Identity[]>(['resident']);
   const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<'standard' | 'setup'>('standard');
 
   const isMinor = session ? ageFrom(session.profile.dateOfBirth) < 18 : false;
 
@@ -67,6 +69,20 @@ export function OnboardingScreen() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (stage === 'standard') {
+    return (
+      <AuthLayout
+        title={`Welcome to ${active?.name ?? 'your community'}`}
+        subtitle="How we look out for each other here."
+      >
+        <CommunityStandard />
+        <Button variant="primary" size="xl" fullWidth onClick={() => setStage('setup')}>
+          I'll be a good neighbour
+        </Button>
+      </AuthLayout>
+    );
   }
 
   return (
