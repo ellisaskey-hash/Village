@@ -11,11 +11,13 @@
 - Run the app: `npm install` then `npm run dev`, open `http://localhost:3005`. It runs in **labelled demo mode** (in-memory data) because there is no database yet — see BLOCKED below.
 - **M1 is reviewable end-to-end:** `/welcome` (enter `DV1 1AA` to find the seeded Dev Village, or `TN12` for Horsmonden) → sign up (try a DOB under 16 — it's refused) → onboarding → the 5-tab shell. Visit **Me → Settings** and flip theme / accent / text size / font / contrast / motion; all work live. Explore + Inbox show designed empty states (content lands M2/M3).
 - `/dev/gallery` still works (M0).
-- Milestones completed so far: **M0 ✅, M1 ✅ (functionally; RLS execution BLOCKED).** M2 in progress.
+- Milestones so far: **M0 ✅, M1 ✅, M2 ✅** (all RLS execution BLOCKED, tests written). M3 in progress.
+- **M2 reviewable:** Me → "Seeding console" (visible in demo mode). Click **Run fixture ingestion**, accept a few proposals, then Explore → Directory → Businesses to see them. Unclaimed businesses show "Is this yours? Claim it" → claim sheet.
 
 ### AWAITING-ELLIS (needs your review)
 
-- M1 visual/feel review of the auth + shell screens (optional; unit + e2e cover behaviour).
+- M1/M2 visual/feel review of the auth, shell, directory, and seeding screens (unit + e2e cover behaviour).
+- **Map view not built** (M2 partial): the seeding console's "map of accepted places" and map pins on place detail need a map surface. Deferred in this offline run — external map tiles are blocked by the CSP and there's no coordinate data without live Overpass. Flagging rather than faking it. Decide later whether to add a self-hosted/vector map.
 
 ### Decisions / accounts I need from you
 
@@ -42,13 +44,19 @@
 
 ---
 
-## Current milestone: M2 — Places, Businesses, Organisations, Directory, Seeding (IN PROGRESS)
+## Current milestone: M3 — Threads, Messages, Listings, Requests (IN PROGRESS)
 
-Building test-first. Ingestion runs in fixture mode (no API keys; AWAITING-KEYS).
+Building test-first. Realtime is a seam (mock has no live channel); open_thread is the single point of thread-creation truth.
 
 ---
 
 ## Done
+
+### M2 — Places, Businesses, Organisations, Directory, Seeding ✅ (RLS BLOCKED; real-API AWAITING-KEYS; map view deferred)
+
+- **Acceptance:** directory populated from the **fixture** (real Overpass/CH/FHRS AWAITING-KEYS) ✅; claim flow end-to-end incl. claim-link auto-approval (RPC) ✅; unclaimed stub renders "Is this yours?" ✅; map pins **deferred** (see AWAITING-ELLIS).
+- **Shipped:** directory schema + RLS + `can_act_as` + `seed_proposals` + claim/seed/launch RPCs (checked in, not executed); ingestion transformers + Horsmonden fixture (unit-tested); directory/claims/seeding services (mock + Supabase seam); directory + detail + claim screens; `/admin/seeding` console.
+- Verified: tsc/lint clean, 23 unit tests, build, e2e 10/10 (adds the seeding pipeline).
 
 ### M1 — Auth, communities, membership & trust rails ✅ (RLS execution BLOCKED)
 
