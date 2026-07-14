@@ -1,50 +1,51 @@
 # PROGRESS
 
+## 🚦 GATES
+
+- **M0 gallery ✓ passed** (founder-approved).
+- **Gate 2 — M3 + DB security proof ✓ MET.** M0–M3 built; database wired and every migration applied to the real Supabase project; RLS security model proven live (26/26 checks, all four isolation assertions + trust-0 caps + cold-DM + full loop + realtime). ← **current position: just cleared. Next up is M4/M5 toward gate 3.**
+- Gate 3 — M5 deployed PWA on your phone (real-device push). Not yet.
+- Gate 4 — M7 real Horsmonden ingestion review. Not yet.
+- Gate 5 — M8 launch checklist. Not yet.
+
 ---
 
 ## ⭐ MORNING REVIEW (read this first)
 
-**Overnight run: M1 → M2 → M3, autonomous. All three are done** (functionally, on the mock; DB execution BLOCKED). Started after M0 sign-off. Every commit is green: lint, typecheck, 27 unit tests, build, 14 Playwright e2e.
+**Database is now live and the security model is proven.** M0–M3 are built; all migrations are applied to the real Supabase project; the app runs against real Postgres (not the mock). Five migration/policy bugs were caught by running the tests against real Postgres and fixed (see "Migration fixes" below).
 
 ### What to look at
 
-- Run the app: `npm install` then `npm run dev`, open `http://localhost:3005`. It runs in **labelled demo mode** (in-memory data, persisted to your browser) because there is no database yet — see BLOCKED below. Data resets if you clear site storage.
-- **Full happy path is reviewable now:**
-  1. `/welcome` — enter `TN12` (Horsmonden) or `DV1` (seeded Dev Village) → sign up (try a DOB under 16, it's refused) → onboarding → the 5-tab shell.
-  2. **Post** (centre +): post a **request** or a **listing** (sell/free/wanted, or lend). It appears in **Explore → Requests / Listings** and opens its detail.
-  3. On someone else's request, **I can help** opens a thread; on a listing, **Message about this**. Threads + notifications live in **Inbox**. The author gets status controls (mark sorted / reserved / done).
-  4. **Me → Seeding console** (demo-admin): **Run fixture ingestion**, accept proposals, then **Explore → Directory** shows the businesses/places/orgs. Unclaimed businesses show "Is this yours?" → claim sheet.
-  5. **Me → Settings**: theme / accent / text size / font / contrast / motion all work live.
+- **The app now runs on the real database.** `.env` is set (gitignored) with the project URL + anon key, so `npm run dev` (restart it if it was already running) or a production build uses Supabase, not the mock. Sign in with a seeded test account: `rlstest+alice@example.com` / `password123` (alice is a trust-2 member of Dev Village with a request + a business already posted). Explore → Requests shows her "Borrow a ladder" request; Inbox shows the thread from the loop test.
+- **Security proof:** `node scripts/db/verify-security.mjs` → **26/26 checks passed** against the live DB. It drives the real RLS through PostgREST as five separate authenticated users. Covers all four isolation assertions (cross-community, hidden-invisible, acting-as-forgery) across M1–M3 tables, trust-0 caps rejecting over-posting via direct API, cold-DM refusal, the full post→respond→realtime-thread-both-ways→fulfil→notifications loop, and P4 participant-only reads. Re-runnable and idempotent.
 - `/dev/gallery` still works (M0).
 
-### AWAITING-ELLIS (needs your review)
+### AWAITING-ELLIS / open items
 
-- Visual/feel review of all the M1–M3 screens (unit + e2e cover behaviour, but not aesthetics).
-- **Map view not built** (M2 partial): the seeding console's "map of accepted places" and map pins on place detail need a map surface. Deferred in this offline run — external map tiles are blocked by the CSP and there's no coordinate data without live Overpass. Flagged, not faked. Decide later whether to add a self-hosted/vector map.
-- **Two-device realtime not demonstrable on the mock** (M3): the respond→thread→fulfil loop is unit-tested and works single-user; genuine two-device realtime needs Supabase (BLOCKED).
-
-### Decisions / accounts I need from you
-
-1. **Supabase project.** There is no cloud Supabase project and Docker is not installed on this machine, so I could not stand up a local database. Everything that needs a DB is written to spec and checked in, but **not executed**. To go live you need to: create a Supabase project (eu-west-2), run the migrations in `supabase/migrations/`, run the RLS tests in `supabase/tests/`, and put the URL + anon key in `.env`. Until then the app runs on a clearly-labelled in-memory mock service layer.
-2. **Git remote.** This repo has no remote configured, so I could not push. All work is committed locally. Add a remote (`git remote add origin …`) and I (or you) can push.
-3. **API keys** for M2 ingestion (Overpass is keyless; Companies House + Anthropic need keys) — logged AWAITING-KEYS; M2 ingestion runs in fixture mode without them.
-
-### Status line
-
-- Milestone in progress: **see "Current milestone" below.**
-- Green at every commit: lint, typecheck, unit tests. Integration/RLS tests are BLOCKED (no DB) with the tests written.
+- **Push + CI still BLOCKED** — the machine's cached GitHub credential is for account `ellis-askey`, which is denied access to `ellisaskey-hash/Village` (403). I can't mint a token for the repo-owner account. **You need to add a Personal Access Token (or push once yourself).** Everything is committed locally; nothing is lost.
+- **UI signup email validation:** Supabase's anon signup rejects `@example.com` / `+alias` addresses as invalid, and email-confirmation may be on. Test accounts were created via the admin API (confirmed). For frictionless UI signup in this test project, toggle "Confirm email" off / relax email validation in the dashboard, or just use the seeded accounts.
+- **Map view** (M2) and **real ingestion APIs** (AWAITING-KEYS) still deferred as before.
+- Visual/feel review of the M1–M3 screens.
 
 ---
 
-## BLOCKED (environment, not spec)
+## Migration fixes (caught by running against real Postgres)
 
-- `BLOCKED: needs Supabase project` — no cloud project, and Docker is unavailable so `supabase start` (local stack) is not possible. All migrations, RLS policies, RLS tests, and RPCs are written per spec 03 and checked into `supabase/` but have **not** been executed. No integration or RLS test has been run; none are reported as passing.
-- `BLOCKED: no git remote` — cannot push; committing locally only.
-- `AWAITING-KEYS` — Companies House + Anthropic keys for M2 real ingestion; fixture mode covers the pipeline meanwhile.
+Per your instruction — every migration that failed against real Postgres, and the fix:
 
-## DECISION-MADE (spec-consistent choices made without stopping)
+1. **`array_to_string` in a generated column** (`20260714010001`). Spec 03 builds `businesses.search_document` with `array_to_string(categories,' ')`, but that function is STABLE, and generated columns require IMMUTABLE expressions → "generation expression is not immutable". **Fix:** added an `imm_array_to_string()` wrapper declared IMMUTABLE (output depends only on input) and used it. Edited in place before first successful apply.
+2. **`created_by` had no default** (`20260714030001`, new). The app's client inserts omit `created_by` (the mock set it); on real Postgres that violates NOT NULL. **Fix:** `alter … set default auth.uid()` on listings/requests/places — fixes the app insert and keeps the `created_by = auth.uid()` RLS check valid.
+3–5. **RLS infinite recursion** (`20260714030002`, new), caught by the live verification:
+   - `listings`/`requests` trust-0 cap policies did `count(*) from listings/requests` inside the policy on that same table → "infinite recursion detected in policy". **Fix:** moved the counts into SECURITY DEFINER helpers (`active_listing_count`, `open_request_count`) that read outside RLS.
+   - `thread_participants` read policy referenced `thread_participants` (and `threads`/`messages` policies did the same) → recursion. **Fix:** SECURITY DEFINER `my_thread_ids()` helper; all thread/message/participant policies now use it.
 
-- **Mock service layer for no-DB dev.** Spec 09 mandates the `buildXService` + `useServices()` shape with Zod boundaries behind TanStack Query. With no DB, each service has a clearly-labelled in-memory implementation returning production-shaped data, selected at runtime when `VITE_SUPABASE_URL` is absent. The Supabase-backed implementation is written behind the same interface so the swap is one flag. Rationale: keeps every screen real and reviewable now (Law: no half-build), and makes the DB swap a single seam.
+These are forward migrations (applied ones are never edited except #1 which was fixed before its first successful apply). All applied cleanly; the verification then went 26/26.
+
+## DECISION-MADE
+
+- **Project region is eu-north-1, not eu-west-2.** You said eu-west-2, but the project (`xlksaymsvproupvaylit`) is actually in eu-north-1 (the direct host is IPv6-only eu-north; the working pooler is `aws-0-eu-north-1.pooler.supabase.com`). DB password corrected to `Talia-2021!!`. Used the IPv4 session pooler because the direct host is IPv6-only and this environment's IPv6 egress is flaky.
+- **Live JS verification is the authoritative RLS proof.** The pgTAP `supabase/tests/rls_m*.sql` files remain the checked-in spec artifacts, but the proof of record is `scripts/db/verify-security.mjs`, which exercises the actual policies through PostgREST as real authenticated users (stronger than pgTAP, which would need a TAP runner + direct `auth.users` inserts). 26/26.
+- **Mock service layer stays as the no-env fallback.** With `.env` present the app uses Supabase; without it (e.g. CI without secrets) it falls back to the labelled mock, so the mock-mode Playwright specs still act as regression tests.
 
 ---
 

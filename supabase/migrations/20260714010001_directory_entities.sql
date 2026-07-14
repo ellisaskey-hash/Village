@@ -2,6 +2,13 @@
 -- organisations (+ members, posts). Places and businesses reference each other, so the
 -- cross FKs are added by ALTER once both tables exist.
 
+-- MIGRATION FIX: spec 03 uses array_to_string() inside a generated column, but that function
+-- is STABLE (not IMMUTABLE) on Postgres, so it is rejected in a generation expression. This
+-- wrapper is declared IMMUTABLE (its output depends only on its input) so the FTS column on
+-- businesses.categories can be built. See PROGRESS.md.
+create or replace function public.imm_array_to_string(arr text[])
+returns text language sql immutable as $$ select array_to_string(arr, ' ') $$;
+
 create table public.places (
   id uuid primary key default gen_random_uuid(),
   community_id uuid not null references public.communities(id) on delete cascade,
@@ -42,7 +49,7 @@ create table public.businesses (
   verified_at timestamptz,
   hidden_at timestamptz, hidden_reason text,
   search_document tsvector generated always as (to_tsvector('english',
-    name || ' ' || coalesce(description,'') || ' ' || array_to_string(categories,' '))) stored,
+    name || ' ' || coalesce(description,'') || ' ' || public.imm_array_to_string(categories))) stored,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
