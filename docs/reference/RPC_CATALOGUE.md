@@ -52,6 +52,17 @@ Author/admin only. Legal transitions only (closed listings are terminal). Sets `
 ### `set_request_status(p_id uuid, p_status text, p_fulfilled_by uuid default null) → requests`
 Author/admin only. Legal transitions only. Sets `fulfilled_by` on fulfilment (the mutual-aid loop).
 
+## M4 (migration 20260714040003)
+
+### `set_rsvp(p_event_id uuid, p_status text, p_party_size smallint default 1) → event_rsvps`
+Authenticated member. going/maybe/waitlist/cancelled. On a capacity event, a `going` that would overflow is dropped to `waitlist`; freeing a spot (cancel/maybe) runs `promote_waitlist`. Verified live: 12/12 (`scripts/db/verify-m4.mjs`).
+
+### `expand_recurrence(p_parent_id uuid, p_count int default 8) → int`
+Author/admin. Generates `p_count` future instances from the parent's `recurrence` JSON. DST-correct: computes in Europe/London wall-clock before converting back to timestamptz, so a weekly 19:00 event stays 19:00 local across the clock change. Also called from cron-tick (spec 09).
+
+### `promote_waitlist(p_event_id uuid) → void`
+Internal (called by `set_rsvp`). Promotes earliest waitlisted RSVPs into freed capacity and notifies them.
+
 ## Planned (later milestones)
 
 `post_alert` · `report_target` · `admin_moderate` · `global_search`.
