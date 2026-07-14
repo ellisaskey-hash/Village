@@ -755,9 +755,9 @@ export function createSupabaseServices(): Services {
         const vapid = import.meta.env.VITE_VAPID_PUBLIC_KEY;
         if (!vapid) return false;
         if ((await Notification.requestPermission()) !== 'granted') return false;
-        let reg: ServiceWorkerRegistration | undefined;
+        let reg: ServiceWorkerRegistration;
         try {
-          reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register('/sw.js'));
+          reg = await navigator.serviceWorker.ready; // registered by virtual:pwa-register on load
         } catch {
           return false;
         }

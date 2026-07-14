@@ -14,9 +14,23 @@ import '@fontsource/atkinson-hyperlegible/700.css';
 
 import './index.css';
 import { initSentry } from '@/lib/sentry';
+import { setUpdater } from '@/lib/pwa';
 import { App } from '@/App';
 
 initSentry();
+
+// Register the service worker (production only). registerType 'prompt' => surface an update
+// toast rather than reloading silently; the UpdatePrompt component listens for the event.
+if (import.meta.env.PROD) {
+  void import('virtual:pwa-register').then(({ registerSW }) => {
+    const updateSW = registerSW({
+      onNeedRefresh() {
+        window.dispatchEvent(new CustomEvent('pwa-need-refresh'));
+      },
+    });
+    setUpdater(updateSW);
+  });
+}
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root container #root not found');

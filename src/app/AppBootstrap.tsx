@@ -6,7 +6,8 @@ import { useApplyA11y } from '@/app/state/a11y';
 import { useBootstrapSession } from '@/app/state/session';
 import { AppBackground } from '@/components/decor/AppBackground';
 import { MockBanner } from '@/components/layout/MockBanner';
-import { ToastProvider } from '@/components/ui';
+import { UpdatePrompt } from '@/components/layout/UpdatePrompt';
+import { OfflinePill, ToastProvider } from '@/components/ui';
 import { ServicesProvider, useServices } from '@/lib/services/provider';
 
 /**
@@ -36,7 +37,11 @@ function Inner({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <AppBackground />
-      <ToastProvider>{children}</ToastProvider>
+      <OfflinePill />
+      <ToastProvider>
+        <UpdatePrompt />
+        {children}
+      </ToastProvider>
       {isMock && !onDevRoute && <MockBanner />}
     </>
   );

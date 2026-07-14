@@ -12,14 +12,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      // M0 ships the manifest generated from tokens. The custom injectManifest SW
-      // (offline queue, precache strategy) and its update prompt land in M8 per spec 09.
-      // injectRegister:false keeps the production HTML free of inline scripts so the
-      // strict CSP (script-src 'self') holds without a nonce.
-      strategies: 'generateSW',
+      // Custom injectManifest SW at src/sw.ts (spec 09): precache + CacheFirst media + web-push.
+      // injectRegister:false keeps the production HTML free of inline scripts so the strict CSP
+      // (script-src 'self') holds; registration happens in app code via virtual:pwa-register.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       injectRegister: false,
       devOptions: { enabled: false },
-      workbox: {
+      injectManifest: {
         // Fix #23/#26 — keep the SW precache cap sane.
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,woff2,svg,png}'],

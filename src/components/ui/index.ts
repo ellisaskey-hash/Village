@@ -27,6 +27,7 @@ export { Banner } from './Banner';
 export { InfoCallout } from './InfoCallout';
 export { TextLink } from './TextLink';
 export { PullToRefresh } from './PullToRefresh';
+export { OfflinePill } from './OfflinePill';
 export { SwipeAction } from './SwipeAction';
 export { StaggeredBody } from './StaggeredBody';
 export { MetricStat } from './MetricStat';
