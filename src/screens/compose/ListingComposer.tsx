@@ -7,6 +7,7 @@ import { errorMessage } from '@/lib/errors';
 import { useDraft } from '@/lib/drafts';
 import { Button, Field, SegmentedControl, Sheet, Textarea, useToasts } from '@/components/ui';
 import { StaggeredBody } from '@/components/ui';
+import { PhotoInput } from '@/components/content/PhotoInput';
 import type { ListingKind } from '@/lib/services/types';
 
 /** `lend` is fixed for the equipment tile; the sell tile lets the poster pick sell/free/wanted. */
@@ -28,6 +29,7 @@ export function ListingComposer({
     kind: (fixedKind ?? 'sell') as ListingKind, title: '', description: '', category: '', price: '',
   });
   const { kind, title, description, category, price } = draft;
+  const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   const effectiveKind = fixedKind ?? kind;
@@ -43,10 +45,12 @@ export function ListingComposer({
         category: category || 'other',
         ...(description ? { description } : {}),
         ...(pricePence !== undefined && !Number.isNaN(pricePence) ? { pricePence } : {}),
+        ...(photos.length ? { photos } : {}),
       });
       await qc.invalidateQueries({ queryKey: ['listings', active.communityId] });
       onClose();
       clearDraft();
+      setPhotos([]);
       navigate(`/listings/${l.id}`);
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -80,6 +84,7 @@ export function ListingComposer({
             ]}
           />
         )}
+        {effectiveKind !== 'wanted' && <PhotoInput value={photos} onChange={setPhotos} label="Photos" />}
         <Field label="Title" value={title} onChange={(e) => setDraft({ title: e.target.value })} placeholder="Garden bench, solid oak" />
         <Field label="Category" value={category} onChange={(e) => setDraft({ category: e.target.value })} placeholder="Furniture" />
         {effectiveKind === 'sell' && (

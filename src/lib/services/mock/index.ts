@@ -634,7 +634,7 @@ export function createMockServices(): Services {
           category: parsed.category,
           pricePence: parsed.pricePence ?? null,
           status: 'active',
-          photos: [],
+          photos: parsed.photos ?? [],
           createdAt: nowIso(),
         };
         d.listings.push(listing);
@@ -1175,6 +1175,18 @@ export function createMockServices(): Services {
       async triage(reportId) {
         const rep = db().reports.find((r) => r.id === reportId);
         return triageReport({ reason: rep?.reason ?? 'other', note: rep?.note ?? null });
+      },
+    },
+
+    media: {
+      async upload(files) {
+        // No storage in the mock — inline the images as data URIs so they render locally.
+        return Promise.all(files.map((file) => new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error('could not read the image'));
+          reader.readAsDataURL(file);
+        })));
       },
     },
 

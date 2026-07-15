@@ -53,6 +53,19 @@ export function BusinessDetail() {
   const b = q.data;
   const isOwner = Boolean(b && session && b.ownerProfileId === session.profileId);
 
+  async function enquire() {
+    if (!b?.ownerProfileId) return;
+    setBusy(true);
+    try {
+      const threadId = await services.threads.open('business', b.id, b.ownerProfileId, `Hi, I'd like to enquire about ${b.name}.`);
+      navigate(`/inbox/t/${threadId}`);
+    } catch (e) {
+      push({ title: errorMessage(e), variant: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <motion.div
       variants={screenEnter}
@@ -106,11 +119,13 @@ export function BusinessDetail() {
             </motion.div>
           ) : null}
 
-          <motion.div variants={cardEnter}>
-            <Button variant="primary" size="xl" fullWidth leadingIcon="messages" onClick={() => push({ title: 'Messaging lands in the next update', variant: 'info' })}>
-              Enquire
-            </Button>
-          </motion.div>
+          {b.ownerProfileId && !isOwner && (
+            <motion.div variants={cardEnter}>
+              <Button variant="primary" size="xl" fullWidth leadingIcon="messages" loading={busy} onClick={enquire}>
+                Enquire
+              </Button>
+            </motion.div>
+          )}
         </>
       )}
 

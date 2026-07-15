@@ -141,6 +141,12 @@ export interface ModerationService {
   triage(reportId: string): Promise<TriageSuggestion>;
 }
 
+export interface MediaService {
+  /** Upload image files and return their URLs (Supabase Storage public URLs, or data URIs in
+   *  the mock). Used by every composer that accepts photos (spec 07). */
+  upload(files: File[]): Promise<string[]>;
+}
+
 export interface AccountService {
   /** GDPR export — the caller's own data as a JSON blob for download. */
   export(): Promise<Record<string, unknown>>;
@@ -254,6 +260,7 @@ export const listingSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   category: z.string().trim().min(1, 'Pick a category'),
   pricePence: z.number().int().nonnegative().optional(),
+  photos: z.array(z.string()).max(4).optional(),
 });
 export type ListingInput = z.infer<typeof listingSchema>;
 
@@ -321,4 +328,5 @@ export interface Services {
   search: SearchService;
   moderation: ModerationService;
   account: AccountService;
+  media: MediaService;
 }

@@ -652,7 +652,7 @@ export function createSupabaseServices(): Services {
           .insert({
             community_id: communityId, kind: parsed.kind, title: parsed.title,
             description: parsed.description ?? null, category: parsed.category,
-            price_pence: parsed.pricePence ?? null,
+            price_pence: parsed.pricePence ?? null, photos: parsed.photos ?? [],
           })
           .select(LISTING_SELECT).single();
         if (error) throw error;
@@ -967,6 +967,23 @@ export function createSupabaseServices(): Services {
         const rows = await getSupabase().from('reports').select('reason,note').eq('id', reportId).maybeSingle();
         const r = rows.data as { reason: string; note: string | null } | null;
         return triageReport({ reason: r?.reason ?? 'other', note: r?.note ?? null });
+      },
+    },
+
+    media: {
+      async upload(files) {
+        const sb = getSupabase();
+        const { data: auth } = await sb.auth.getUser();
+        const uid = auth.user?.id ?? 'anon';
+        const urls: string[] = [];
+        for (const file of files) {
+          const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+          const path = `${uid}/${crypto.randomUUID()}.${ext}`;
+          const { error } = await sb.storage.from('photos').upload(path, file, { contentType: file.type, upsert: false });
+          if (error) throw error;
+          urls.push(sb.storage.from('photos').getPublicUrl(path).data.publicUrl);
+        }
+        return urls;
       },
     },
 
