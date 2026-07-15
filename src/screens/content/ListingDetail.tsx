@@ -76,6 +76,19 @@ export function ListingDetail() {
               body="Only you and the moderators can see it for now. We'll be in touch if anything is needed."
             />
           )}
+          {l.photos.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto rounded-xl">
+              {l.photos.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`${l.title} photo ${i + 1}`}
+                  className="h-48 w-auto shrink-0 rounded-xl border border-border object-cover"
+                  loading="lazy"
+                />
+              ))}
+            </div>
+          )}
           <Card>
             <div className="flex items-start gap-3">
               <IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} size="lg" />

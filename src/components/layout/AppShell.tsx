@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
 import { pressable } from '@/lib/motion';
 import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
-import { useActiveMembership } from '@/app/state/session';
+import { CommunitySwitcher } from '@/components/layout/CommunitySwitcher';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
 import { ListingComposer } from '@/screens/compose/ListingComposer';
 import { EventComposer } from '@/screens/compose/EventComposer';
@@ -41,7 +41,6 @@ export function AppShell() {
   const [postChoice, setPostChoice] = useState('request');
   const [composer, setComposer] = useState<Composer>('none');
   const [searchOpen, setSearchOpen] = useState(false);
-  const active = useActiveMembership();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,7 +75,10 @@ export function AppShell() {
         <div className="px-2">
           <BrandLogo withWordmark />
         </div>
-        <nav className="mt-6 flex flex-col gap-1">
+        <div className="mt-3">
+          <CommunitySwitcher variant="rail" />
+        </div>
+        <nav className="mt-4 flex flex-col gap-1">
           {TABS.map((t) => (
             <RailLink key={t.to} {...t} />
           ))}
@@ -101,7 +103,7 @@ export function AppShell() {
         {/* Header */}
         <header className="sticky top-0 z-header flex items-center gap-3 border-b border-border bg-[var(--c-glass-panel-bg)] px-screenX py-3 backdrop-blur-md lg:hidden">
           <BrandLogo />
-          <span className="text-h3 font-semibold text-text">{active?.name ?? 'Local'}</span>
+          <CommunitySwitcher variant="header" />
           <div className="ml-auto flex items-center gap-1">
             <IconButton icon="search" ariaLabel="Search" size="sm" onClick={() => setSearchOpen(true)} />
             <IconButton icon="bell" ariaLabel="Notifications" size="sm" onClick={() => navigate('/inbox')} />

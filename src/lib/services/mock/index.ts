@@ -603,7 +603,7 @@ export function createMockServices(): Services {
       async get(id) {
         const l = db().listings.find((x) => x.id === id) ?? null;
         if (!l || !visibleToViewer('listing', l)) return null;
-        return { ...l, hidden: db().hidden.some((h) => h.kind === 'listing' && h.id === l.id) };
+        return { ...l, photos: l.photos ?? [], hidden: db().hidden.some((h) => h.kind === 'listing' && h.id === l.id) };
       },
       async create(communityId, input: ListingInput) {
         const parsed = listingSchema.parse(input);
@@ -631,6 +631,7 @@ export function createMockServices(): Services {
           category: parsed.category,
           pricePence: parsed.pricePence ?? null,
           status: 'active',
+          photos: [],
           createdAt: nowIso(),
         };
         d.listings.push(listing);

@@ -199,6 +199,7 @@ export interface Listing {
   category: string;
   pricePence: number | null;
   status: ListingStatus;
+  photos: string[];
   /** True when the item is hidden pending review — only ever surfaced to its author. */
   hidden?: boolean;
   createdAt: string;

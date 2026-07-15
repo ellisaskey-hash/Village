@@ -187,7 +187,7 @@ function mapProposal(r: DbSeedProposal): SeedProposal {
 interface DbListing {
   id: string; community_id: string; created_by: string; kind: Listing['kind']; title: string;
   description: string | null; category: string; price_pence: number | null; status: ListingStatus;
-  created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null;
+  photos?: string[] | null; created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null;
 }
 interface DbRequest {
   id: string; community_id: string; created_by: string; title: string; description: string | null;
@@ -198,7 +198,7 @@ function mapListing(r: DbListing): Listing {
   return {
     id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
     kind: r.kind, title: r.title, description: r.description, category: r.category,
-    pricePence: r.price_pence, status: r.status, hidden: Boolean(r.hidden_at), createdAt: r.created_at,
+    pricePence: r.price_pence, status: r.status, photos: r.photos ?? [], hidden: Boolean(r.hidden_at), createdAt: r.created_at,
   };
 }
 function mapRequest(r: DbRequest): RequestPost {
