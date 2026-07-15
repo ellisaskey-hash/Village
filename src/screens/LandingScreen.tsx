@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter, springSnappy } from '@/lib/motion';
 import { BrandLogo, Button, IconBadge, TextLink, type IconName } from '@/components/ui';
 
 const VALUE: { icon: IconName; title: string; body: string }[] = [
@@ -22,7 +22,7 @@ export function LandingScreen() {
       animate="animate"
       className="mx-auto max-w-3xl px-screenX py-16"
     >
-      <div className="flex flex-col items-center gap-6 text-center">
+      <motion.div variants={cardEnter} className="flex flex-col items-center gap-6 text-center">
         <BrandLogo size={64} withWordmark />
         <h1 className="font-display text-display font-bold text-text">Your village, in one place</h1>
         <p className="max-w-xl text-h3 font-normal text-textMuted">
@@ -30,28 +30,33 @@ export function LandingScreen() {
           neighbour, built for one community at a time.
         </p>
         <div className="flex flex-col items-center gap-3">
-          <Button variant="primary" size="xl" trailingIcon="chevron-right" onClick={() => navigate('/welcome')}>
+          <Button variant="primary" size="xl" leadingIcon="home" className="motion-safe:animate-breath" onClick={() => navigate('/welcome')}>
             Find your community
           </Button>
           <span className="text-small text-textMuted">
             Already a member? <TextLink onClick={() => navigate('/auth/sign-in')}>Sign in</TextLink>
           </span>
         </div>
-      </div>
+      </motion.div>
 
-      <section className="mt-16 grid gap-4 sm:grid-cols-2">
+      <motion.section variants={cardEnter} className="mt-16 grid gap-4 sm:grid-cols-2">
         {VALUE.map((v) => (
-          <div key={v.title} className="rounded-lg border border-border bg-bgElevated p-cardPad">
+          <motion.div
+            key={v.title}
+            whileHover={{ y: -4 }}
+            transition={springSnappy}
+            className="rounded-lg border border-border bg-bgElevated p-cardPad shadow-card transition-shadow hover:shadow-raised"
+          >
             <IconBadge icon={v.icon} tone="accent" size="md" />
             <h2 className="mt-3 text-h3 font-semibold text-text">{v.title}</h2>
             <p className="mt-1 text-small text-textMuted">{v.body}</p>
-          </div>
+          </motion.div>
         ))}
-      </section>
+      </motion.section>
 
-      <footer className="mt-16 text-center text-small text-textFaint">
+      <motion.footer variants={cardEnter} className="mt-16 text-center text-small text-textFaint">
         Launching first in Horsmonden, Kent. Places data © OpenStreetMap contributors.
-      </footer>
+      </motion.footer>
     </motion.main>
   );
 }

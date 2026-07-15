@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { listContainer, listItem } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { Badge, Card, EmptyState, IconBadge, ListRow, Skeleton, StatCard } from '@/components/ui';
+import { Badge, Card, EmptyState, IconBadge, ListRow, Skeleton, StatCard, type IconName, type Tone } from '@/components/ui';
 import { reasonLabel } from './moderationCopy';
 
 /** Admin home: today's numbers + priority reports first (spec 04 §Admin console). */
@@ -26,6 +28,15 @@ export function AdminDashboard() {
   const d = dash.data;
   const priority = (reports.data ?? []).filter((r) => r.priority).slice(0, 5);
 
+  const stats: { icon: IconName; tone: Tone; eyebrow: string; value: number; to: string }[] = d ? [
+    { icon: 'shield', tone: d.openReports ? 'warn' : 'positive', eyebrow: 'Open reports', value: d.openReports, to: '/admin/reports' },
+    { icon: 'flame', tone: d.priorityReports ? 'warn' : 'neutral', eyebrow: 'Priority', value: d.priorityReports, to: '/admin/reports' },
+    { icon: 'eye', tone: 'accent', eyebrow: 'Hidden', value: d.hiddenItems, to: '/admin/hidden' },
+    { icon: 'clock', tone: 'accent', eyebrow: 'Awaiting release', value: d.delayedPosts, to: '/admin/delays' },
+    { icon: 'businesses', tone: 'accent', eyebrow: 'Claims', value: d.pendingClaims, to: '/admin/seeding' },
+    { icon: 'users', tone: 'accent', eyebrow: 'New today', value: d.newMembersToday, to: '/admin/members' },
+  ] : [];
+
   return (
     <>
       {dash.isLoading || !d ? (
@@ -33,14 +44,13 @@ export function AdminDashboard() {
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height={92} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <StatCard icon="shield" tone={d.openReports ? 'warn' : 'positive'} eyebrow="Open reports" value={d.openReports} onClick={() => navigate('/admin/reports')} />
-          <StatCard icon="flame" tone={d.priorityReports ? 'warn' : 'neutral'} eyebrow="Priority" value={d.priorityReports} onClick={() => navigate('/admin/reports')} />
-          <StatCard icon="eye" eyebrow="Hidden" value={d.hiddenItems} onClick={() => navigate('/admin/hidden')} />
-          <StatCard icon="clock" eyebrow="Awaiting release" value={d.delayedPosts} onClick={() => navigate('/admin/delays')} />
-          <StatCard icon="businesses" eyebrow="Claims" value={d.pendingClaims} onClick={() => navigate('/admin/seeding')} />
-          <StatCard icon="users" eyebrow="New today" value={d.newMembersToday} onClick={() => navigate('/admin/members')} />
-        </div>
+        <motion.div variants={listContainer} initial="initial" animate="animate" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {stats.map((s) => (
+            <motion.div key={s.eyebrow} variants={listItem}>
+              <StatCard icon={s.icon} tone={s.tone} eyebrow={s.eyebrow} value={s.value} onClick={() => navigate(s.to)} />
+            </motion.div>
+          ))}
+        </motion.div>
       )}
 
       <section className="space-y-3">
