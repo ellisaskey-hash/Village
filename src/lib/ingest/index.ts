@@ -1,7 +1,7 @@
 // Ingestion transformers (spec 08). Pure functions: raw source shape -> seed-proposal
-// drafts. No network, no DB. Shared by the mock seeding pipeline (now) and the Vercel
-// api/seed-ingest functions (later, AWAITING-KEYS). Ingestion NEVER writes live rows; it
-// only produces proposals for admin review.
+// drafts. No network, no DB. Shared by the fixture pipeline and the live fetchers in
+// ./live.ts (Overpass, FHRS, Companies House, Claude URL-extract). Ingestion NEVER writes
+// live rows; it only produces proposals for admin review.
 
 export type ProposalKind = 'place' | 'business' | 'organisation' | 'event';
 export type ProposalSource =
@@ -148,8 +148,8 @@ export function ingestCompaniesHouse(items: CompaniesHouseItem[]): SeedProposalD
 }
 
 // ---- Manual URL extract ---------------------------------------------------------
-// The live version pastes URLs to a Claude Haiku tool-use extraction (AWAITING-KEYS).
-// The offline version accepts already-extracted records so the pipeline runs end to end.
+// The live extraction (Claude Haiku, tool-use forced schema) lives in ./live.ts and returns
+// these already-extracted records; this transformer maps them to organisation proposals.
 
 export interface ExtractedOrg {
   name: string;

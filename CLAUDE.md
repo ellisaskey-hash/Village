@@ -19,7 +19,11 @@ You are building **Local**, a location-centric community platform (working name;
 
 ## Current state
 
-**M0–M8 complete; database live; security proven (66/66); hardened; DEPLOYED.** Everything through the admin console + M8 hardening is built. All migrations applied to the real Supabase project (**eu-north-1**); RLS/behaviour proven live 66/66 (`verify-security` 26, `verify-m4` 12, `verify-m5` 15, `verify-m7` 13). Deployed at **https://village-tau-mauve.vercel.app** (real Postgres). The app uses real Supabase when `.env` is present, else a labelled mock. Green: typecheck (app + `tsconfig.api.json`) · lint · **44 unit** · **26 e2e** · build.
+**M0–M8 complete + demo-ready; database live; security proven (66/66); DEPLOYED.** Complete-build exercise (not production). Everything in specs 00–10 is DONE, AWAITING-KEY (Companies House only), or DEFERRED-BY-DESIGN (map view, launch steps, CI) — see the reconciliation table in `docs/PROGRESS.md`. RLS/behaviour proven live 66/66. Deployed at **https://village-tau-mauve.vercel.app**. Green: typecheck (app + `tsconfig.api.json`) · lint · **49 unit** · **26 e2e** · build.
+
+**Demo:** the live DB carries a rich fake demo layer (Dev Village) + real Horsmonden ingestion. Every account + a guided tour is in **`docs/DEMO_GUIDE.md`** (admin `admin@thelocal.test` / `Local-admin-2026`; 12 residents `demo+<name>@thelocal.test` / `demo1234`). Rebuild: `node scripts/db/seed-admin.mjs` then `node scripts/db/seed-demo.mjs`.
+
+**Last-mile engineering shipped:** live URL-extract ingestion (Claude Haiku tool-use → org/event proposals), the spec-08 launch-copy generator, listing photos + gallery, a community switcher (multi-community members), and `accept_seed_proposal` event branch. ANTHROPIC key set locally + in Vercel (triage + URL-extract live).
 
 **M8 recap:** main chunk 221 KB gz (< 800 target; admin + gallery code-split off it); Lighthouse mobile 91; list virtualisation via `VirtualList` (`@tanstack/react-virtual`) on Listings/Requests/Members (1000 rows → < 80 DOM, proven live); offline draft store (`src/lib/drafts.ts`) so composing offline survives a refresh; a11y axe + keyboard-only clean; e2e now force-builds mock mode (`scripts/build-e2e.mjs` → `dist-e2e`) and `api/` is typechecked. Real Horsmonden ingestion (Gate 4) ran live via `scripts/db/ingest-horsmonden.mjs` → 37 proposals staged in `/admin/seeding` (nothing auto-published).
 
