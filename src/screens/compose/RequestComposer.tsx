@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
+import { useDraft } from '@/lib/drafts';
 import { Button, Field, Select, Sheet, Textarea, useToasts } from '@/components/ui';
 import type { RequestCategory } from '@/lib/services/types';
 
@@ -24,9 +25,8 @@ export function RequestComposer({ open, onClose }: { open: boolean; onClose: () 
   const qc = useQueryClient();
   const push = useToasts();
   const active = useActiveMembership();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<RequestCategory>('help');
+  const [draft, setDraft, clearDraft] = useDraft('request', { title: '', description: '', category: 'help' as RequestCategory });
+  const { title, description, category } = draft;
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -40,8 +40,7 @@ export function RequestComposer({ open, onClose }: { open: boolean; onClose: () 
       });
       await qc.invalidateQueries({ queryKey: ['requests', active.communityId] });
       onClose();
-      setTitle('');
-      setDescription('');
+      clearDraft();
       navigate(`/requests/${r.id}`);
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -63,14 +62,14 @@ export function RequestComposer({ open, onClose }: { open: boolean; onClose: () 
       }
     >
       <div className="space-y-4">
-        <Field label="What do you need?" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Borrow a ladder for the weekend" />
+        <Field label="What do you need?" value={title} onChange={(e) => setDraft({ title: e.target.value })} placeholder="Borrow a ladder for the weekend" />
         <Select
           label="Category"
           value={category}
-          onChange={(e) => setCategory(e.target.value as RequestCategory)}
+          onChange={(e) => setDraft({ category: e.target.value as RequestCategory })}
           options={CATEGORIES}
         />
-        <Textarea label="Any detail?" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="A step ladder would be perfect. Happy to collect." maxLength={500} />
+        <Textarea label="Any detail?" value={description} onChange={(e) => setDraft({ description: e.target.value })} placeholder="A step ladder would be perfect. Happy to collect." maxLength={500} />
       </div>
     </Sheet>
   );

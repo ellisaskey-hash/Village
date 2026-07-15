@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
+import { useDraft } from '@/lib/drafts';
 import { Button, Field, SegmentedControl, Sheet, Textarea, useToasts } from '@/components/ui';
 import type { ListingKind } from '@/lib/services/types';
 
@@ -22,11 +23,10 @@ export function ListingComposer({
   const qc = useQueryClient();
   const push = useToasts();
   const active = useActiveMembership();
-  const [kind, setKind] = useState<ListingKind>(fixedKind ?? 'sell');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [price, setPrice] = useState('');
+  const [draft, setDraft, clearDraft] = useDraft(`listing:${fixedKind ?? 'sell'}`, {
+    kind: (fixedKind ?? 'sell') as ListingKind, title: '', description: '', category: '', price: '',
+  });
+  const { kind, title, description, category, price } = draft;
   const [busy, setBusy] = useState(false);
 
   const effectiveKind = fixedKind ?? kind;
@@ -45,9 +45,7 @@ export function ListingComposer({
       });
       await qc.invalidateQueries({ queryKey: ['listings', active.communityId] });
       onClose();
-      setTitle('');
-      setDescription('');
-      setPrice('');
+      clearDraft();
       navigate(`/listings/${l.id}`);
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -73,7 +71,7 @@ export function ListingComposer({
           <SegmentedControl<ListingKind>
             ariaLabel="Listing kind"
             value={kind}
-            onChange={setKind}
+            onChange={(v) => setDraft({ kind: v })}
             options={[
               { value: 'sell', label: 'For sale' },
               { value: 'free', label: 'Free' },
@@ -81,12 +79,12 @@ export function ListingComposer({
             ]}
           />
         )}
-        <Field label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Garden bench, solid oak" />
-        <Field label="Category" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Furniture" />
+        <Field label="Title" value={title} onChange={(e) => setDraft({ title: e.target.value })} placeholder="Garden bench, solid oak" />
+        <Field label="Category" value={category} onChange={(e) => setDraft({ category: e.target.value })} placeholder="Furniture" />
         {effectiveKind === 'sell' && (
-          <Field label="Price (£)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="25" />
+          <Field label="Price (£)" type="number" value={price} onChange={(e) => setDraft({ price: e.target.value })} placeholder="25" />
         )}
-        <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Good condition, collection from the High Street." maxLength={800} />
+        <Textarea label="Description" value={description} onChange={(e) => setDraft({ description: e.target.value })} placeholder="Good condition, collection from the High Street." maxLength={800} />
       </div>
     </Sheet>
   );
