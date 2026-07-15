@@ -497,6 +497,24 @@ export function createMockServices(): Services {
         persist();
         return e;
       },
+      async removeService(id) {
+        const me = requireProfileId();
+        const d = db();
+        d.services = d.services.filter((s) => !(s.id === id && s.createdBy === me));
+        persist();
+      },
+      async removeSkill(id) {
+        const me = requireProfileId();
+        const d = db();
+        d.skills = d.skills.filter((s) => !(s.id === id && s.profileId === me));
+        persist();
+      },
+      async removeEquipment(id) {
+        const me = requireProfileId();
+        const d = db();
+        d.equipment = d.equipment.filter((e) => !(e.id === id && e.ownerProfileId === me));
+        persist();
+      },
     },
 
     claims: {

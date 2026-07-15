@@ -576,6 +576,18 @@ export function createSupabaseServices(): Services {
         if (error) throw error;
         return mapEquip(data as unknown as DbEquip);
       },
+      async removeService(id) {
+        const { error } = await getSupabase().from('services').delete().eq('id', id);
+        if (error) throw error;
+      },
+      async removeSkill(id) {
+        const { error } = await getSupabase().from('skills').delete().eq('id', id);
+        if (error) throw error;
+      },
+      async removeEquipment(id) {
+        const { error } = await getSupabase().from('equipment_items').delete().eq('id', id);
+        if (error) throw error;
+      },
     },
 
     claims: {

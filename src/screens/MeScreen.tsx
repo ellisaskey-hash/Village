@@ -29,6 +29,9 @@ export function MeScreen() {
   const listingsQuery = useQuery({ queryKey: ['listings', communityId], queryFn: () => services.listings.list(communityId), enabled: Boolean(communityId) });
   const requestsQuery = useQuery({ queryKey: ['requests', communityId], queryFn: () => services.requests.list(communityId), enabled: Boolean(communityId) });
   const eventsQuery = useQuery({ queryKey: ['events', communityId], queryFn: () => services.events.list(communityId), enabled: Boolean(communityId) });
+  const equipmentQuery = useQuery({ queryKey: ['directory', 'equipment', communityId], queryFn: () => services.directory.equipment(communityId), enabled: Boolean(communityId) });
+  const skillsQuery = useQuery({ queryKey: ['directory', 'skills', communityId], queryFn: () => services.directory.skills(communityId), enabled: Boolean(communityId) });
+  const servicesQuery = useQuery({ queryKey: ['directory', 'services', communityId], queryFn: () => services.directory.services(communityId), enabled: Boolean(communityId) });
 
   const me = membersQuery.data?.find((m) => m.profileId === session?.profileId);
   const trust = active?.trustLevel ?? 0;
@@ -38,6 +41,22 @@ export function MeScreen() {
   const myRequests = (requestsQuery.data ?? []).filter((r) => r.createdBy === uid);
   const myEvents = (eventsQuery.data ?? []).filter((e) => e.createdBy === uid);
   const hasActivity = myListings.length + myRequests.length + myEvents.length > 0;
+  const myEquipment = (equipmentQuery.data ?? []).filter((e) => e.ownerProfileId === uid);
+  const mySkills = (skillsQuery.data ?? []).filter((s) => s.profileId === uid);
+  const myServices = (servicesQuery.data ?? []).filter((s) => s.createdBy === uid);
+  const hasContributions = myEquipment.length + mySkills.length + myServices.length > 0;
+
+  async function remove(kind: 'equipment' | 'skill' | 'service', id: string) {
+    try {
+      if (kind === 'equipment') await services.directory.removeEquipment(id);
+      else if (kind === 'skill') await services.directory.removeSkill(id);
+      else await services.directory.removeService(id);
+      await qc.invalidateQueries({ queryKey: ['directory'] });
+      push({ title: 'Removed', variant: 'success' });
+    } catch (e) {
+      push({ title: e instanceof Error ? e.message : 'Could not remove that', variant: 'error' });
+    }
+  }
 
   async function createInvite() {
     try {
@@ -109,6 +128,26 @@ export function MeScreen() {
           </div>
         )}
       </motion.section>
+
+      {hasContributions && (
+        <motion.section variants={cardEnter} className="space-y-3">
+          <h2 className="text-h3 font-semibold text-text">My skills &amp; equipment</h2>
+          <div className="space-y-2">
+            {myServices.map((s) => (
+              <ListRow key={s.id} leading={<IconBadge icon="services" tone="accent" />} title={s.title} subtitle={`Service · ${s.category}`}
+                trailing={<Button variant="ghost" size="sm" leadingIcon="remove" onClick={() => remove('service', s.id)}>Remove</Button>} />
+            ))}
+            {myEquipment.map((e) => (
+              <ListRow key={e.id} leading={<IconBadge icon="equipment" tone="positive" />} title={e.name} subtitle={`Lending · ${e.category}`}
+                trailing={<Button variant="ghost" size="sm" leadingIcon="remove" onClick={() => remove('equipment', e.id)}>Remove</Button>} />
+            ))}
+            {mySkills.map((s) => (
+              <ListRow key={s.id} leading={<IconBadge icon="sparkle" tone="purple" />} title={s.skill} subtitle="Skill"
+                trailing={<Button variant="ghost" size="sm" leadingIcon="remove" onClick={() => remove('skill', s.id)}>Remove</Button>} />
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       <motion.section variants={cardEnter} className="space-y-3">
         <h2 className="text-h3 font-semibold text-text">Invite neighbours</h2>

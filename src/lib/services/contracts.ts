@@ -206,6 +206,9 @@ export interface DirectoryService {
   addService(communityId: string, input: ServiceInput): Promise<Service>;
   addSkill(communityId: string, skill: string, note?: string): Promise<Skill>;
   addEquipment(communityId: string, input: EquipmentInput): Promise<EquipmentItem>;
+  removeService(id: string): Promise<void>;
+  removeSkill(id: string): Promise<void>;
+  removeEquipment(id: string): Promise<void>;
 }
 
 export const eventSchema = z.object({

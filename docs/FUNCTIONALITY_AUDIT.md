@@ -14,6 +14,8 @@ stubbed, and what is missing, against `/docs/spec`. Status: **DONE** · **IN PRO
 | Business "Enquire" button | Toasted "Messaging lands in the next update" — a dead control (Law 13) | Opens a real thread with the owner (claimed businesses only) — **DONE** |
 | Profile editing | No UI to change name/avatar/bio/identity chips | `EditProfileSheet` (avatar upload, name, bio, identity chips) from the Me profile card, wiring `profiles.update` + `updateIdentities` — **DONE** |
 | Add a skill | Skills directory was read-only; no way to add one | `SkillComposer` + "Share a skill" in the Post menu (wires `directory.addSkill`) — **DONE** |
+| My equipment & skills (spec 07) | No management section; nothing removable | `removeService/removeSkill/removeEquipment` (+ owner-only delete RLS, migration 20260715140001); "My skills & equipment" section on Me with Remove — **DONE** |
+| Vouching | `vouchFor` had no UI | A **Vouch** action on each neighbour in Directory → People (visible to trust-2+ members for below-verified neighbours) — **DONE** |
 
 ## Still MISSING / to do (prioritised)
 

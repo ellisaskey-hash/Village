@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
-import { useActiveMembership } from '@/app/state/session';
-import { Avatar, Chip, EmptyState, IconBadge, ListRow, Skeleton, type IconName } from '@/components/ui';
+import { useActiveMembership, useSession } from '@/app/state/session';
+import { Avatar, Button, Chip, EmptyState, IconBadge, ListRow, Skeleton, useToasts, type IconName } from '@/components/ui';
 import { DirectoryCard } from '@/components/content/DirectoryCard';
 
 type Sub = 'businesses' | 'services' | 'places' | 'equipment' | 'skills' | 'organisations' | 'people';
@@ -22,8 +22,22 @@ export function DirectoryView() {
   const services = useServices();
   const navigate = useNavigate();
   const active = useActiveMembership();
+  const session = useSession();
+  const push = useToasts();
+  const qc = useQueryClient();
   const communityId = active?.communityId ?? '';
+  const canVouch = (active?.trustLevel ?? 0) >= 2;
   const [sub, setSub] = useState<Sub>('businesses');
+
+  async function vouch(profileId: string, name: string) {
+    try {
+      await services.vouches.vouchFor(profileId, communityId);
+      await qc.invalidateQueries({ queryKey: ['members', communityId] });
+      push({ title: `You vouched for ${name}`, variant: 'success' });
+    } catch (e) {
+      push({ title: e instanceof Error ? e.message : 'Could not vouch', variant: 'error' });
+    }
+  }
 
   const q = useQuery({
     queryKey: ['directory', sub, communityId],
@@ -60,7 +74,15 @@ export function DirectoryView() {
       ) : sub === 'people' ? (
         <div className="space-y-2">
           {(data as Awaited<ReturnType<typeof services.memberships.membersOf>>).map((m) => (
-            <ListRow key={m.profileId} leading={<Avatar name={m.displayName} size="sm" />} title={m.displayName} subtitle={m.identities.join(' · ') || 'Neighbour'} />
+            <ListRow
+              key={m.profileId}
+              leading={<Avatar name={m.displayName} {...(m.avatarUrl ? { src: m.avatarUrl } : {})} size="sm" />}
+              title={m.displayName}
+              subtitle={m.identities.join(' · ') || 'Neighbour'}
+              trailing={canVouch && m.profileId !== session?.profileId && m.trustLevel < 2
+                ? <Button variant="ghost" size="sm" leadingIcon="heart" onClick={() => vouch(m.profileId, m.displayName)}>Vouch</Button>
+                : undefined}
+            />
           ))}
         </div>
       ) : sub === 'businesses' ? (
