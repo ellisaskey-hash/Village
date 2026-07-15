@@ -188,7 +188,7 @@ function mapProposal(r: DbSeedProposal): SeedProposal {
 interface DbListing {
   id: string; community_id: string; created_by: string; kind: Listing['kind']; title: string;
   description: string | null; category: string; price_pence: number | null; status: ListingStatus;
-  condition?: string | null; photos?: string[] | null; created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null;
+  condition?: string | null; photos?: string[] | null; created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null; businesses?: { name: string } | null;
 }
 interface DbRequest {
   id: string; community_id: string; created_by: string; title: string; description: string | null;
@@ -197,7 +197,7 @@ interface DbRequest {
 }
 function mapListing(r: DbListing): Listing {
   return {
-    id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
+    id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.businesses?.name ?? r.profiles?.display_name ?? '',
     kind: r.kind, title: r.title, description: r.description, category: r.category,
     pricePence: r.price_pence, status: r.status, condition: r.condition ?? null, photos: r.photos ?? [], hidden: Boolean(r.hidden_at), createdAt: r.created_at,
   };
@@ -209,20 +209,20 @@ function mapRequest(r: DbRequest): RequestPost {
     neededBy: r.needed_by, fulfilledBy: r.fulfilled_by, hidden: Boolean(r.hidden_at), createdAt: r.created_at,
   };
 }
-const LISTING_SELECT = '*, profiles!listings_created_by_fkey(display_name)';
+const LISTING_SELECT = '*, profiles!listings_created_by_fkey(display_name), businesses!listings_as_business_id_fkey(name)';
 const REQUEST_SELECT = '*, profiles!requests_created_by_fkey(display_name)';
 
 interface DbEvent {
   id: string; community_id: string; created_by: string; title: string; description: string | null;
   category: Event['category']; location_text: string | null; starts_at: string; ends_at: string | null;
-  rsvp_mode: Event['rsvpMode']; capacity: number | null; photos?: string[] | null; profiles?: { display_name: string } | null;
+  rsvp_mode: Event['rsvpMode']; capacity: number | null; photos?: string[] | null; profiles?: { display_name: string } | null; businesses?: { name: string } | null;
 }
 interface DbRsvp { event_id: string; profile_id: string; status: RsvpStatus; party_size: number }
 function mapEvent(r: DbEvent, rsvps: DbRsvp[], me: string | undefined): Event {
   const going = rsvps.filter((x) => x.event_id === r.id && x.status === 'going').reduce((s, x) => s + (x.party_size || 0), 0);
   const mine = me ? (rsvps.find((x) => x.event_id === r.id && x.profile_id === me)?.status ?? null) : null;
   return {
-    id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
+    id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.businesses?.name ?? r.profiles?.display_name ?? '',
     title: r.title, description: r.description, category: r.category, locationText: r.location_text,
     startsAt: r.starts_at, endsAt: r.ends_at, rsvpMode: r.rsvp_mode, capacity: r.capacity,
     photos: r.photos ?? [], goingCount: going, myRsvp: mine,
@@ -260,7 +260,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
 }
 const SVC_SEL = '*, profiles!services_created_by_fkey(display_name)';
 const EQ_SEL = '*, profiles!equipment_items_owner_profile_id_fkey(display_name)';
-const EV_SEL = '*, profiles!events_created_by_fkey(display_name)';
+const EV_SEL = '*, profiles!events_created_by_fkey(display_name), businesses!events_as_business_id_fkey(name)';
 
 function mapMembership(r: DbMembership): Membership {
   return {
@@ -665,6 +665,7 @@ export function createSupabaseServices(): Services {
             community_id: communityId, kind: parsed.kind, title: parsed.title,
             description: parsed.description ?? null, category: parsed.category,
             price_pence: parsed.pricePence ?? null, condition: parsed.condition ?? null, photos: parsed.photos ?? [],
+            as_business_id: parsed.asBusinessId ?? null,
           })
           .select(LISTING_SELECT).single();
         if (error) throw error;
@@ -845,6 +846,7 @@ export function createSupabaseServices(): Services {
           community_id: communityId, title: p.title, description: p.description ?? null, category: p.category,
           starts_at: p.startsAt, ends_at: p.endsAt ?? null, location_text: p.locationText ?? null,
           rsvp_mode: p.rsvpMode, capacity: p.capacity ?? null, photos: p.photos ?? [],
+          as_business_id: p.asBusinessId ?? null,
         }).select(EV_SEL).single();
         if (error) throw error;
         const { data: auth } = await sb.auth.getUser();

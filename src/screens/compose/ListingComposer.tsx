@@ -8,6 +8,7 @@ import { useDraft } from '@/lib/drafts';
 import { Button, Field, SegmentedControl, Sheet, Textarea, useToasts } from '@/components/ui';
 import { StaggeredBody } from '@/components/ui';
 import { PhotoInput } from '@/components/content/PhotoInput';
+import { ActingAsSelector } from '@/components/content/ActingAsSelector';
 import type { ListingKind } from '@/lib/services/types';
 
 /** `lend` is fixed for the equipment tile; the sell tile lets the poster pick sell/free/wanted. */
@@ -31,6 +32,7 @@ export function ListingComposer({
   const { kind, title, description, category, price } = draft;
   const [photos, setPhotos] = useState<string[]>([]);
   const [condition, setCondition] = useState<'new' | 'likeNew' | 'good' | 'fair' | 'spares'>('good');
+  const [asBusinessId, setAsBusinessId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const effectiveKind = fixedKind ?? kind;
@@ -48,11 +50,13 @@ export function ListingComposer({
         ...(pricePence !== undefined && !Number.isNaN(pricePence) ? { pricePence } : {}),
         ...(photos.length ? { photos } : {}),
         ...(effectiveKind !== 'wanted' ? { condition } : {}),
+        ...(asBusinessId ? { asBusinessId } : {}),
       });
       await qc.invalidateQueries({ queryKey: ['listings', active.communityId] });
       onClose();
       clearDraft();
       setPhotos([]);
+      setAsBusinessId(null);
       navigate(`/listings/${l.id}`);
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -74,6 +78,7 @@ export function ListingComposer({
       }
     >
       <StaggeredBody className="space-y-4">
+        <ActingAsSelector value={asBusinessId} onChange={setAsBusinessId} />
         {!fixedKind && (
           <SegmentedControl<ListingKind>
             ariaLabel="Listing kind"

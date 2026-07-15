@@ -221,6 +221,7 @@ export const eventSchema = z.object({
   rsvpMode: z.enum(['none', 'open', 'capacity']),
   capacity: z.number().int().positive().optional(),
   photos: z.array(z.string()).max(4).optional(),
+  asBusinessId: z.string().optional(),
 });
 export type EventInput = z.infer<typeof eventSchema>;
 
@@ -268,6 +269,7 @@ export const listingSchema = z.object({
   pricePence: z.number().int().nonnegative().optional(),
   condition: z.enum(['new', 'likeNew', 'good', 'fair', 'spares']).optional(),
   photos: z.array(z.string()).max(4).optional(),
+  asBusinessId: z.string().optional(),
 });
 export type ListingInput = z.infer<typeof listingSchema>;
 

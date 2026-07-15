@@ -16,18 +16,16 @@ stubbed, and what is missing, against `/docs/spec`. Status: **DONE** · **IN PRO
 | Add a skill | Skills directory was read-only; no way to add one | `SkillComposer` + "Share a skill" in the Post menu (wires `directory.addSkill`) — **DONE** |
 | My equipment & skills (spec 07) | No management section; nothing removable | `removeService/removeSkill/removeEquipment` (+ owner-only delete RLS, migration 20260715140001); "My skills & equipment" section on Me with Remove — **DONE** |
 | Vouching | `vouchFor` had no UI | A **Vouch** action on each neighbour in Directory → People (visible to trust-2+ members for below-verified neighbours) — **DONE** |
+| Acting-as (post as your business) | No selector; every post was personal | `ActingAsSelector` on the Listing + Event composers (shows only if you own a business); saves `as_business_id`; the listing/event then shows the **business** as author — **DONE** (org-officer acting-as still to come) |
 
 ## Still MISSING / to do (prioritised)
 
 | Area | Gap | Priority |
 |---|---|---|
-| Acting-as | No "post as your business / organisation" selector on composers (spec 07); every post is personal | High |
-| Me screen | Spec 07 "My equipment & skills" management (list/remove your own) is absent | Medium |
 | Events | No "This month" grid toggle (spec 07); no map snippet (PostGIS, deferred with map view) | Medium |
 | Business management | Owner can't add hours, items/offers, or org posts from the UI | Medium |
-| Notifications / DM privacy / quiet hours | Toggles exist; not verified that they actually gate delivery end-to-end | Medium |
-| Vouching | No UI to vouch for another member (trust ladder step, spec 04) | Medium |
-| Alerts | Acting-as-org for verified-tier alerts; category gating by trust | Medium |
+| Acting-as (org officer) | Post as a verified organisation (needs organisation_members UI) | Medium |
+| Notifications / DM privacy / quiet hours | Toggles exist; server-side gating is in the RPCs (`post_alert` respects prefs) but a full end-to-end pass isn't done | Medium |
 | Realtime | Threads poll (4s) rather than subscribe to a Supabase channel | Low |
 
 ## Notes

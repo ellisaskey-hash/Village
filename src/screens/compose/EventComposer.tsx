@@ -7,6 +7,7 @@ import { errorMessage } from '@/lib/errors';
 import { Button, Field, SegmentedControl, Select, Sheet, Textarea, useToasts } from '@/components/ui';
 import { StaggeredBody } from '@/components/ui';
 import { PhotoInput } from '@/components/content/PhotoInput';
+import { ActingAsSelector } from '@/components/content/ActingAsSelector';
 import type { EventCategory, RsvpMode } from '@/lib/services/types';
 
 const CATEGORIES: { value: EventCategory; label: string }[] = [
@@ -33,6 +34,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
   const [rsvpMode, setRsvpMode] = useState<RsvpMode>('open');
   const [capacity, setCapacity] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [asBusinessId, setAsBusinessId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -49,10 +51,12 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
         ...(description ? { description } : {}),
         ...(cap && !Number.isNaN(cap) ? { capacity: cap } : {}),
         ...(photos.length ? { photos } : {}),
+        ...(asBusinessId ? { asBusinessId } : {}),
       });
       await qc.invalidateQueries({ queryKey: ['events', active.communityId] });
       onClose();
       setPhotos([]);
+      setAsBusinessId(null);
       navigate(`/events/${ev.id}`);
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -65,6 +69,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
     <Sheet open={open} onClose={onClose} title="Add an event" hero={{ icon: 'events', tone: 'warn' }}
       footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Post event</Button>}>
       <StaggeredBody className="space-y-4">
+        <ActingAsSelector value={asBusinessId} onChange={setAsBusinessId} />
         <PhotoInput value={photos} onChange={setPhotos} />
         <Field label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Summer fete on the green" />
         <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value as EventCategory)} options={CATEGORIES} />
