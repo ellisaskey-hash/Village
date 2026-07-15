@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { useThemeStore, type ThemePref } from '@/app/state/theme';
 import {
   useA11yStore,
@@ -130,7 +130,7 @@ export function SettingsScreen() {
         <h1 className="font-display text-h1 font-bold text-text">Settings</h1>
       </header>
 
-      <section>
+      <motion.section variants={cardEnter}>
         <h2 className="mb-2 text-h3 font-semibold text-text">Appearance</h2>
         <Card className="divide-y divide-border">
           <Row label="Theme">
@@ -204,9 +204,9 @@ export function SettingsScreen() {
             />
           </Row>
         </Card>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section variants={cardEnter}>
         <h2 className="mb-2 text-h3 font-semibold text-text">Privacy</h2>
         <Card className="divide-y divide-border">
           <Row label="Who can message me directly">
@@ -229,9 +229,9 @@ export function SettingsScreen() {
             />
           </Row>
         </Card>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section variants={cardEnter}>
         <h2 className="mb-2 text-h3 font-semibold text-text">Notifications</h2>
         <Card className="divide-y divide-border">
           {NOTIF_PREFS.map((p) => (
@@ -252,9 +252,9 @@ export function SettingsScreen() {
             </p>
           </div>
         </Card>
-      </section>
+      </motion.section>
 
-      <section>
+      <motion.section variants={cardEnter}>
         <h2 className="mb-2 text-h3 font-semibold text-text">Your data</h2>
         <Card className="space-y-3">
           <p className="text-small text-textMuted">
@@ -271,7 +271,7 @@ export function SettingsScreen() {
             </Button>
           </div>
         </Card>
-      </section>
+      </motion.section>
 
       <Modal
         open={removeOpen}
