@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
-import { pressable, tabScreenCrossfade } from '@/lib/motion';
+import { pressable } from '@/lib/motion';
 import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
 import { CommunitySwitcher } from '@/components/layout/CommunitySwitcher';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
@@ -42,7 +42,6 @@ export function AppShell() {
   const [composer, setComposer] = useState<Composer>('none');
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
-  const { pathname } = useLocation();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -112,11 +111,7 @@ export function AppShell() {
         </header>
 
         <main id="main" className="flex-1 pb-24 lg:pb-10">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div key={pathname} variants={tabScreenCrossfade} initial="initial" animate="animate" exit="exit">
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          <Outlet />
         </main>
       </div>
 
