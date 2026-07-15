@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { Banner, Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { ReportButton } from '@/components/moderation/ReportButton';
+import { PhotoHero } from '@/components/content/PhotoHero';
+import { AuthorCard } from '@/components/content/AuthorCard';
 import { priceLabel } from './ListingsView';
 import type { ListingStatus } from '@/lib/services/types';
 
@@ -52,7 +54,7 @@ export function ListingDetail() {
 
   return (
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
-      <header className="flex items-center gap-2">
+      <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
         <h1 className="font-display text-h1 font-bold text-text">Listing</h1>
         {l && !isAuthor && (
@@ -60,66 +62,57 @@ export function ListingDetail() {
             <ReportButton targetKind="listing" targetId={l.id} targetLabel={l.title} />
           </span>
         )}
-      </header>
+      </motion.header>
 
       {q.isLoading ? (
-        <Skeleton height={140} />
+        <div className="space-y-4"><Skeleton height={208} /><Skeleton height={120} /></div>
       ) : !l ? (
         <Card><p className="text-body text-textMuted">We couldn't find that listing.</p></Card>
       ) : (
         <>
           {isAuthor && l.hidden && (
-            <Banner
-              tone="warn"
-              icon="eye"
-              title="This is hidden while we review a report"
-              body="Only you and the moderators can see it for now. We'll be in touch if anything is needed."
-            />
+            <motion.div variants={cardEnter}>
+              <Banner tone="warn" icon="eye" title="This is hidden while we review a report" body="Only you and the moderators can see it for now. We'll be in touch if anything is needed." />
+            </motion.div>
           )}
-          {l.photos.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto rounded-xl">
-              {l.photos.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt={`${l.title} photo ${i + 1}`}
-                  className="h-48 w-auto shrink-0 rounded-xl border border-border object-cover"
-                  loading="lazy"
-                />
-              ))}
-            </div>
-          )}
-          <Card>
-            <div className="flex items-start gap-3">
-              <IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} size="lg" />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-h2 font-semibold text-text">{l.title}</h2>
-                <p className="text-small text-textMuted">{priceLabel(l)} · {l.authorName}</p>
+          <motion.div variants={cardEnter}>
+            <PhotoHero photos={l.photos} icon="listings" from={l.kind === 'free' ? 'var(--c-positive)' : 'var(--c-accent)'} to="var(--c-accent-warm)" />
+          </motion.div>
+          <motion.div variants={cardEnter}>
+            <Card>
+              <div className="flex items-start gap-3">
+                <IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-h2 font-semibold text-text">{l.title}</h2>
+                  <p className="text-small text-textMuted">{priceLabel(l)}{l.category ? ` · ${l.category}` : ''}</p>
+                </div>
               </div>
-            </div>
-            {l.description && <p className="mt-3 text-body text-text">{l.description}</p>}
-            {l.status !== 'active' && <p className="mt-2 text-small text-warn">Status: {l.status}</p>}
-          </Card>
+              {l.description && <p className="mt-3 text-body text-text">{l.description}</p>}
+              {l.status !== 'active' && <p className="mt-2 text-small text-warn capitalize">{l.status}</p>}
+            </Card>
+          </motion.div>
 
-          {isAuthor ? (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" onClick={() => setStatus(l.status === 'reserved' ? 'active' : 'reserved')} disabled={l.status === 'completed'}>
-                {l.status === 'reserved' ? 'Un-reserve' : 'Mark reserved'}
-              </Button>
-              <Button variant="primary" size="sm" leadingIcon="check" onClick={() => setStatus('completed')} disabled={l.status === 'completed'}>
-                Mark done
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setStatus('withdrawn')}>
-                Withdraw
-              </Button>
-            </div>
-          ) : l.status === 'active' || l.status === 'reserved' ? (
-            <Button variant="primary" size="xl" fullWidth leadingIcon="messages" onClick={() => setReplyOpen(true)}>
-              Message about this
-            </Button>
-          ) : (
-            <Card><p className="text-small text-textMuted">This listing is closed.</p></Card>
+          {!isAuthor && (
+            <motion.div variants={cardEnter}>
+              <AuthorCard communityId={l.communityId} profileId={l.createdBy} fallbackName={l.authorName} />
+            </motion.div>
           )}
+
+          <motion.div variants={cardEnter}>
+            {isAuthor ? (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" size="sm" onClick={() => setStatus(l.status === 'reserved' ? 'active' : 'reserved')} disabled={l.status === 'completed'}>
+                  {l.status === 'reserved' ? 'Un-reserve' : 'Mark reserved'}
+                </Button>
+                <Button variant="primary" size="sm" leadingIcon="check" onClick={() => setStatus('completed')} disabled={l.status === 'completed'}>Mark done</Button>
+                <Button variant="ghost" size="sm" onClick={() => setStatus('withdrawn')}>Withdraw</Button>
+              </div>
+            ) : l.status === 'active' || l.status === 'reserved' ? (
+              <Button variant="primary" size="xl" fullWidth leadingIcon="messages" onClick={() => setReplyOpen(true)}>Message about this</Button>
+            ) : (
+              <Card><p className="text-small text-textMuted">This listing is closed.</p></Card>
+            )}
+          </motion.div>
         </>
       )}
 

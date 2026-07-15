@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
-import { Card, IconBadge, IconButton, Skeleton } from '@/components/ui';
+import { Card, Icon, IconBadge, IconButton, Skeleton } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 
 export function PlaceDetail() {
@@ -25,18 +25,22 @@ export function PlaceDetail() {
         <Card><p className="text-body text-textMuted">We couldn't find that place.</p></Card>
       ) : (
         <>
-          <PhotoHero photos={p.photos} icon="places" from="var(--c-positive)" to="var(--c-info)" />
-          <Card>
-            <div className="flex items-start gap-3">
-              <IconBadge icon="places" tone="positive" size="lg" />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-h2 font-semibold text-text">{p.name}</h2>
-                <p className="text-small text-textMuted capitalize">{p.kind}</p>
+          <motion.div variants={cardEnter}>
+            <PhotoHero photos={p.photos} icon="places" from="var(--c-positive)" to="var(--c-info)" />
+          </motion.div>
+          <motion.div variants={cardEnter}>
+            <Card>
+              <div className="flex items-start gap-3">
+                <IconBadge icon="places" tone="positive" size="lg" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-h2 font-semibold text-text">{p.name}</h2>
+                  <p className="text-small text-textMuted capitalize">{p.kind}</p>
+                </div>
               </div>
-            </div>
-            {p.description && <p className="mt-3 text-body text-text">{p.description}</p>}
-            {p.address && <p className="mt-2 text-small text-textMuted">{p.address}</p>}
-          </Card>
+              {p.description && <p className="mt-3 text-body text-text">{p.description}</p>}
+              {p.address && <p className="mt-2 flex items-center gap-1.5 text-small text-textMuted"><Icon name="pin" size={14} className="text-textFaint" /> {p.address}</p>}
+            </Card>
+          </motion.div>
         </>
       )}
     </motion.div>

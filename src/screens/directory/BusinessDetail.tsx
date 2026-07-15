@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
@@ -73,48 +73,44 @@ export function BusinessDetail() {
         </Card>
       ) : (
         <>
-          <PhotoHero photos={b.photos} icon="businesses" />
-          <Card>
-            <div className="flex items-start gap-3">
-              <IconBadge icon="businesses" tone="accent" size="lg" />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-h2 font-semibold text-text">{b.name}</h2>
-                {b.categories.length > 0 && (
-                  <p className="text-small text-textMuted">{b.categories.join(', ')}</p>
-                )}
+          <motion.div variants={cardEnter}>
+            <PhotoHero photos={b.photos} icon="businesses" />
+          </motion.div>
+          <motion.div variants={cardEnter}>
+            <Card>
+              <div className="flex items-start gap-3">
+                <IconBadge icon="businesses" tone="accent" size="lg" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-h2 font-semibold text-text">{b.name}</h2>
+                  {b.categories.length > 0 && <p className="text-small text-textMuted">{b.categories.join(', ')}</p>}
+                </div>
               </div>
-            </div>
-            {b.description && <p className="mt-3 text-body text-text">{b.description}</p>}
-            {(b.contact.phone || b.contact.email || b.contact.website) && (
-              <div className="mt-3 space-y-1 text-small text-textMuted">
-                {b.contact.phone && <p>{b.contact.phone}</p>}
-                {b.contact.email && <p>{b.contact.email}</p>}
-                {b.contact.website && <p>{b.contact.website}</p>}
-              </div>
-            )}
-          </Card>
+              {b.description && <p className="mt-3 text-body text-text">{b.description}</p>}
+              {(b.contact.phone || b.contact.email || b.contact.website) && (
+                <div className="mt-3 space-y-1 text-small text-textMuted">
+                  {b.contact.phone && <p>{b.contact.phone}</p>}
+                  {b.contact.email && <p>{b.contact.email}</p>}
+                  {b.contact.website && <p>{b.contact.website}</p>}
+                </div>
+              )}
+            </Card>
+          </motion.div>
 
           {isOwner ? (
-            <Banner tone="accent" icon="check" title="You manage this page" body="Add your hours and an offer to help neighbours find you." />
+            <motion.div variants={cardEnter}>
+              <Banner tone="accent" icon="check" title="You manage this page" body="Add your hours and an offer to help neighbours find you." />
+            </motion.div>
           ) : !b.ownerProfileId ? (
-            <Banner
-              tone="warn"
-              icon="info"
-              title="Is this your business?"
-              body="Claim this page to manage it, add offers, and reply to enquiries."
-              action={{ label: 'Claim it', onClick: () => setClaimOpen(true) }}
-            />
+            <motion.div variants={cardEnter}>
+              <Banner tone="warn" icon="info" title="Is this your business?" body="Claim this page to manage it, add offers, and reply to enquiries." action={{ label: 'Claim it', onClick: () => setClaimOpen(true) }} />
+            </motion.div>
           ) : null}
 
-          <Button
-            variant="primary"
-            size="xl"
-            fullWidth
-            leadingIcon="messages"
-            onClick={() => push({ title: 'Messaging lands in the next update', variant: 'info' })}
-          >
-            Enquire
-          </Button>
+          <motion.div variants={cardEnter}>
+            <Button variant="primary" size="xl" fullWidth leadingIcon="messages" onClick={() => push({ title: 'Messaging lands in the next update', variant: 'info' })}>
+              Enquire
+            </Button>
+          </motion.div>
         </>
       )}
 

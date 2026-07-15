@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { Badge, Banner, Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { ReportButton } from '@/components/moderation/ReportButton';
+import { AuthorCard } from '@/components/content/AuthorCard';
 
 export function RequestDetail() {
   const { id = '' } = useParams();
@@ -52,7 +53,7 @@ export function RequestDetail() {
 
   return (
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
-      <header className="flex items-center gap-2">
+      <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
         <h1 className="font-display text-h1 font-bold text-text">Request</h1>
         {r && !isAuthor && (
@@ -60,36 +61,42 @@ export function RequestDetail() {
             <ReportButton targetKind="request" targetId={r.id} targetLabel={r.title} />
           </span>
         )}
-      </header>
+      </motion.header>
 
       {q.isLoading ? (
-        <Skeleton height={140} />
+        <div className="space-y-4"><Skeleton height={120} /><Skeleton height={72} /></div>
       ) : !r ? (
         <Card><p className="text-body text-textMuted">We couldn't find that request.</p></Card>
       ) : (
         <>
           {isAuthor && r.hidden && (
-            <Banner
-              tone="warn"
-              icon="eye"
-              title="This is hidden while we review a report"
-              body="Only you and the moderators can see it for now. We'll be in touch if anything is needed."
-            />
+            <motion.div variants={cardEnter}>
+              <Banner tone="warn" icon="eye" title="This is hidden while we review a report" body="Only you and the moderators can see it for now. We'll be in touch if anything is needed." />
+            </motion.div>
           )}
-          <Card>
-            <div className="flex items-start gap-3">
-              <IconBadge icon="requests" tone="accent" size="lg" />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-h2 font-semibold text-text">{r.title}</h2>
-                  {r.status !== 'open' && <Badge tone="warn" dot />}
+          <motion.div variants={cardEnter}>
+            <Card>
+              <div className="flex items-start gap-3">
+                <IconBadge icon="requests" tone="accent" size="lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-h2 font-semibold text-text">{r.title}</h2>
+                    {r.status !== 'open' && <Badge tone="warn" dot />}
+                  </div>
+                  <p className="text-small text-textMuted capitalize">{r.category}</p>
                 </div>
-                <p className="text-small text-textMuted">{r.category} · {r.authorName}</p>
               </div>
-            </div>
-            {r.description && <p className="mt-3 text-body text-text">{r.description}</p>}
-          </Card>
+              {r.description && <p className="mt-3 text-body text-text">{r.description}</p>}
+            </Card>
+          </motion.div>
 
+          {!isAuthor && (
+            <motion.div variants={cardEnter}>
+              <AuthorCard communityId={r.communityId} profileId={r.createdBy} fallbackName={r.authorName} />
+            </motion.div>
+          )}
+
+          <motion.div variants={cardEnter}>
           {isAuthor ? (
             <div className="flex gap-2">
               <Button variant="primary" size="xl" fullWidth leadingIcon="check" onClick={() => setStatus('fulfilled')} disabled={r.status === 'fulfilled'}>
@@ -106,6 +113,7 @@ export function RequestDetail() {
           ) : (
             <Card><p className="text-small text-textMuted">This request is closed.</p></Card>
           )}
+          </motion.div>
         </>
       )}
 
