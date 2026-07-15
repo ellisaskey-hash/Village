@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { EmptyState, SegmentedControl } from '@/components/ui';
 import { useActiveMembership } from '@/app/state/session';
 import { DirectoryView } from '@/screens/directory/DirectoryView';
@@ -32,36 +32,40 @@ export function ExploreScreen() {
       variants={screenEnter}
       initial="initial"
       animate="animate"
-      className="mx-auto max-w-2xl space-y-6 px-screenX py-6"
+      className="mx-auto max-w-4xl space-y-5 px-screenX py-6"
     >
-      <header>
+      <motion.header variants={cardEnter}>
         <h1 className="font-display text-h1 font-bold text-text">Explore</h1>
         <p className="text-small text-textMuted">Everything happening in {active?.name ?? 'your community'}.</p>
-      </header>
+      </motion.header>
 
-      <SegmentedControl<Section>
-        ariaLabel="Explore section"
-        value={section}
-        onChange={setSection}
-        options={[
-          { value: 'listings', label: 'Listings' },
-          { value: 'requests', label: 'Requests' },
-          { value: 'events', label: 'Events' },
-          { value: 'directory', label: 'Directory' },
-        ]}
-      />
+      <motion.div variants={cardEnter} className="sticky top-0 z-10 -mx-screenX bg-[var(--c-glass-panel-bg)]/80 px-screenX py-2 backdrop-blur-md">
+        <SegmentedControl<Section>
+          ariaLabel="Explore section"
+          value={section}
+          onChange={setSection}
+          options={[
+            { value: 'listings', label: 'Listings' },
+            { value: 'requests', label: 'Requests' },
+            { value: 'events', label: 'Events' },
+            { value: 'directory', label: 'Directory' },
+          ]}
+        />
+      </motion.div>
 
-      {section === 'directory' ? (
-        <DirectoryView />
-      ) : section === 'listings' ? (
-        <ListingsView />
-      ) : section === 'requests' ? (
-        <RequestsView />
-      ) : section === 'events' ? (
-        <EventsView />
-      ) : (
-        <EmptyState icon={e.icon} title={e.title} body={e.body} />
-      )}
+      <motion.div variants={cardEnter}>
+        {section === 'directory' ? (
+          <DirectoryView />
+        ) : section === 'listings' ? (
+          <ListingsView />
+        ) : section === 'requests' ? (
+          <RequestsView />
+        ) : section === 'events' ? (
+          <EventsView />
+        ) : (
+          <EmptyState icon={e.icon} title={e.title} body={e.body} />
+        )}
+      </motion.div>
     </motion.div>
   );
 }
