@@ -27,6 +27,9 @@ function check(name, pass, detail = '') {
 const rowId = (d) => (d == null ? undefined : Array.isArray(d) ? d[0]?.id : d.id ?? d);
 
 // ---- cleanup + fixtures --------------------------------------------------------
+// Clear the one non-cascading cross-reference first: a request fulfilled_by points at a profile
+// with no ON DELETE, so a prior run's fulfilled request blocks deleting that user (FK order).
+await sql.query("update requests set fulfilled_by = null where fulfilled_by in (select id from profiles where email like 'rlstest+%')");
 await sql.query("delete from auth.users where email like 'rlstest+%'");
 await sql.query("delete from businesses where name in ('Alice Bakery','Forged','Forged Business')");
 await sql.query("delete from places where name='Secret Spot'");
