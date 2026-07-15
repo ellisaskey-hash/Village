@@ -30,6 +30,7 @@ export function ListingComposer({
   });
   const { kind, title, description, category, price } = draft;
   const [photos, setPhotos] = useState<string[]>([]);
+  const [condition, setCondition] = useState<'new' | 'likeNew' | 'good' | 'fair' | 'spares'>('good');
   const [busy, setBusy] = useState(false);
 
   const effectiveKind = fixedKind ?? kind;
@@ -46,6 +47,7 @@ export function ListingComposer({
         ...(description ? { description } : {}),
         ...(pricePence !== undefined && !Number.isNaN(pricePence) ? { pricePence } : {}),
         ...(photos.length ? { photos } : {}),
+        ...(effectiveKind !== 'wanted' ? { condition } : {}),
       });
       await qc.invalidateQueries({ queryKey: ['listings', active.communityId] });
       onClose();
@@ -89,6 +91,23 @@ export function ListingComposer({
         <Field label="Category" value={category} onChange={(e) => setDraft({ category: e.target.value })} placeholder="Furniture" />
         {effectiveKind === 'sell' && (
           <Field label="Price (£)" type="number" value={price} onChange={(e) => setDraft({ price: e.target.value })} placeholder="25" />
+        )}
+        {effectiveKind !== 'wanted' && (
+          <div className="space-y-1.5">
+            <span className="text-small font-medium text-text">Condition</span>
+            <SegmentedControl
+              ariaLabel="Condition"
+              value={condition}
+              onChange={setCondition}
+              options={[
+                { value: 'new', label: 'New' },
+                { value: 'likeNew', label: 'Like new' },
+                { value: 'good', label: 'Good' },
+                { value: 'fair', label: 'Fair' },
+                { value: 'spares', label: 'Spares' },
+              ]}
+            />
+          </div>
         )}
         <Textarea label="Description" value={description} onChange={(e) => setDraft({ description: e.target.value })} placeholder="Good condition, collection from the High Street." maxLength={800} />
       </StaggeredBody>

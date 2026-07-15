@@ -9,15 +9,14 @@ stubbed, and what is missing, against `/docs/spec`. Status: **DONE** · **IN PRO
 | Item | Was | Now |
 |---|---|---|
 | Blank page on navigation | Shell `AnimatePresence mode="wait"` stalled exits → blank until refresh | Removed; Outlet renders directly (screenEnter still fades in) — **DONE** |
-| **Photo upload when posting** | No upload UI anywhere despite photo columns on listings/events/alerts/businesses/places | `photos` storage bucket + RLS, `media.upload` service (Supabase Storage / mock data-URI), `PhotoInput` component, wired into the **Listing composer** — **DONE for listings** (rollout to other composers pending) |
+| **Photo upload when posting** | No upload UI anywhere despite photo columns on listings/events/alerts/businesses/places | `photos` storage bucket + RLS, `media.upload` service (Supabase Storage / mock data-URI), `PhotoInput`, wired into **Listing, Event, Equipment and Alert composers**; photos render on cards, detail heroes, and the alert strip — **DONE** (business/place management still to come) |
+| Listing condition | `condition` in the DB, not collected or shown | Condition control in the Sell composer (New/Like-new/Good/Fair/Spares); shown on the listing detail — **DONE** |
 | Business "Enquire" button | Toasted "Messaging lands in the next update" — a dead control (Law 13) | Opens a real thread with the owner (claimed businesses only) — **DONE** |
 
 ## Still MISSING / to do (prioritised)
 
 | Area | Gap | Priority |
 |---|---|---|
-| Photos | Roll `PhotoInput` into the **Event, Alert, Equipment** composers + **Business/Place** management | High |
-| Listing detail | `condition` field (new/like-new/good/fair) exists in the DB, not collected or shown | High |
 | Acting-as | No "post as your business / organisation" selector on composers (spec 07); every post is personal | High |
 | Profile editing | No UI to change name, avatar, bio or identity chips after signup (the service `profiles.update` supports it) | High |
 | Directory: Skills | No way to add a skill (the Post sheet has no "skill" option); the Skills tab is read-only | Medium |

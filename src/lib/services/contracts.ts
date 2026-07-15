@@ -86,6 +86,7 @@ export const alertSchema = z.object({
   title: z.string().trim().min(2).max(140),
   body: z.string().trim().max(1000).optional(),
   asOrganisationId: z.string().optional(),
+  photos: z.array(z.string()).max(4).optional(),
 });
 export type AlertInput = z.infer<typeof alertSchema>;
 
@@ -216,6 +217,7 @@ export const eventSchema = z.object({
   locationText: z.string().trim().max(200).optional(),
   rsvpMode: z.enum(['none', 'open', 'capacity']),
   capacity: z.number().int().positive().optional(),
+  photos: z.array(z.string()).max(4).optional(),
 });
 export type EventInput = z.infer<typeof eventSchema>;
 
@@ -231,6 +233,7 @@ export const equipmentSchema = z.object({
   category: z.enum(['garden', 'diy', 'transport', 'kitchen', 'events', 'sports', 'other']),
   note: z.string().trim().max(500).optional(),
   lendTerms: z.string().trim().max(300).optional(),
+  photos: z.array(z.string()).max(4).optional(),
 });
 export type EquipmentInput = z.infer<typeof equipmentSchema>;
 
@@ -260,6 +263,7 @@ export const listingSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   category: z.string().trim().min(1, 'Pick a category'),
   pricePence: z.number().int().nonnegative().optional(),
+  condition: z.enum(['new', 'likeNew', 'good', 'fair', 'spares']).optional(),
   photos: z.array(z.string()).max(4).optional(),
 });
 export type ListingInput = z.infer<typeof listingSchema>;

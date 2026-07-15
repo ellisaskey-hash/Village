@@ -4,6 +4,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { Button, InfoCallout, SegmentedControl, Sheet, Textarea, Field, useToasts } from '@/components/ui';
+import { PhotoInput } from '@/components/content/PhotoInput';
 import type { AlertCategory } from '@/lib/services/types';
 
 const CATEGORIES: { value: AlertCategory; label: string }[] = [
@@ -21,6 +22,7 @@ export function AlertComposer({ open, onClose }: { open: boolean; onClose: () =>
   const [category, setCategory] = useState<AlertCategory>('lostPet');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -32,11 +34,13 @@ export function AlertComposer({ open, onClose }: { open: boolean; onClose: () =>
         category,
         title,
         ...(body ? { body } : {}),
+        ...(photos.length ? { photos } : {}),
       });
       await qc.invalidateQueries({ queryKey: ['alerts', active.communityId] });
       onClose();
       setTitle('');
       setBody('');
+      setPhotos([]);
       push({ title: 'Alert posted to your community', variant: 'success' });
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -59,6 +63,7 @@ export function AlertComposer({ open, onClose }: { open: boolean; onClose: () =>
         </div>
         <Field label="Headline" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Lost cat near the green" />
         <Textarea label="Details" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Ginger tom, answers to Milo. Last seen on Maidstone Road." maxLength={600} />
+        <PhotoInput value={photos} onChange={setPhotos} label="Photo (helps neighbours spot it)" />
       </div>
     </Sheet>
   );

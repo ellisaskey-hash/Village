@@ -36,6 +36,7 @@ export interface MockEvent {
   endsAt: string | null;
   rsvpMode: RsvpMode;
   capacity: number | null;
+  photos?: string[];
 }
 export interface MockRsvp {
   eventId: string;

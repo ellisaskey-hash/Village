@@ -56,6 +56,7 @@ export function AlertsStrip() {
                   <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${a.tier === 'platform' ? 'bg-danger' : a.tier === 'verified' ? 'bg-warn' : 'bg-info'}`} />
                 </span>
                 <Icon name="alerts" size={20} className={TIER_TONE[a.tier]} />
+                {a.photos[0] && <img src={a.photos[0]} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-border object-cover" />}
                 <div className="min-w-0 flex-1">
                   <p className="text-body font-semibold text-text">{a.title}</p>
                   {a.body && <p className="text-small text-textMuted">{a.body}</p>}

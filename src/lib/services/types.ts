@@ -210,6 +210,7 @@ export interface Listing {
   category: string;
   pricePence: number | null;
   status: ListingStatus;
+  condition: string | null;
   photos: string[];
   /** True when the item is hidden pending review — only ever surfaced to its author. */
   hidden?: boolean;
@@ -320,6 +321,7 @@ export interface EquipmentItem {
   category: string;
   note: string | null;
   lendTerms: string | null;
+  photos: string[];
   available: boolean;
 }
 
@@ -338,6 +340,7 @@ export interface Alert {
   category: AlertCategory;
   title: string;
   body: string | null;
+  photos: string[];
   resolvedAt: string | null;
   expiresAt: string;
   createdAt: string;

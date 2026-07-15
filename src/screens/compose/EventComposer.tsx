@@ -6,6 +6,7 @@ import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { Button, Field, SegmentedControl, Select, Sheet, Textarea, useToasts } from '@/components/ui';
 import { StaggeredBody } from '@/components/ui';
+import { PhotoInput } from '@/components/content/PhotoInput';
 import type { EventCategory, RsvpMode } from '@/lib/services/types';
 
 const CATEGORIES: { value: EventCategory; label: string }[] = [
@@ -31,6 +32,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
   const [description, setDescription] = useState('');
   const [rsvpMode, setRsvpMode] = useState<RsvpMode>('open');
   const [capacity, setCapacity] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -46,9 +48,11 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
         ...(locationText ? { locationText } : {}),
         ...(description ? { description } : {}),
         ...(cap && !Number.isNaN(cap) ? { capacity: cap } : {}),
+        ...(photos.length ? { photos } : {}),
       });
       await qc.invalidateQueries({ queryKey: ['events', active.communityId] });
       onClose();
+      setPhotos([]);
       navigate(`/events/${ev.id}`);
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -61,6 +65,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
     <Sheet open={open} onClose={onClose} title="Add an event" hero={{ icon: 'events', tone: 'warn' }}
       footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Post event</Button>}>
       <StaggeredBody className="space-y-4">
+        <PhotoInput value={photos} onChange={setPhotos} />
         <Field label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Summer fete on the green" />
         <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value as EventCategory)} options={CATEGORIES} />
         <Field label="When" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />

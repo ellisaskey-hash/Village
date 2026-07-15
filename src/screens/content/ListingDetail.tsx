@@ -13,6 +13,8 @@ import { AuthorCard } from '@/components/content/AuthorCard';
 import { priceLabel } from './ListingsView';
 import type { ListingStatus } from '@/lib/services/types';
 
+const CONDITION: Record<string, string> = { new: 'New', likeNew: 'Like new', good: 'Good', fair: 'Fair', spares: 'Spares or repair' };
+
 export function ListingDetail() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
@@ -84,7 +86,7 @@ export function ListingDetail() {
                 <IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} size="lg" />
                 <div className="min-w-0 flex-1">
                   <h2 className="text-h2 font-semibold text-text">{l.title}</h2>
-                  <p className="text-small text-textMuted">{priceLabel(l)}{l.category ? ` · ${l.category}` : ''}</p>
+                  <p className="text-small text-textMuted">{priceLabel(l)}{l.condition ? ` · ${CONDITION[l.condition] ?? l.condition}` : ''}{l.category ? ` · ${l.category}` : ''}</p>
                 </div>
               </div>
               {l.description && <p className="mt-3 text-body text-text">{l.description}</p>}

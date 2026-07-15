@@ -51,7 +51,7 @@ export function EquipmentDetail() {
       ) : (
         <>
           <motion.div variants={cardEnter}>
-            <PhotoHero icon="equipment" from="var(--c-positive)" to="var(--c-accent)" />
+            <PhotoHero photos={e.photos} icon="equipment" from="var(--c-positive)" to="var(--c-accent)" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>

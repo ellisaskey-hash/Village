@@ -188,7 +188,7 @@ function mapProposal(r: DbSeedProposal): SeedProposal {
 interface DbListing {
   id: string; community_id: string; created_by: string; kind: Listing['kind']; title: string;
   description: string | null; category: string; price_pence: number | null; status: ListingStatus;
-  photos?: string[] | null; created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null;
+  condition?: string | null; photos?: string[] | null; created_at: string; hidden_at?: string | null; profiles?: { display_name: string } | null;
 }
 interface DbRequest {
   id: string; community_id: string; created_by: string; title: string; description: string | null;
@@ -199,7 +199,7 @@ function mapListing(r: DbListing): Listing {
   return {
     id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
     kind: r.kind, title: r.title, description: r.description, category: r.category,
-    pricePence: r.price_pence, status: r.status, photos: r.photos ?? [], hidden: Boolean(r.hidden_at), createdAt: r.created_at,
+    pricePence: r.price_pence, status: r.status, condition: r.condition ?? null, photos: r.photos ?? [], hidden: Boolean(r.hidden_at), createdAt: r.created_at,
   };
 }
 function mapRequest(r: DbRequest): RequestPost {
@@ -236,18 +236,18 @@ interface DbSkill { id: string; community_id: string; profile_id: string; skill:
 function mapSkill(r: DbSkill): Skill {
   return { id: r.id, communityId: r.community_id, profileId: r.profile_id, personName: r.profiles?.display_name ?? '', skill: r.skill, note: r.note };
 }
-interface DbEquip { id: string; community_id: string; owner_profile_id: string; name: string; category: string; note: string | null; lend_terms: string | null; available: boolean; profiles?: { display_name: string } | null }
+interface DbEquip { id: string; community_id: string; owner_profile_id: string; name: string; category: string; note: string | null; lend_terms: string | null; photos?: string[] | null; available: boolean; profiles?: { display_name: string } | null }
 function mapEquip(r: DbEquip): EquipmentItem {
-  return { id: r.id, communityId: r.community_id, ownerProfileId: r.owner_profile_id, ownerName: r.profiles?.display_name ?? '', name: r.name, category: r.category, note: r.note, lendTerms: r.lend_terms, available: r.available };
+  return { id: r.id, communityId: r.community_id, ownerProfileId: r.owner_profile_id, ownerName: r.profiles?.display_name ?? '', name: r.name, category: r.category, note: r.note, lendTerms: r.lend_terms, photos: r.photos ?? [], available: r.available };
 }
 interface DbAlert {
   id: string; community_id: string; created_by: string | null; tier: Alert['tier']; category: Alert['category'];
-  title: string; body: string | null; resolved_at: string | null; expires_at: string; created_at: string;
+  title: string; body: string | null; photos?: string[] | null; resolved_at: string | null; expires_at: string; created_at: string;
 }
 function mapAlert(r: DbAlert): Alert {
   return {
     id: r.id, communityId: r.community_id, createdBy: r.created_by, tier: r.tier, category: r.category,
-    title: r.title, body: r.body, resolvedAt: r.resolved_at, expiresAt: r.expires_at, createdAt: r.created_at,
+    title: r.title, body: r.body, photos: r.photos ?? [], resolvedAt: r.resolved_at, expiresAt: r.expires_at, createdAt: r.created_at,
   };
 }
 function urlBase64ToUint8Array(base64: string): Uint8Array {
@@ -572,7 +572,7 @@ export function createSupabaseServices(): Services {
       },
       async addEquipment(communityId: string, input: EquipmentInput) {
         const p = equipmentSchema.parse(input);
-        const { data, error } = await getSupabase().from('equipment_items').insert({ community_id: communityId, name: p.name, category: p.category, note: p.note ?? null, lend_terms: p.lendTerms ?? null }).select(EQ_SEL).single();
+        const { data, error } = await getSupabase().from('equipment_items').insert({ community_id: communityId, name: p.name, category: p.category, note: p.note ?? null, lend_terms: p.lendTerms ?? null, photos: p.photos ?? [] }).select(EQ_SEL).single();
         if (error) throw error;
         return mapEquip(data as unknown as DbEquip);
       },
@@ -652,7 +652,7 @@ export function createSupabaseServices(): Services {
           .insert({
             community_id: communityId, kind: parsed.kind, title: parsed.title,
             description: parsed.description ?? null, category: parsed.category,
-            price_pence: parsed.pricePence ?? null, photos: parsed.photos ?? [],
+            price_pence: parsed.pricePence ?? null, condition: parsed.condition ?? null, photos: parsed.photos ?? [],
           })
           .select(LISTING_SELECT).single();
         if (error) throw error;
@@ -832,7 +832,7 @@ export function createSupabaseServices(): Services {
         const { data, error } = await sb.from('events').insert({
           community_id: communityId, title: p.title, description: p.description ?? null, category: p.category,
           starts_at: p.startsAt, ends_at: p.endsAt ?? null, location_text: p.locationText ?? null,
-          rsvp_mode: p.rsvpMode, capacity: p.capacity ?? null,
+          rsvp_mode: p.rsvpMode, capacity: p.capacity ?? null, photos: p.photos ?? [],
         }).select(EV_SEL).single();
         if (error) throw error;
         const { data: auth } = await sb.auth.getUser();
@@ -854,7 +854,7 @@ export function createSupabaseServices(): Services {
         const p = alertSchema.parse(input);
         const { data, error } = await getSupabase().rpc('post_alert', {
           p_community: communityId, p_tier: p.tier, p_category: p.category, p_title: p.title,
-          p_body: p.body ?? null, p_as_org: p.asOrganisationId ?? null,
+          p_body: p.body ?? null, p_as_org: p.asOrganisationId ?? null, p_photos: p.photos ?? [],
         });
         if (error) throw error;
         return mapAlert(data as DbAlert);

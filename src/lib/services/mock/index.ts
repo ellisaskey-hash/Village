@@ -490,6 +490,7 @@ export function createMockServices(): Services {
           category: parsed.category,
           note: parsed.note ?? null,
           lendTerms: parsed.lendTerms ?? null,
+          photos: parsed.photos ?? [],
           available: true,
         };
         db().equipment.push(e);
@@ -606,7 +607,7 @@ export function createMockServices(): Services {
       async get(id) {
         const l = db().listings.find((x) => x.id === id) ?? null;
         if (!l || !visibleToViewer('listing', l)) return null;
-        return { ...l, photos: l.photos ?? [], hidden: db().hidden.some((h) => h.kind === 'listing' && h.id === l.id) };
+        return { ...l, condition: l.condition ?? null, photos: l.photos ?? [], hidden: db().hidden.some((h) => h.kind === 'listing' && h.id === l.id) };
       },
       async create(communityId, input: ListingInput) {
         const parsed = listingSchema.parse(input);
@@ -634,6 +635,7 @@ export function createMockServices(): Services {
           category: parsed.category,
           pricePence: parsed.pricePence ?? null,
           status: 'active',
+          condition: parsed.condition ?? null,
           photos: parsed.photos ?? [],
           createdAt: nowIso(),
         };
@@ -922,6 +924,7 @@ export function createMockServices(): Services {
           category: parsed.category,
           title: parsed.title,
           body: parsed.body ?? null,
+          photos: parsed.photos ?? [],
           resolvedAt: null,
           expiresAt: new Date(Date.now() + 3 * 864e5).toISOString(),
           createdAt: nowIso(),
@@ -976,6 +979,7 @@ export function createMockServices(): Services {
           endsAt: parsed.endsAt ?? null,
           rsvpMode: parsed.rsvpMode,
           capacity: parsed.capacity ?? null,
+          photos: parsed.photos ?? [],
         };
         db().events.push(e);
         persist();
