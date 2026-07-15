@@ -6,14 +6,45 @@
 - **Gate 2 — M3 + DB security proof ✓ MET.** M0–M3 built; DB wired; RLS proven live (53/53 incl. M4/M5).
 - **Gate 3 — M5 deployed PWA on your phone (real-device push). ← one hands-on step left (you, on your phone).** Deployed live at **https://village-tau-mauve.vercel.app**; PWA is installable (manifest + SW + icons verified); custom push service worker shipped; landing Lighthouse (mobile) perf 96 / a11y 96 / best-practices 100 / SEO 91 (all ≥90). The only thing I can't do headlessly is confirm a push actually lands on a physical device — see the phone test steps below. AWAITING-ELLIS.
 - **M7 — moderation, safety, admin console ✓ BUILT + proven live (13/13, `scripts/db/verify-m7.mjs`).** Reports + auto-hide, admin_moderate, suspension (writes-blocked/reads-kept), first-post delay queue, moderation-triage (advisory, fixture mode — AWAITING-KEYS), full `/admin` console, ReportSheet + escalation signposting, community-standard onboarding screen, GDPR export/delete. Admin walkthrough + creds in Morning Review.
-- Gate 4 — M7 real Horsmonden ingestion review. Not yet (needs live ingestion keys).
-- Gate 5 — M8 launch checklist. Not yet.
+- **Gate 4 — real Horsmonden ingestion ✓ pipeline RUN against live APIs; review is yours.** 37 real proposals landed in the `/admin/seeding` queue (Overpass 19 places + 8 businesses, FHRS 10 businesses), `seed_proposals` only — nothing auto-published (verified: places/businesses/orgs still 0). Two real-API bugs found and fixed (Overpass 406 → User-Agent; FHRS fuzzy-matched "Horsenden"/Perivale → postcode-district filter). Companies House **AWAITING-KEY**; org/council ingestion is **AWAITING-KEYS** (URL-extract needs Anthropic). Review steps + gap checklist in Morning Review.
+- Gate 5 — M8 launch checklist. See the rendered status table at the end of this file.
 
 ---
 
 ## ⭐ MORNING REVIEW (read this first)
 
 **M0–M6 are built, the database is live, the security model is proven (53/53), and the app is DEPLOYED.** Live at **https://village-tau-mauve.vercel.app**, running on real Postgres. All 21 commits are on GitHub (`ellisaskey-hash/Village`).
+
+### 🌱 Gate 4 — review the real Horsmonden ingestion (in `/admin/seeding`)
+
+I ran the real pipeline against live public APIs for Horsmonden (TN12) and landed **37 proposals** in the review queue. **Nothing auto-published** — every row is a `seed_proposal` awaiting your accept/reject (verified: places/businesses/organisations tables still hold 0 rows). Re-run any time with `node scripts/db/ingest-horsmonden.mjs` (idempotent — it dedupes against what's already there).
+
+**Counts by source and kind:**
+
+| Source | Places | Businesses | Notes |
+|---|---|---|---|
+| OpenStreetMap Overpass | 19 | 8 | every place has coordinates (📍) for the future map |
+| FSA FHRS | – | 10 | food businesses, filtered to TN12 |
+| Companies House | – | – | **AWAITING-KEY** — set `CH_API_KEY` in `.env` to enable |
+| URL-extract (orgs/council/events) | – | – | **AWAITING-KEYS** — needs the Anthropic key (Haiku extraction) |
+
+**Two real-API bugs this run exposed (both fixed, both now unit-tested):**
+1. **Overpass returned HTTP 406** to Node's `fetch` because it sent no `User-Agent`. Fixed: all source calls now send a UA; added two more Overpass mirrors + a retry (the public instance also 504'd once — transient load).
+2. **FHRS `address=Horsmonden` fuzzy-matched "Horsenden" (Perivale, UB6) and Princes Risborough** — 40 results, only 12 actually in TN12. Fixed: FHRS results are filtered to the community's postcode districts. Without this you'd have seen ~28 junk businesses from West London.
+
+**Duplicates / junk I spotted (so you can reject fast):**
+- **Neighbouring-parish spillover** from the 2.5 km Overpass radius — a handful of **Goudhurst** items slipped in: *Goudhurst Parish Hall*, *Goudhurst Village Pre-School*, *St Mary's Church* (Goudhurst's church; Horsmonden's is St Margaret's), and probably the pubs *Star and Eagle*, *The Vine*, *The Green Cross* (Goudhurst inns). Overpass has no postcode on most nodes, so radius is the only geofence — reject these in review. Reducing the radius would also drop legitimate Horsmonden-edge spots, so I left the call to you.
+- **FHRS caterer, not a public business:** *Impact Food Group At Horsmonden Primary School* (the school's meal contractor) — reject or merge into the school.
+- **Cross-source dedup worked:** *The Gun & Spitroast* and *Heath Stores* each appeared in both FHRS and Overpass and were collapsed to one business (I taught the deduper that "&" ≡ "and" and to drop "Ltd"). Each pub still legitimately appears **once as a place and once as a business stub** — that's intended (spec 08), not a dup.
+
+**Gap checklist (spec 08 flags: school? pub? council? church? hall?):**
+- ✅ **School** — *Leigh Academy Horsmonden* (place) + *Horsmonden Kindergarten* (business).
+- ✅ **Pub** — *The Gun & Spitroast* (Horsmonden's own), plus the Goudhurst ones to weed out.
+- ✅ **Church** — *St Margaret's, Horsmonden* + *Horsmonden Methodist Church*.
+- ✅ **Hall** — *Horsmonden Village Hall* + *St Margaret's Church Hall*.
+- ❌ **Parish council** — **not found.** Overpass/FHRS don't carry it; it's an organisation, which comes from URL-extract (AWAITING-KEYS). Add it via the console's quick-add, or accept the fixture org proposals, or run URL-extract once the Anthropic key is set. Same gap for **verified-source orgs** (PTA, school office) — 0 real org proposals yet.
+
+**How to review (deployed app):** sign in as **`admin@thelocal.test` / `Local-admin-2026`** → **Me → Admin console → Seeding** (`/admin/seeding`). The **Review queue** lists every proposal with a green ✓ (accept → materialises the row into places/businesses/organisations) and an ✗ (reject). The **Launch checklist** card tracks ≥15 places / ≥10 businesses / ≥2 verified orgs live as you accept. Work top-down: accept the Horsmonden places/businesses, reject the Goudhurst spillover and the school caterer, then use quick-add for the parish council. (Accept/reject are wired and RLS-guarded; I did **not** accept anything for you — the review is deliberately yours.)
 
 ### 📱 Gate 3 — test on your phone (this is the one hands-on step left)
 

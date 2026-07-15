@@ -25,6 +25,8 @@ export interface OverpassElement {
   id: number;
   lat?: number;
   lon?: number;
+  /** Present on `way`/`relation` results fetched with `out center` — the geometric centroid. */
+  center?: { lat: number; lon: number };
   tags?: Record<string, string>;
 }
 
@@ -71,10 +73,18 @@ export function ingestOverpass(elements: OverpassElement[]): SeedProposalDraft[]
     const kind = placeKind(tags);
     if (!kind) continue;
     const address = [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' ') || undefined;
+    const lat = el.lat ?? el.center?.lat;
+    const lon = el.lon ?? el.center?.lon;
     out.push({
       kind: 'place',
       source: 'overpass',
-      payload: { name, kind, ...(address ? { address } : {}), osm_id: `${el.type}/${el.id}` },
+      payload: {
+        name,
+        kind,
+        ...(address ? { address } : {}),
+        ...(typeof lat === 'number' && typeof lon === 'number' ? { lat, lon } : {}),
+        osm_id: `${el.type}/${el.id}`,
+      },
     });
     // Commercial amenities and shops also seed an unclaimed business stub.
     const commercial = Boolean(tags.shop) || (tags.amenity ? COMMERCIAL_AMENITIES.has(tags.amenity) : false);
