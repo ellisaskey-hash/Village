@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { Chip, EmptyState, IconBadge, ListRow, Skeleton } from '@/components/ui';
+import { Chip, EmptyState, IconBadge, ListRow, Skeleton, VirtualList } from '@/components/ui';
 import type { RequestStatus } from '@/lib/services/types';
 
 const STATUS_LABEL: Record<RequestStatus, string> = {
@@ -35,10 +35,12 @@ export function RequestsView() {
     );
   }
   return (
-    <div className="space-y-2">
-      {q.data.map((r) => (
+    <VirtualList
+      items={q.data}
+      getKey={(r) => r.id}
+      estimateSize={72}
+      renderItem={(r) => (
         <ListRow
-          key={r.id}
           leading={<IconBadge icon="requests" tone={r.status === 'open' ? 'accent' : 'neutral'} />}
           title={r.title}
           subtitle={`${r.category} · ${r.authorName}`}
@@ -49,7 +51,7 @@ export function RequestsView() {
           }
           onClick={() => navigate(`/requests/${r.id}`)}
         />
-      ))}
-    </div>
+      )}
+    />
   );
 }

@@ -4,7 +4,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import {
-  Avatar, Badge, Button, Card, EmptyState, ListRow, Sheet, Skeleton, useToasts,
+  Avatar, Badge, Button, Card, EmptyState, ListRow, Sheet, Skeleton, VirtualList, useToasts,
 } from '@/components/ui';
 import type { AdminMember } from '@/lib/services/types';
 
@@ -65,18 +65,20 @@ export function MembersQueue() {
 
   return (
     <>
-      <div className="space-y-2">
-        {members.map((m) => (
+      <VirtualList
+        items={members}
+        getKey={(m) => m.profileId}
+        estimateSize={72}
+        renderItem={(m) => (
           <ListRow
-            key={m.profileId}
             leading={<Avatar name={m.displayName} {...(m.avatarUrl ? { src: m.avatarUrl } : {})} size="md" />}
             title={m.displayName}
             subtitle={`${TRUST_LABEL[m.trustLevel]}${m.upheldReports > 0 ? ` · ${m.upheldReports} upheld ${m.upheldReports === 1 ? 'report' : 'reports'}` : ''}`}
             trailing={isSuspended(m) ? <Badge tone="warn" dot /> : undefined}
             onClick={() => setOpenId(m.profileId)}
           />
-        ))}
-      </div>
+        )}
+      />
 
       <Sheet open={Boolean(selected)} onClose={() => setOpenId(null)} title={selected?.displayName ?? 'Member'} hero={{ icon: 'user', tone: 'accent' }}>
         {selected && (

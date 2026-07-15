@@ -29,6 +29,7 @@ export { TextLink } from './TextLink';
 export { PullToRefresh } from './PullToRefresh';
 export { OfflinePill } from './OfflinePill';
 export { SwipeAction } from './SwipeAction';
+export { VirtualList } from './VirtualList';
 export { StaggeredBody } from './StaggeredBody';
 export { MetricStat } from './MetricStat';
 export { StatCard } from './StatCard';

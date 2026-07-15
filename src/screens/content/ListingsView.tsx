@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { Badge, EmptyState, IconBadge, ListRow, Skeleton } from '@/components/ui';
+import { Badge, EmptyState, IconBadge, ListRow, Skeleton, VirtualList } from '@/components/ui';
 import type { Listing } from '@/lib/services/types';
 
 export function priceLabel(l: Listing): string {
@@ -34,17 +34,19 @@ export function ListingsView() {
     );
   }
   return (
-    <div className="space-y-2">
-      {q.data.map((l) => (
+    <VirtualList
+      items={q.data}
+      getKey={(l) => l.id}
+      estimateSize={72}
+      renderItem={(l) => (
         <ListRow
-          key={l.id}
           leading={<IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} />}
           title={l.title}
           subtitle={`${priceLabel(l)} · ${l.authorName}`}
           trailing={l.status !== 'active' ? <Badge tone="warn" count={0} dot /> : undefined}
           onClick={() => navigate(`/listings/${l.id}`)}
         />
-      ))}
-    </div>
+      )}
+    />
   );
 }

@@ -39,6 +39,7 @@ The living reference is `/dev/gallery` (dark + light, all states). Screenshot ba
 | StaggeredBody | StaggeredBody.tsx | Drawer body stagger | caller passes reduce policy |
 | MetricStat | MetricStat.tsx | Big number + delta | tabular numerals; up/down/none |
 | StatCard | StatCard.tsx | Home stat tile | icon badge + eyebrow + value; pressable; value gradient |
+| VirtualList | VirtualList.tsx | Window-virtualised list (> 50 items) | page-scroll `useWindowVirtualizer`; renders all at/below threshold; used by Listings/Requests/admin Members |
 | BrandLogo | BrandLogo.tsx | The Local mark | SVG stops read `var(--c-accent/…)` — re-colours with theme/skin/accent |
 
 Shared: `tones.ts` (badge tone → CSS-var classes), `primitiveProps.ts` (framer-safe native prop omissions).
