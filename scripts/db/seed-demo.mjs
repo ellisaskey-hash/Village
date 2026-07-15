@@ -70,6 +70,17 @@ await q("delete from moderation_actions where actor_id in (select id from profil
 await q("update reports set decided_by = null where decided_by in (select id from profiles where email like 'm7test+%' or email like 'demoseed+%')");
 await q("update requests set fulfilled_by = null where fulfilled_by in (select id from profiles where email like 'm7test+%' or email like 'demoseed+%')");
 await q("delete from auth.users where email like 'm7test+%' or email like 'demoseed+%'");
+
+// De-pollute Dev Village: it is the demo community, so strip any non-DEMO content + test-suite
+// memberships that the live verify runs (m4test/m5test/rlstest) leave behind, so a fresh
+// explorer sees only the curated demo.
+for (const t of ['listings', 'events', 'requests', 'alerts']) await q(`delete from ${t} where community_id=$1 and title not like 'DEMO %'`, [dev.id]);
+for (const t of ['businesses', 'organisations', 'places']) await q(`delete from ${t} where community_id=$1 and name not like 'DEMO %'`, [dev.id]);
+await q("delete from threads where community_id=$1 and created_by not in (select id from profiles where email like 'demo+%@thelocal.test' or email='admin@thelocal.test')", [dev.id]);
+await rpcOn();
+await q("delete from memberships where community_id=$1 and profile_id not in (select id from profiles where email like 'demo+%@thelocal.test' or email='admin@thelocal.test')", [dev.id]);
+await rpcOff();
+
 await q("delete from moderation_actions where target_id in (select id from listings where title like 'DEMO %')");
 await q("delete from reports where target_id in (select id from listings where title like 'DEMO %')");
 await q("delete from threads where title like 'DEMO %' or created_by in (select id from profiles where email like 'demo+%@thelocal.test')");
