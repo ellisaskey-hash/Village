@@ -172,3 +172,32 @@ export function ingestUrlExtract(orgs: ExtractedOrg[]): SeedProposalDraft[] {
       },
     }));
 }
+
+/** An event pulled from a parish/church/school calendar by the URL-extract (spec 08). */
+export interface ExtractedEvent {
+  title: string;
+  category?: string;
+  description?: string;
+  startsAt: string; // ISO date-time
+  endsAt?: string;
+  locationText?: string;
+}
+
+const EVENT_CATEGORIES = new Set(['community', 'school', 'sport', 'club', 'church', 'market', 'other']);
+
+export function ingestExtractedEvents(events: ExtractedEvent[]): SeedProposalDraft[] {
+  return events
+    .filter((e) => e.title && e.startsAt)
+    .map((e) => ({
+      kind: 'event' as const,
+      source: 'url_extract' as const,
+      payload: {
+        title: e.title,
+        category: e.category && EVENT_CATEGORIES.has(e.category) ? e.category : 'community',
+        ...(e.description ? { description: e.description } : {}),
+        starts_at: e.startsAt,
+        ...(e.endsAt ? { ends_at: e.endsAt } : {}),
+        ...(e.locationText ? { location_text: e.locationText } : {}),
+      },
+    }));
+}

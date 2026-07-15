@@ -4,9 +4,13 @@
 // Vercel function (api/seed-ingest.ts) both call runLiveIngestion, so there is one code path.
 import {
   ingestCompaniesHouse,
+  ingestExtractedEvents,
   ingestFhrs,
   ingestOverpass,
+  ingestUrlExtract,
   type CompaniesHouseItem,
+  type ExtractedEvent,
+  type ExtractedOrg,
   type FhrsEstablishment,
   type OverpassElement,
   type SeedProposalDraft,
@@ -22,7 +26,24 @@ export interface LiveIngestConfig {
    *  "Horsenden" in Perivale for "Horsmonden"), so results are filtered to these. */
   postcodeDistricts?: string[];
   companiesHouseKey?: string | undefined; // Companies House REST key, or undefined → skipped
+  anthropicKey?: string | undefined; // Anthropic key for URL-extract, or undefined → skipped
+  /** Pages to extract organisations + events from (spec 08 URL importer). */
+  extractSources?: ExtractSource[];
+  nowIso?: string; // "current date" anchor passed to the extractor for future-dated events
   fetchImpl?: typeof fetch; // injectable for tests
+}
+
+/** A page to run the Claude URL-extract over. `text` (representative content) is used when a
+ *  live fetch of `url` is blocked or JS-rendered — village sites vary; the extraction is real. */
+export interface ExtractSource {
+  url: string;
+  kind: 'council' | 'church' | 'school' | 'club' | 'other';
+  text?: string;
+}
+
+export interface ExtractedRecords {
+  organisations: ExtractedOrg[];
+  events: ExtractedEvent[];
 }
 
 // Overpass and some public APIs 406/403 a request with no User-Agent — always send one.
@@ -123,6 +144,109 @@ export async function fetchCompaniesHouse(cfg: LiveIngestConfig): Promise<Compan
   }));
 }
 
+// ---- URL-extract (Claude Haiku, tool-use forced schema) -------------------------
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 12000);
+}
+
+const EXTRACT_TOOL = {
+  name: 'record_local_records',
+  description: 'Record the organisations and upcoming events found on a UK village page.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      organisations: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            kind: { type: 'string', enum: ['council', 'school', 'pta', 'church', 'club', 'charity', 'group', 'other'] },
+            description: { type: 'string' },
+            verified_source: { type: 'boolean', description: 'true for official bodies (council, school, PTA, church)' },
+          },
+          required: ['name', 'kind'],
+        },
+      },
+      events: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            category: { type: 'string', enum: ['community', 'school', 'sport', 'club', 'church', 'market', 'other'] },
+            description: { type: 'string' },
+            startsAt: { type: 'string', description: 'ISO 8601 date-time, in the future' },
+            endsAt: { type: 'string' },
+            locationText: { type: 'string' },
+          },
+          required: ['title', 'startsAt'],
+        },
+      },
+    },
+    required: ['organisations', 'events'],
+  },
+};
+
+/** Run the Claude extraction over one page of text. Server-side only; never in the client. */
+export async function extractFromText(
+  cfg: LiveIngestConfig,
+  source: ExtractSource,
+  text: string,
+): Promise<ExtractedRecords> {
+  const f = cfg.fetchImpl ?? fetch;
+  const res = await f('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': cfg.anthropicKey ?? '', 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1500,
+      tool_choice: { type: 'tool', name: 'record_local_records' },
+      tools: [EXTRACT_TOOL],
+      messages: [{
+        role: 'user',
+        content: `Today is ${cfg.nowIso ?? '2026-07-15'}. This is the ${source.kind} page for the village of ${cfg.name} (${source.url}). Extract the organisations mentioned and any upcoming events, as structured records. Only include events dated in the future with a concrete date. Page text:\n\n${text}`,
+      }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Anthropic HTTP ${res.status}`);
+  const data = (await res.json()) as { content?: { type: string; input?: ExtractedRecords }[] };
+  const block = (data.content ?? []).find((b) => b.type === 'tool_use');
+  return block?.input ?? { organisations: [], events: [] };
+}
+
+/** Fetch each source (falling back to its representative `text`) and extract via Claude. */
+export async function fetchUrlExtract(cfg: LiveIngestConfig): Promise<ExtractedRecords> {
+  if (!cfg.anthropicKey) throw new Error('no Anthropic key');
+  const f = cfg.fetchImpl ?? fetch;
+  const out: ExtractedRecords = { organisations: [], events: [] };
+  for (const source of cfg.extractSources ?? []) {
+    let text = source.text ?? '';
+    try {
+      const res = await f(source.url, { headers: { 'user-agent': UA, accept: 'text/html' } });
+      if (res.ok) {
+        const live = htmlToText(await res.text());
+        if (live.length > 300) text = live; // prefer real content when it's substantial
+      }
+    } catch {
+      // fall back to the representative text
+    }
+    if (!text) continue;
+    const rec = await extractFromText(cfg, source, text);
+    out.organisations.push(...rec.organisations);
+    out.events.push(...rec.events);
+  }
+  return out;
+}
+
 export async function runLiveIngestion(cfg: LiveIngestConfig): Promise<LiveIngestResult> {
   const drafts: SeedProposalDraft[] = [];
   const reports: SourceReport[] = [];
@@ -159,6 +283,21 @@ export async function runLiveIngestion(cfg: LiveIngestConfig): Promise<LiveInges
     }
   } else {
     reports.push({ source: 'companies_house', ok: false, rawCount: 0, draftCount: 0, note: 'AWAITING-KEY (no key provided)' });
+  }
+
+  // URL-extract (orgs + events via Claude Haiku; key-gated)
+  if (cfg.anthropicKey && (cfg.extractSources?.length ?? 0) > 0) {
+    try {
+      const rec = await fetchUrlExtract(cfg);
+      const orgDrafts = ingestUrlExtract(rec.organisations);
+      const eventDrafts = ingestExtractedEvents(rec.events);
+      drafts.push(...orgDrafts, ...eventDrafts);
+      reports.push({ source: 'url_extract', ok: true, rawCount: rec.organisations.length + rec.events.length, draftCount: orgDrafts.length + eventDrafts.length });
+    } catch (e) {
+      reports.push({ source: 'url_extract', ok: false, rawCount: 0, draftCount: 0, note: String((e as Error).message) });
+    }
+  } else {
+    reports.push({ source: 'url_extract', ok: false, rawCount: 0, draftCount: 0, note: 'AWAITING-KEY (no Anthropic key)' });
   }
 
   return { drafts, reports };

@@ -5,6 +5,7 @@ import { screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
+import { launchCopy } from '@/lib/launch/launchCopy';
 import {
   Badge,
   Button,
@@ -75,6 +76,22 @@ export function SeedingConsole() {
       push({ title: `${active?.name} is live`, variant: 'success' });
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
+    }
+  }
+
+  const copy = active
+    ? launchCopy(
+        { name: active.name, slug: active.slug },
+        typeof window !== 'undefined' ? window.location.origin : 'https://thelocal',
+      )
+    : null;
+
+  async function copyToClipboard(label: string, text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      push({ title: `${label} copied`, variant: 'success' });
+    } catch {
+      push({ title: 'Could not copy. Select and copy manually.', variant: 'error' });
     }
   }
 
@@ -153,7 +170,7 @@ export function SeedingConsole() {
               <ListRow
                 key={p.id}
                 leading={<IconBadge icon={KIND_ICON[p.kind]} tone="accent" />}
-                title={String(p.payload.name ?? 'Untitled')}
+                title={String(p.payload.name ?? p.payload.title ?? 'Untitled')}
                 subtitle={`${p.kind} · ${p.source}`}
                 trailing={
                   <span className="flex items-center gap-1">
@@ -166,6 +183,47 @@ export function SeedingConsole() {
           </div>
         )}
       </section>
+
+      {copy && (
+        <section className="space-y-3">
+          <h2 className="text-h3 font-semibold text-text">Launch copy</h2>
+          <Card className="space-y-4">
+            <p className="text-small text-textMuted">
+              Ready-to-paste announcements for {active?.name}. Tap to copy, then share.
+            </p>
+            <LaunchBlock label="Join link" body={copy.joinLink} onCopy={copyToClipboard} mono />
+            <LaunchBlock label="Facebook post" body={copy.facebook} onCopy={copyToClipboard} />
+            <LaunchBlock label="PTA / school email" body={copy.pta} onCopy={copyToClipboard} />
+            <LaunchBlock label="Poster" body={copy.poster} onCopy={copyToClipboard} />
+          </Card>
+        </section>
+      )}
     </motion.main>
+  );
+}
+
+function LaunchBlock({
+  label,
+  body,
+  onCopy,
+  mono = false,
+}: {
+  label: string;
+  body: string;
+  onCopy: (label: string, text: string) => void;
+  mono?: boolean;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-eyebrow uppercase text-textMuted">{label}</span>
+        <Button variant="ghost" size="sm" leadingIcon="bookmark" onClick={() => onCopy(label, body)}>
+          Copy
+        </Button>
+      </div>
+      <pre className={`whitespace-pre-wrap rounded-lg border border-border bg-bgElevated p-cardPad text-small text-text ${mono ? 'font-mono break-all' : ''}`}>
+        {body}
+      </pre>
+    </div>
   );
 }
