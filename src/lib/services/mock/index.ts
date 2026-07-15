@@ -420,6 +420,9 @@ export function createMockServices(): Services {
       async organisations(communityId) {
         return db().organisations.filter((o) => o.communityId === communityId);
       },
+      async noticeboard() {
+        return []; // org posts are not modelled in the mock; live noticeboard uses Supabase.
+      },
       async business(id) {
         return db().businesses.find((b) => b.id === id) ?? null;
       },

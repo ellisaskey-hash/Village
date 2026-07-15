@@ -16,6 +16,7 @@ import type {
   MemberSummary,
   Membership,
   Message,
+  NoticePost,
   NotificationItem,
   Organisation,
   Place,
@@ -185,6 +186,8 @@ export interface DirectoryService {
   places(communityId: string): Promise<Place[]>;
   businesses(communityId: string): Promise<Business[]>;
   organisations(communityId: string): Promise<Organisation[]>;
+  /** Recent announcements from verified organisations, for the Home noticeboard (spec 07). */
+  noticeboard(communityId: string): Promise<NoticePost[]>;
   business(id: string): Promise<Business | null>;
   place(id: string): Promise<Place | null>;
   organisation(id: string): Promise<Organisation | null>;

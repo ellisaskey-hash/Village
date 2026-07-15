@@ -2,15 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { Badge, EmptyState, IconBadge, ListRow, Skeleton, VirtualList } from '@/components/ui';
+import { EmptyState, Skeleton, VirtualList } from '@/components/ui';
+import { ListingCard, priceBadge } from '@/components/content/ListingCard';
 import type { Listing } from '@/lib/services/types';
 
-export function priceLabel(l: Listing): string {
-  if (l.kind === 'free') return 'Free';
-  if (l.kind === 'wanted') return 'Wanted';
-  if (l.kind === 'lend') return 'To borrow';
-  return l.pricePence != null ? `£${(l.pricePence / 100).toFixed(2)}` : 'For sale';
-}
+/** Kept for detail screens that import it. */
+export const priceLabel = priceBadge;
 
 export function ListingsView() {
   const services = useServices();
@@ -23,7 +20,7 @@ export function ListingsView() {
     enabled: Boolean(communityId),
   });
 
-  if (q.isLoading) return <Skeleton height={72} />;
+  if (q.isLoading) return <div className="grid grid-cols-2 gap-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={230} />)}</div>;
   if (!q.data || q.data.length === 0) {
     return (
       <EmptyState
@@ -33,19 +30,20 @@ export function ListingsView() {
       />
     );
   }
+  // Two-column photo grid, windowed a row (of two) at a time for long lists.
+  const rows: Listing[][] = [];
+  for (let i = 0; i < q.data.length; i += 2) rows.push(q.data.slice(i, i + 2));
   return (
     <VirtualList
-      items={q.data}
-      getKey={(l) => l.id}
-      estimateSize={72}
-      renderItem={(l) => (
-        <ListRow
-          leading={<IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} />}
-          title={l.title}
-          subtitle={`${priceLabel(l)} · ${l.authorName}`}
-          trailing={l.status !== 'active' ? <Badge tone="warn" count={0} dot /> : undefined}
-          onClick={() => navigate(`/listings/${l.id}`)}
-        />
+      items={rows}
+      getKey={(row) => row.map((l) => l.id).join('-')}
+      estimateSize={248}
+      renderItem={(row) => (
+        <div className="grid grid-cols-2 gap-3">
+          {row.map((l) => (
+            <ListingCard key={l.id} listing={l} onClick={() => navigate(`/listings/${l.id}`)} />
+          ))}
+        </div>
       )}
     />
   );

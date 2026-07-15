@@ -40,6 +40,7 @@ import {
   type Listing,
   type ListingStatus,
   type Message,
+  type NoticePost,
   type NotificationItem,
   type Organisation,
   type Place,
@@ -508,6 +509,20 @@ export function createSupabaseServices(): Services {
         const { data, error } = await getSupabase().from('organisations').select('*').eq('community_id', communityId);
         if (error) throw error;
         return (data ?? []).map((r) => mapOrganisation(r as DbOrganisation));
+      },
+      async noticeboard(communityId: string): Promise<NoticePost[]> {
+        const { data, error } = await getSupabase()
+          .from('organisation_posts')
+          .select('id, title, body, created_at, organisations!inner(id, name, community_id, verified_source)')
+          .eq('organisations.community_id', communityId)
+          .eq('kind', 'announcement')
+          .order('created_at', { ascending: false })
+          .limit(6);
+        if (error) throw error;
+        return ((data ?? []) as unknown[]).map((row) => {
+          const r = row as { id: string; title: string; body: string | null; created_at: string; organisations: { id: string; name: string; verified_source: boolean } };
+          return { id: r.id, organisationId: r.organisations.id, organisationName: r.organisations.name, title: r.title, body: r.body, verified: r.organisations.verified_source, createdAt: r.created_at };
+        });
       },
       async business(id: string) {
         const { data, error } = await getSupabase().from('businesses').select('*').eq('id', id).maybeSingle();

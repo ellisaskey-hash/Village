@@ -170,6 +170,17 @@ export interface Organisation {
   source: 'seed' | 'self';
 }
 
+/** A verified-org announcement, surfaced on the Home noticeboard (spec 07). */
+export interface NoticePost {
+  id: string;
+  organisationId: string;
+  organisationName: string;
+  title: string;
+  body: string | null;
+  verified: boolean;
+  createdAt: string;
+}
+
 export type ProposalKind = 'place' | 'business' | 'organisation' | 'event';
 export type ProposalStatus = 'pending' | 'accepted' | 'rejected' | 'merged';
 

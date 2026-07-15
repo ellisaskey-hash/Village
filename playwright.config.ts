@@ -9,8 +9,11 @@ export default defineConfig({
   testDir: './e2e',
   snapshotDir: './e2e/__screenshots__',
   fullyParallel: true,
-  // The gallery renders every primitive in every state and settles fonts/images; under a cold
-  // build + parallel load it can pass 30s. 60s absorbs that without masking a real hang.
+  // One preview server serves all specs; too many workers starve the screenshot/axe page.evaluate
+  // calls (they time out under contention, not from a real hang). Cap to 2 for reliability.
+  workers: 2,
+  // The gallery renders every primitive in every state and settles fonts/images; 60s absorbs a
+  // cold-build race without masking a real hang.
   timeout: 60_000,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
