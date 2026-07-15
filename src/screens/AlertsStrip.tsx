@@ -1,6 +1,8 @@
+import { motion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession } from '@/app/state/session';
+import { alertArrival, listItem, statusPulse } from '@/lib/motion';
 import { Card, Icon, TextLink } from '@/components/ui';
 import type { AlertTier } from '@/lib/services/types';
 
@@ -8,6 +10,11 @@ const TIER_TONE: Record<AlertTier, string> = {
   community: 'text-info',
   verified: 'text-warn',
   platform: 'text-danger',
+};
+const TIER_BORDER: Record<AlertTier, string> = {
+  community: 'border-l-info',
+  verified: 'border-l-warn',
+  platform: 'border-l-danger',
 };
 
 /** Home alerts strip (spec 07). Live alerts, tier-coloured; renders nothing when there are
@@ -36,22 +43,33 @@ export function AlertsStrip() {
 
   return (
     <section className="space-y-2">
-      {alerts.map((a) => (
-        <Card key={a.id} className="border-l-4" >
-          <div className="flex items-start gap-3">
-            <Icon name="alerts" size={20} className={TIER_TONE[a.tier]} />
-            <div className="min-w-0 flex-1">
-              <p className="text-body font-semibold text-text">{a.title}</p>
-              {a.body && <p className="text-small text-textMuted">{a.body}</p>}
-              {a.createdBy === session?.profileId && (
-                <div className="mt-1">
-                  <TextLink onClick={() => resolve(a.id)}>Mark resolved</TextLink>
+      {alerts.map((a) => {
+        const urgent = a.tier !== 'community';
+        return (
+          <motion.div key={a.id} variants={urgent ? alertArrival : listItem} initial="initial" animate="animate">
+            <Card className={`border-l-4 ${TIER_BORDER[a.tier]}`}>
+              <div className="flex items-start gap-3">
+                <span className="relative mt-0.5 flex h-2.5 w-2.5 shrink-0">
+                  {urgent && (
+                    <motion.span variants={statusPulse} animate="animate" className={`absolute inline-flex h-full w-full rounded-full ${a.tier === 'platform' ? 'bg-danger' : 'bg-warn'}`} />
+                  )}
+                  <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${a.tier === 'platform' ? 'bg-danger' : a.tier === 'verified' ? 'bg-warn' : 'bg-info'}`} />
+                </span>
+                <Icon name="alerts" size={20} className={TIER_TONE[a.tier]} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-body font-semibold text-text">{a.title}</p>
+                  {a.body && <p className="text-small text-textMuted">{a.body}</p>}
+                  {a.createdBy === session?.profileId && (
+                    <div className="mt-1">
+                      <TextLink onClick={() => resolve(a.id)}>Mark resolved</TextLink>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        </Card>
-      ))}
+              </div>
+            </Card>
+          </motion.div>
+        );
+      })}
     </section>
   );
 }

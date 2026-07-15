@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { useActiveMembership, useSession } from '@/app/state/session';
 import { useServices } from '@/lib/services/provider';
 import { formatWhen } from '@/lib/ics';
-import { Badge, Button, Card, EmptyState, Icon, IconBadge, PullToRefresh, Skeleton, StaggeredBody, type IconName } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, Icon, IconBadge, PullToRefresh, Skeleton, type IconName } from '@/components/ui';
 import { ListingCard } from '@/components/content/ListingCard';
+import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import { AlertsStrip } from '@/screens/AlertsStrip';
 
 const QUICK: { icon: IconName; label: string; to: string }[] = [
@@ -15,12 +17,12 @@ const QUICK: { icon: IconName; label: string; to: string }[] = [
   { icon: 'alerts', label: 'Report something lost', to: '/explore' },
 ];
 
-function SectionHeader({ title, to, onSeeAll }: { title: string; to?: string; onSeeAll?: () => void }) {
+function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
   return (
-    <div className="flex items-baseline justify-between">
+    <div className="mb-2 flex items-baseline justify-between">
       <h2 className="text-h3 font-semibold text-text">{title}</h2>
-      {to && onSeeAll && (
-        <button type="button" onClick={onSeeAll} className="text-small font-medium text-accent hover:underline">
+      {onSeeAll && (
+        <button type="button" onClick={onSeeAll} className="text-small font-medium text-accent transition-opacity hover:opacity-70">
           See all
         </button>
       )}
@@ -36,6 +38,7 @@ export function HomeScreen() {
   const qc = useQueryClient();
   const communityId = active?.communityId ?? '';
   const firstName = session?.profile.displayName.split(' ')[0] ?? 'neighbour';
+  const [peek, setPeek] = useState<PeekItem | null>(null);
 
   const eventsQ = useQuery({ queryKey: ['events', communityId], queryFn: () => services.events.list(communityId), enabled: Boolean(communityId) });
   const requestsQ = useQuery({ queryKey: ['requests', communityId], queryFn: () => services.requests.list(communityId), enabled: Boolean(communityId) });
@@ -49,11 +52,7 @@ export function HomeScreen() {
   const notices = (noticesQ.data ?? []).slice(0, 3);
 
   async function refresh() {
-    await qc.invalidateQueries({ queryKey: ['events', communityId] });
-    await qc.invalidateQueries({ queryKey: ['requests', communityId] });
-    await qc.invalidateQueries({ queryKey: ['listings', communityId] });
-    await qc.invalidateQueries({ queryKey: ['noticeboard', communityId] });
-    await qc.invalidateQueries({ queryKey: ['alerts', communityId] });
+    await Promise.all(['events', 'requests', 'listings', 'noticeboard', 'alerts'].map((k) => qc.invalidateQueries({ queryKey: [k, communityId] })));
   }
 
   async function rsvp(eventId: string) {
@@ -63,27 +62,34 @@ export function HomeScreen() {
 
   return (
     <PullToRefresh onRefresh={refresh}>
-      <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-sectionGap px-screenX py-6">
-        <header>
+      <motion.div
+        variants={screenEnter}
+        initial="initial"
+        animate="animate"
+        className="mx-auto grid max-w-5xl grid-cols-1 gap-4 px-screenX py-6 lg:grid-cols-12 lg:gap-5"
+      >
+        <motion.header variants={cardEnter} className="lg:col-span-12">
           <p className="text-eyebrow uppercase text-textMuted">{active?.name ?? 'Your community'}</p>
           <h1 className="font-display text-h1 font-bold text-text">Good to see you, {firstName}</h1>
-        </header>
+        </motion.header>
 
-        <AlertsStrip />
+        <motion.div variants={cardEnter} className="lg:col-span-12">
+          <AlertsStrip />
+        </motion.div>
 
         {loading && (
-          <div className="space-y-3">
+          <motion.div variants={cardEnter} className="space-y-3 lg:col-span-12">
             <Skeleton height={44} />
-            <div className="flex gap-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} width={224} height={200} />)}</div>
-          </div>
+            <div className="flex gap-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} width={224} height={200} />)}</div>
+          </motion.div>
         )}
 
         {soon.length > 0 && (
-          <section className="space-y-3">
-            <SectionHeader title="Happening soon" to="/explore?tab=events" onSeeAll={() => navigate('/explore?tab=events')} />
+          <motion.section variants={cardEnter} className="lg:col-span-6">
+            <SectionHeader title="Happening soon" onSeeAll={() => navigate('/explore?tab=events')} />
             <div className="space-y-2">
               {soon.map((ev) => (
-                <Card key={ev.id} variant="pressable" onClick={() => navigate(`/events/${ev.id}`)} className="flex items-center gap-3">
+                <Card key={ev.id} variant="pressable" onClick={() => setPeek({ kind: 'event', data: ev })} className="flex items-center gap-3">
                   <IconBadge icon="events" tone="warn" size="md" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-body font-semibold text-text">{ev.title}</p>
@@ -100,15 +106,15 @@ export function HomeScreen() {
                 </Card>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
-        <section className="space-y-3">
-          <SectionHeader title="Needs a hand" to="/explore?tab=requests" onSeeAll={() => navigate('/explore?tab=requests')} />
+        <motion.section variants={cardEnter} className="lg:col-span-6">
+          <SectionHeader title="Needs a hand" onSeeAll={() => navigate('/explore?tab=requests')} />
           {openRequests.length > 0 ? (
             <div className="space-y-2">
               {openRequests.map((r) => (
-                <Card key={r.id} variant="pressable" onClick={() => navigate(`/requests/${r.id}`)} className="flex items-center gap-3">
+                <Card key={r.id} variant="pressable" onClick={() => setPeek({ kind: 'request', data: r })} className="flex items-center gap-3">
                   <IconBadge icon="requests" tone="accent" size="md" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-body font-semibold text-text">{r.title}</p>
@@ -121,21 +127,21 @@ export function HomeScreen() {
           ) : (
             <EmptyState icon="requests" title="Nobody needs a hand right now" body="Be the first to ask. Neighbours are quick to help with lifts, tools and recommendations." action={{ label: 'Ask for a hand', onClick: () => navigate('/explore?tab=requests'), leadingIcon: 'plus' }} />
           )}
-        </section>
+        </motion.section>
 
         {freshListings.length > 0 && (
-          <section className="space-y-3">
-            <SectionHeader title="New in the village" to="/explore?tab=listings" onSeeAll={() => navigate('/explore?tab=listings')} />
+          <motion.section variants={cardEnter} className="lg:col-span-12">
+            <SectionHeader title="New in the village" onSeeAll={() => navigate('/explore?tab=listings')} />
             <div className="-mx-screenX flex gap-3 overflow-x-auto px-screenX pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {freshListings.map((l) => (
-                <ListingCard key={l.id} listing={l} variant="compact" onClick={() => navigate(`/listings/${l.id}`)} />
+                <ListingCard key={l.id} listing={l} variant="compact" onClick={() => setPeek({ kind: 'listing', data: l })} />
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
         {notices.length > 0 && (
-          <section className="space-y-3">
+          <motion.section variants={cardEnter} className="lg:col-span-8">
             <SectionHeader title="From the noticeboard" />
             <div className="space-y-2">
               {notices.map((n) => (
@@ -149,21 +155,29 @@ export function HomeScreen() {
                 </Card>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
-        <section>
+        <motion.section variants={cardEnter} className="lg:col-span-4">
           <SectionHeader title="Quick actions" />
-          <StaggeredBody className="mt-2 grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3 lg:grid-cols-1">
             {QUICK.map((qk) => (
-              <button key={qk.label} type="button" onClick={() => navigate(qk.to)} className="flex flex-col items-center gap-2 rounded-lg border border-border bg-bgElevated p-4 text-center transition-colors hover:border-accent/40">
+              <motion.button
+                key={qk.label}
+                type="button"
+                onClick={() => navigate(qk.to)}
+                whileTap={{ scale: 0.97 }}
+                className="flex flex-col items-center gap-2 rounded-lg border border-border bg-bgElevated p-4 text-center transition-colors hover:border-accent/40 lg:flex-row lg:gap-3 lg:text-left"
+              >
                 <IconBadge icon={qk.icon} tone="accent" size="md" />
                 <span className="text-small font-medium text-text">{qk.label}</span>
-              </button>
+              </motion.button>
             ))}
-          </StaggeredBody>
-        </section>
+          </div>
+        </motion.section>
       </motion.div>
+
+      <PeekSheet item={peek} onClose={() => setPeek(null)} />
     </PullToRefresh>
   );
 }

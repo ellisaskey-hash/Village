@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
-import { pressable } from '@/lib/motion';
+import { pressable, tabScreenCrossfade } from '@/lib/motion';
 import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
 import { CommunitySwitcher } from '@/components/layout/CommunitySwitcher';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
@@ -42,6 +42,7 @@ export function AppShell() {
   const [composer, setComposer] = useState<Composer>('none');
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -111,7 +112,11 @@ export function AppShell() {
         </header>
 
         <main id="main" className="flex-1 pb-24 lg:pb-10">
-          <Outlet />
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div key={pathname} variants={tabScreenCrossfade} initial="initial" animate="animate" exit="exit">
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
@@ -205,7 +210,7 @@ function PostButton({ onClick }: { onClick: () => void }) {
       transition={pressable.transition}
       className="flex flex-1 justify-center"
     >
-      <span className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-textOnAccent shadow-glowAccent">
+      <span className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-textOnAccent shadow-glowAccent motion-safe:animate-breath">
         <Icon name="plus" size={26} />
       </span>
     </motion.button>
