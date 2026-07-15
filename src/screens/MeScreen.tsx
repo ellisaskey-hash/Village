@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -5,6 +6,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession, useSessionStore } from '@/app/state/session';
 import { Avatar, Button, Card, Chip, EmptyState, Icon, IconBadge, ListRow, useToasts } from '@/components/ui';
+import { EditProfileSheet } from '@/screens/EditProfileSheet';
 import type { TrustLevel } from '@/lib/services/types';
 
 const TRUST_LABEL: Record<TrustLevel, string> = {
@@ -20,6 +22,7 @@ export function MeScreen() {
   const reset = useSessionStore((s) => s.reset);
   const qc = useQueryClient();
   const communityId = active?.communityId ?? '';
+  const [editOpen, setEditOpen] = useState(false);
 
   const membersQuery = useQuery({ queryKey: ['members', communityId], queryFn: () => services.memberships.membersOf(communityId), enabled: Boolean(communityId) });
   const invitesQuery = useQuery({ queryKey: ['invites', communityId], queryFn: () => services.invites.mine(communityId), enabled: Boolean(communityId) });
@@ -70,7 +73,9 @@ export function MeScreen() {
               </h1>
               <p className="text-small text-textMuted">{active ? `Villager since ${since} · ${TRUST_LABEL[trust]}` : 'No community yet'}</p>
             </div>
+            <Button variant="secondary" size="sm" leadingIcon="edit" className="ml-auto self-start" onClick={() => setEditOpen(true)}>Edit</Button>
           </div>
+          {session.profile.bio && <p className="mt-3 text-body text-text">{session.profile.bio}</p>}
           {me && me.identities.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {me.identities.map((id) => <Chip key={id} tone="neutral" selected>{id}</Chip>)}
@@ -134,6 +139,8 @@ export function MeScreen() {
         <ListRow title="Settings" leading={<Icon name="settings" size={20} className="text-textMuted" />} onClick={() => navigate('/me/settings')} />
         <ListRow title="Sign out" leading={<Icon name="back" size={20} className="text-textMuted" />} onClick={signOut} />
       </motion.section>
+
+      <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} currentIdentities={me?.identities ?? []} />
     </motion.div>
   );
 }

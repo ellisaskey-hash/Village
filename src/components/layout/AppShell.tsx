@@ -9,11 +9,12 @@ import { RequestComposer } from '@/screens/compose/RequestComposer';
 import { ListingComposer } from '@/screens/compose/ListingComposer';
 import { EventComposer } from '@/screens/compose/EventComposer';
 import { ServiceComposer } from '@/screens/compose/ServiceComposer';
+import { SkillComposer } from '@/screens/compose/SkillComposer';
 import { EquipmentComposer } from '@/screens/compose/EquipmentComposer';
 import { AlertComposer } from '@/screens/compose/AlertComposer';
 import { SearchSheet } from '@/screens/SearchSheet';
 
-type Composer = 'none' | 'request' | 'sell' | 'equipment' | 'event' | 'service' | 'alert';
+type Composer = 'none' | 'request' | 'sell' | 'equipment' | 'event' | 'service' | 'skill' | 'alert';
 
 interface Tab {
   to: string;
@@ -34,6 +35,7 @@ const POST_OPTIONS = [
   { value: 'event', label: 'Event', helper: 'Something happening locally' },
   { value: 'alert', label: 'Alert', helper: 'Lost pet, road closure, notice' },
   { value: 'service', label: 'Offer a service', helper: 'Trades and professionals' },
+  { value: 'skill', label: 'Share a skill', helper: 'Something you can help with' },
 ];
 
 export function AppShell() {
@@ -63,6 +65,7 @@ export function AppShell() {
       lend: 'equipment',
       event: 'event',
       service: 'service',
+      skill: 'skill',
       alert: 'alert',
     };
     setComposer(map[postChoice] ?? 'none');
@@ -150,6 +153,7 @@ export function AppShell() {
       <EquipmentComposer open={composer === 'equipment'} onClose={() => setComposer('none')} />
       <EventComposer open={composer === 'event'} onClose={() => setComposer('none')} />
       <ServiceComposer open={composer === 'service'} onClose={() => setComposer('none')} />
+      <SkillComposer open={composer === 'skill'} onClose={() => setComposer('none')} />
       <AlertComposer open={composer === 'alert'} onClose={() => setComposer('none')} />
       <SearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>

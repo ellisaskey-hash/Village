@@ -12,15 +12,15 @@ stubbed, and what is missing, against `/docs/spec`. Status: **DONE** · **IN PRO
 | **Photo upload when posting** | No upload UI anywhere despite photo columns on listings/events/alerts/businesses/places | `photos` storage bucket + RLS, `media.upload` service (Supabase Storage / mock data-URI), `PhotoInput`, wired into **Listing, Event, Equipment and Alert composers**; photos render on cards, detail heroes, and the alert strip — **DONE** (business/place management still to come) |
 | Listing condition | `condition` in the DB, not collected or shown | Condition control in the Sell composer (New/Like-new/Good/Fair/Spares); shown on the listing detail — **DONE** |
 | Business "Enquire" button | Toasted "Messaging lands in the next update" — a dead control (Law 13) | Opens a real thread with the owner (claimed businesses only) — **DONE** |
+| Profile editing | No UI to change name/avatar/bio/identity chips | `EditProfileSheet` (avatar upload, name, bio, identity chips) from the Me profile card, wiring `profiles.update` + `updateIdentities` — **DONE** |
+| Add a skill | Skills directory was read-only; no way to add one | `SkillComposer` + "Share a skill" in the Post menu (wires `directory.addSkill`) — **DONE** |
 
 ## Still MISSING / to do (prioritised)
 
 | Area | Gap | Priority |
 |---|---|---|
 | Acting-as | No "post as your business / organisation" selector on composers (spec 07); every post is personal | High |
-| Profile editing | No UI to change name, avatar, bio or identity chips after signup (the service `profiles.update` supports it) | High |
-| Directory: Skills | No way to add a skill (the Post sheet has no "skill" option); the Skills tab is read-only | Medium |
-| Me screen | Spec 07 "My equipment & skills" management section is absent | Medium |
+| Me screen | Spec 07 "My equipment & skills" management (list/remove your own) is absent | Medium |
 | Events | No "This month" grid toggle (spec 07); no map snippet (PostGIS, deferred with map view) | Medium |
 | Business management | Owner can't add hours, items/offers, or org posts from the UI | Medium |
 | Notifications / DM privacy / quiet hours | Toggles exist; not verified that they actually gate delivery end-to-end | Medium |
