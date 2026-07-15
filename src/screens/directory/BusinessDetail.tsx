@@ -17,6 +17,7 @@ import {
   Textarea,
   useToasts,
 } from '@/components/ui';
+import { PhotoHero } from '@/components/content/PhotoHero';
 
 export function BusinessDetail() {
   const { id = '' } = useParams();
@@ -72,6 +73,7 @@ export function BusinessDetail() {
         </Card>
       ) : (
         <>
+          <PhotoHero photos={b.photos} icon="businesses" />
           <Card>
             <div className="flex items-start gap-3">
               <IconBadge icon="businesses" tone="accent" size="lg" />

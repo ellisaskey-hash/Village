@@ -2,8 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { EmptyState, IconBadge, ListRow, Skeleton } from '@/components/ui';
-import { formatWhen } from '@/lib/ics';
+import { EmptyState, Skeleton } from '@/components/ui';
+import { EventCard } from '@/components/content/EventCard';
 
 export function EventsView() {
   const services = useServices();
@@ -28,15 +28,9 @@ export function EventsView() {
     );
   }
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {upcoming.map((e) => (
-        <ListRow
-          key={e.id}
-          leading={<IconBadge icon="events" tone="warn" />}
-          title={e.title}
-          subtitle={`${formatWhen(e.startsAt)}${e.rsvpMode !== 'none' ? ` · ${e.goingCount} going` : ''}`}
-          onClick={() => navigate(`/events/${e.id}`)}
-        />
+        <EventCard key={e.id} event={e} onClick={() => navigate(`/events/${e.id}`)} />
       ))}
     </div>
   );

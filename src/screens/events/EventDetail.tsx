@@ -6,6 +6,7 @@ import { useServices } from '@/lib/services/provider';
 import { errorMessage } from '@/lib/errors';
 import { downloadIcs, formatWhen } from '@/lib/ics';
 import { Banner, Button, Card, IconBadge, IconButton, Skeleton, useToasts } from '@/components/ui';
+import { PhotoHero } from '@/components/content/PhotoHero';
 import type { RsvpStatus } from '@/lib/services/types';
 
 export function EventDetail() {
@@ -39,6 +40,7 @@ export function EventDetail() {
         <Card><p className="text-body text-textMuted">We couldn't find that event.</p></Card>
       ) : (
         <>
+          <PhotoHero photos={e.photos} icon="events" from="var(--c-accent)" to="var(--c-accent-warm)" />
           <Card>
             <div className="flex items-start gap-3">
               <IconBadge icon="events" tone="warn" size="lg" />

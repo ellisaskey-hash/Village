@@ -215,7 +215,7 @@ const REQUEST_SELECT = '*, profiles!requests_created_by_fkey(display_name)';
 interface DbEvent {
   id: string; community_id: string; created_by: string; title: string; description: string | null;
   category: Event['category']; location_text: string | null; starts_at: string; ends_at: string | null;
-  rsvp_mode: Event['rsvpMode']; capacity: number | null; profiles?: { display_name: string } | null;
+  rsvp_mode: Event['rsvpMode']; capacity: number | null; photos?: string[] | null; profiles?: { display_name: string } | null;
 }
 interface DbRsvp { event_id: string; profile_id: string; status: RsvpStatus; party_size: number }
 function mapEvent(r: DbEvent, rsvps: DbRsvp[], me: string | undefined): Event {
@@ -225,7 +225,7 @@ function mapEvent(r: DbEvent, rsvps: DbRsvp[], me: string | undefined): Event {
     id: r.id, communityId: r.community_id, createdBy: r.created_by, authorName: r.profiles?.display_name ?? '',
     title: r.title, description: r.description, category: r.category, locationText: r.location_text,
     startsAt: r.starts_at, endsAt: r.ends_at, rsvpMode: r.rsvp_mode, capacity: r.capacity,
-    goingCount: going, myRsvp: mine,
+    photos: r.photos ?? [], goingCount: going, myRsvp: mine,
   };
 }
 interface DbService { id: string; community_id: string; created_by: string; title: string; category: string; description: string | null; active: boolean; profiles?: { display_name: string } | null }

@@ -79,6 +79,7 @@ await q("delete from events where title like 'DEMO %'");
 await q("delete from alerts where title like 'DEMO %'");
 await q("delete from organisations where name like 'DEMO %'");
 await q("delete from businesses where name like 'DEMO %'");
+await q("delete from places where name like 'DEMO %'");
 await q("delete from auth.users where email like 'demo+%@thelocal.test'");
 
 // ---- residents ----
@@ -103,8 +104,17 @@ for (const [tag, name, trust] of RESIDENTS) {
 console.log(`Dev Village: created ${RESIDENTS.length} demo residents.`);
 
 // ---- businesses: one claimed, one unclaimed stub ----
-const joinery = (await one("insert into businesses (community_id,owner_profile_id,name,categories,description,contact,is_home_business,source,claimed_at,verified_at) values ($1,$2,'DEMO Fielding Joinery',$3,'Bespoke joinery and fitted furniture, based on the High Street.',$4,false,'self',now(),now()) returning id", [dev.id, R.tom, ['joinery', 'carpentry'], JSON.stringify({ phone: '01000 000000', email: 'hello@fielding.example' })])).id;
-await one("insert into businesses (community_id,name,categories,description,source) values ($1,'DEMO Green Leaf Café',$2,'Independent café by the green. Is this yours? Claim it.','seed') returning id", [dev.id, ['cafe']]);
+const joinery = (await one("insert into businesses (community_id,owner_profile_id,name,categories,description,contact,is_home_business,photos,source,claimed_at,verified_at) values ($1,$2,'DEMO Fielding Joinery',$3,'Bespoke joinery and fitted furniture, based on the High Street.',$4,false,$5,'self',now(),now()) returning id", [dev.id, R.tom, ['joinery', 'carpentry'], JSON.stringify({ phone: '01000 000000', email: 'hello@fielding.example' }), [photo('Fielding Joinery', '#6b4f2f'), photo('Workshop', '#4a3720')]])).id;
+await one("insert into businesses (community_id,name,categories,description,photos,source) values ($1,'DEMO Green Leaf Café',$2,'Independent café by the green. Is this yours? Claim it.',$3,'seed') returning id", [dev.id, ['cafe'], [photo('Green Leaf Café', '#2f6b45')]]);
+
+// ---- places (so Directory -> Places is populated) ----
+async function place(name, kind, bg) {
+  await q("insert into places (community_id,name,kind,description,photos,source) values ($1,$2,$3,$4,$5,'seed')", [dev.id, name, kind, `${name}, at the heart of Dev Village.`, [photo(name, bg)]]);
+}
+await place('DEMO The Village Green', 'green', '#2e7d46');
+await place('DEMO The Bell Inn', 'pub', '#7a4a2f');
+await place('DEMO Dev Village Stores', 'shop', '#2f5f7a');
+await place('DEMO The Old Hall', 'hall', '#5c3f7a');
 
 // ---- organisation + posts ----
 const ra = (await one("insert into organisations (community_id,name,kind,description,verified_source,source) values ($1,'DEMO Dev Village Residents Association','group','The residents association for Dev Village.',true,'self') returning id", [dev.id])).id;
@@ -134,12 +144,12 @@ const ladderReq = await request(R.omar, 'DEMO Borrow a ladder this weekend', 'bo
 
 // ---- events + RSVPs ----
 const soon = (days, hour) => `now() + interval '${days} days' + interval '${hour} hours'`;
-async function event(by, title, cat, days, hour, loc) {
-  return (await one(`insert into events (community_id,created_by,title,description,category,location_text,starts_at,rsvp_mode) values ($1,$2,$3,$4,$5,$6,${soon(days, hour)},'open') returning id`,
-    [dev.id, by, title, 'Everyone welcome. Bring the family.', cat, loc])).id;
+async function event(by, title, cat, days, hour, loc, photoBg) {
+  return (await one(`insert into events (community_id,created_by,title,description,category,location_text,starts_at,rsvp_mode,photos) values ($1,$2,$3,$4,$5,$6,${soon(days, hour)},'open',$7) returning id`,
+    [dev.id, by, title, 'Everyone welcome. Bring the family.', cat, loc, [photo(title.replace('DEMO ', ''), photoBg)]])).id;
 }
-const fete = await event(R.priya, 'DEMO Village fete', 'community', 12, 11, 'The Green');
-const cricket = await event(R.sam, 'DEMO Cricket club social', 'sport', 20, 18, 'The Pavilion');
+const fete = await event(R.priya, 'DEMO Village fete', 'community', 12, 11, 'The Green', '#c2683a');
+const cricket = await event(R.sam, 'DEMO Cricket club social', 'sport', 20, 18, 'The Pavilion', '#3a7ac2');
 async function rsvp(eventId, who, status = 'going') { await q("insert into event_rsvps (event_id,profile_id,status) values ($1,$2,$3) on conflict do nothing", [eventId, who, status]); }
 for (const who of [R.tom, R.maria, R.jack, R.dev, R.nina]) await rsvp(fete, who, 'going');
 await rsvp(fete, R.chloe, 'maybe');

@@ -286,6 +286,7 @@ export interface Event {
   endsAt: string | null;
   rsvpMode: RsvpMode;
   capacity: number | null;
+  photos: string[];
   goingCount: number;
   myRsvp: RsvpStatus | null;
 }

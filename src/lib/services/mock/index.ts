@@ -188,7 +188,7 @@ function toEvent(e: MockEvent): Event {
   const goingCount = d.eventRsvps.filter((x) => x.eventId === e.id && x.status === 'going').reduce((s, x) => s + x.partySize, 0);
   const me = getCurrentProfileId();
   const myRsvp = me ? (d.eventRsvps.find((x) => x.eventId === e.id && x.profileId === me)?.status ?? null) : null;
-  return { ...e, goingCount, myRsvp };
+  return { ...e, photos: (e as { photos?: string[] }).photos ?? [], goingCount, myRsvp };
 }
 
 /** Mirrors promote_waitlist: fill freed capacity from the waitlist, oldest first. */

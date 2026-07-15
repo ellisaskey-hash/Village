@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { Avatar, Chip, EmptyState, IconBadge, ListRow, Skeleton, type IconName } from '@/components/ui';
+import { DirectoryCard } from '@/components/content/DirectoryCard';
 
 type Sub = 'businesses' | 'services' | 'places' | 'equipment' | 'skills' | 'organisations' | 'people';
 
@@ -63,9 +64,19 @@ export function DirectoryView() {
           ))}
         </div>
       ) : sub === 'businesses' ? (
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3">
           {(data as Awaited<ReturnType<typeof services.directory.businesses>>).map((b) => (
-            <ListRow key={b.id} leading={<IconBadge icon="businesses" tone="accent" />} title={b.name} subtitle={b.categories.join(', ') || (b.ownerProfileId ? 'Local business' : 'Is this yours? Claim it')} onClick={() => navigate(`/businesses/${b.id}`)} />
+            <DirectoryCard
+              key={b.id}
+              icon="businesses"
+              photos={b.photos}
+              title={b.name}
+              subtitle={b.categories.join(', ') || 'Local business'}
+              {...(b.ownerProfileId
+                ? (b.verifiedAt ? { badge: { label: 'Verified', tone: 'positive' as const } } : {})
+                : { badge: { label: 'Claim it', tone: 'accent' as const } })}
+              onClick={() => navigate(`/businesses/${b.id}`)}
+            />
           ))}
         </div>
       ) : sub === 'services' ? (
@@ -93,9 +104,9 @@ export function DirectoryView() {
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3">
           {(data as Awaited<ReturnType<typeof services.directory.places>>).map((p) => (
-            <ListRow key={p.id} leading={<IconBadge icon="places" tone="positive" />} title={p.name} subtitle={p.kind} onClick={() => navigate(`/places/${p.id}`)} />
+            <DirectoryCard key={p.id} icon="places" photos={p.photos} title={p.name} subtitle={p.kind} from="var(--c-positive)" to="var(--c-info)" onClick={() => navigate(`/places/${p.id}`)} />
           ))}
         </div>
       )}
