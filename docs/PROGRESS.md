@@ -7,7 +7,7 @@
 - **Gate 3 — M5 deployed PWA on your phone (real-device push). ← one hands-on step left (you, on your phone).** Deployed live at **https://village-tau-mauve.vercel.app**; PWA is installable (manifest + SW + icons verified); custom push service worker shipped; landing Lighthouse (mobile) perf 96 / a11y 96 / best-practices 100 / SEO 91 (all ≥90). The only thing I can't do headlessly is confirm a push actually lands on a physical device — see the phone test steps below. AWAITING-ELLIS.
 - **M7 — moderation, safety, admin console ✓ BUILT + proven live (13/13, `scripts/db/verify-m7.mjs`).** Reports + auto-hide, admin_moderate, suspension (writes-blocked/reads-kept), first-post delay queue, moderation-triage (advisory, fixture mode — AWAITING-KEYS), full `/admin` console, ReportSheet + escalation signposting, community-standard onboarding screen, GDPR export/delete. Admin walkthrough + creds in Morning Review.
 - **Gate 4 — real Horsmonden ingestion ✓ pipeline RUN against live APIs; review is yours.** 37 real proposals landed in the `/admin/seeding` queue (Overpass 19 places + 8 businesses, FHRS 10 businesses), `seed_proposals` only — nothing auto-published (verified: places/businesses/orgs still 0). Two real-API bugs found and fixed (Overpass 406 → User-Agent; FHRS fuzzy-matched "Horsenden"/Perivale → postcode-district filter). Companies House **AWAITING-KEY**; org/council ingestion is **AWAITING-KEYS** (URL-extract needs Anthropic). Review steps + gap checklist in Morning Review.
-- Gate 5 — M8 launch checklist. See the rendered status table at the end of this file.
+- **Gate 5 — M8 hardening ✓ ENGINEERING COMPLETE; launch is yours.** Performance (main chunk 221 KB gz < 800 target, code-split verified, Lighthouse mobile 91), full E2E per tab + offline drill (26 e2e green), list virtualisation (1000 listings → < 80 DOM rows, proven live), security regression 66/66 (four assertions, all milestones), a11y axe + keyboard clean. The remaining launch-checklist items are founder actions (accept proposals, claim links, on-device push, `launch_community`) — the status table is at the end of this file. **No launch steps were run** (per your instruction).
 
 ---
 
@@ -116,6 +116,16 @@ These are forward migrations (applied ones are never edited except #1 which was 
 
 ## Done
 
+### M8 — Hardening ✅ (engineering complete; launch actions are AWAITING-ELLIS)
+
+- **Performance (PERFORMANCE.md / spec 10):** main JS chunk **221 KB gz** (target < 800) — code-split the admin console + dev gallery off the main chunk (each its own lazy chunk); Lighthouse mobile on the deployed landing **perf 91** · TBT 80 ms · FCP/LCP/TTI ~2.7-2.9 s (simulated-mobile is pessimistic; SW-warm start is sub-second).
+- **E2E per tab + offline drill:** 26 e2e green — onboarding, content, seeding, gallery (visual+axe), **tabs** (every tab + search), **offline** (compose offline → OfflinePill → reconnect → refresh → draft restored), **scale**, **a11y**. Added a real draft store (`src/lib/drafts.ts`) so composing offline survives a refresh (there was none before).
+- **List virtualisation (spec 02, was entirely missing):** added `@tanstack/react-virtual` + a `VirtualList` primitive (window-scrolled, renders all ≤ 50, windows above). Applied to Listings, Requests, admin Members. Proven live: `e2e/scale.spec.ts` seeds **1000 listings** → **< 80 DOM rows** (desktop + mobile).
+- **Security RLS regression 66/66 live:** verify-security 26 · verify-m4 12 · verify-m5 15 · verify-m7 13. The four assertions (A can't read B, trust-0 caps server-side, hidden invisible to third parties, acting-as unforgeable) hold across every milestone. Fixed a verify-security cleanup FK-order crash (`requests.fulfilled_by`).
+- **Accessibility:** `e2e/a11y.spec.ts` — axe (WCAG A/AA) clean across landing + home/explore/inbox/me/settings/admin; keyboard-only skip-link + Post open/close. (`color-contrast` covered by the token test; `region` best-practice waived with cause.)
+- **Two M7 traps closed:** e2e now force-builds mock mode into `dist-e2e` (can't bind real creds); `api/` is under typecheck (`tsconfig.api.json`).
+- Green: typecheck (app + api) · lint · **44 unit** · **26 e2e** · build · **66/66 live**. Deployed to production.
+
 ### M7 — Moderation, safety, admin console ✅ (proven live 13/13, `scripts/db/verify-m7.mjs`)
 
 - **Acceptance (proven live via the API, `verify-m7.mjs` 13/13):** 3 reports auto-hide a target — author still sees it (flagged "hidden pending review"), third parties and non-members don't; every admin action lands in `moderation_actions`; **suspension blocks writes but not reads** (the bug the live run caught: `admin_moderate` had set `status='suspended'`, which `member_communities()` filters out, stripping reads — fixed to set `suspended_until` only, migration `20260714070003`); GDPR export returns the caller's data, delete anonymises PII while content survives.
@@ -191,3 +201,25 @@ Reading: spec 03/04/07/09. Test-first per CLAUDE.md rule 4.
 Scaffold, `design/tokens.ts` (spec 06), seven-axis theming cascade, motion library, hearth ambient, 33 primitives with mandatory fixes, `/dev/gallery`. Verified: lint / typecheck / 14 unit tests / build (112 KB gz) / e2e 4/4 (screenshots + axe, dark+light, desktop+mobile). Gallery reviewed and approved.
 
 _Note: the M0 e2e screenshot baselines are `*-win32.png` (this machine). CI on Linux needs `*-linux.png` generated once (`npm run e2e:update` in the Playwright Linux container)._
+
+---
+
+## 🚀 Spec 08 launch checklist — live status (Horsmonden)
+
+Legend: 🟢 built & verified (no engineering left) · 🟡 needs-Ellis (a founder action) · 🔴 open (engineering not done / AWAITING-KEYS).
+
+| # | Checklist item (spec 08) | Status | Where it stands |
+|---|---|---|---|
+| 1 | ≥ 15 places accepted, pinned on map | 🟡 needs-Ellis | **19 place proposals staged** in `/admin/seeding` with coordinates — accept the Horsmonden ones, reject the Goudhurst spillover. Map pin *materialisation* on accept is 🔴 open (deferred with the map view, M2); coords are preserved in the payload. |
+| 2 | ≥ 10 business stubs | 🟡 needs-Ellis | **18 business proposals staged** (10 FHRS + 8 Overpass). Accept in the console. |
+| 3 | School + council + key orgs; ≥ 2 orgs `verified_source` | 🔴 open | School present (proposal). **Council + orgs not ingested** — org/event extraction is URL-extract (Claude), **AWAITING-KEYS**. Add the Anthropic key, or quick-add the parish council/PTA in the console. |
+| 4 | ≥ 5 upcoming events | 🔴 open | No event source ran — events come from URL-extract (**AWAITING-KEYS**) or claimed-owner posting. Seed via the recurring-event composer once orgs exist. |
+| 5 | Bin / recurring notices configured | 🟡 needs-Ellis | Console quick-add is the intended path; local knowledge only you have. |
+| 6 | ≥ 3 profiles claimed pre-launch | 🟡 needs-Ellis | Claim links are founder-sent (you asked me **not** to send them). Claim flow + `decide_claim` are built and live. |
+| 7 | Community standard + config reviewed for local fit | 🟢 / 🟡 | Mechanisms shipped (one-screen standard in onboarding; config editor in `/admin/config`). The *review judgement* is yours. |
+| 8 | Join link + Facebook/PTA launch copy generated | 🔴 open | The in-console launch-copy generator is **not built** (spec 08 §checklist). Small, self-contained; flag if you want it before launch. |
+| 9 | Admin push confirmed on founder's device | 🟡 needs-Ellis | Gate 3 — the one on-phone push test (steps in the Morning Review). Everything server-side is deployed. |
+| — | Real transaction-shaped loop with a real pre-launch claimant | 🟡 needs-Ellis | Requires a claimed business + a real interaction (founder-led). |
+| — | `launch_community('horsmonden')` | 🟡 needs-Ellis | **Not run** (per your instruction). Flips status to `launched` when you're ready. |
+
+**Engineering summary:** every mechanism the checklist depends on is built, deployed and tested. The red rows are (a) URL-extract org/event ingestion — one Anthropic key away — and (b) the launch-copy generator, which isn't built. Everything amber is a founder decision or an on-device/real-person step that is deliberately yours.
