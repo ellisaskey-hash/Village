@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppBootstrap } from '@/app/AppBootstrap';
 import {
@@ -17,13 +17,18 @@ import { RequestDetail } from '@/screens/content/RequestDetail';
 import { ThreadScreen } from '@/screens/content/ThreadScreen';
 import { EventDetail } from '@/screens/events/EventDetail';
 import { EquipmentDetail } from '@/screens/directory/EquipmentDetail';
-import { SeedingConsole } from '@/screens/admin/SeedingConsole';
-import { AdminLayout } from '@/screens/admin/AdminLayout';
-import { AdminDashboard } from '@/screens/admin/AdminDashboard';
-import { ReportsQueue } from '@/screens/admin/ReportsQueue';
-import { HiddenQueue, DelaysQueue, ModerationLog } from '@/screens/admin/AdminQueues';
-import { MembersQueue } from '@/screens/admin/MembersQueue';
-import { CommunityConfig } from '@/screens/admin/CommunityConfig';
+// Code-split the admin console + dev gallery: most members never open them, so they should not
+// sit in everyone's main chunk (M8 performance pass, spec 10 / PERFORMANCE.md code-split).
+const SeedingConsole = lazy(() => import('@/screens/admin/SeedingConsole').then((m) => ({ default: m.SeedingConsole })));
+const AdminLayout = lazy(() => import('@/screens/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })));
+const AdminDashboard = lazy(() => import('@/screens/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+const ReportsQueue = lazy(() => import('@/screens/admin/ReportsQueue').then((m) => ({ default: m.ReportsQueue })));
+const HiddenQueue = lazy(() => import('@/screens/admin/AdminQueues').then((m) => ({ default: m.HiddenQueue })));
+const DelaysQueue = lazy(() => import('@/screens/admin/AdminQueues').then((m) => ({ default: m.DelaysQueue })));
+const ModerationLog = lazy(() => import('@/screens/admin/AdminQueues').then((m) => ({ default: m.ModerationLog })));
+const MembersQueue = lazy(() => import('@/screens/admin/MembersQueue').then((m) => ({ default: m.MembersQueue })));
+const CommunityConfig = lazy(() => import('@/screens/admin/CommunityConfig').then((m) => ({ default: m.CommunityConfig })));
+const GalleryScreen = lazy(() => import('@/dev/gallery/GalleryScreen').then((m) => ({ default: m.GalleryScreen })));
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen';
 import { SignInScreen } from '@/screens/auth/SignInScreen';
 import { SignUpScreen } from '@/screens/auth/SignUpScreen';
@@ -33,7 +38,6 @@ import { ExploreScreen } from '@/screens/ExploreScreen';
 import { InboxScreen } from '@/screens/InboxScreen';
 import { MeScreen } from '@/screens/MeScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
-import { GalleryScreen } from '@/dev/gallery/GalleryScreen';
 import { LandingScreen } from '@/screens/LandingScreen';
 import { BrandLogo } from '@/components/ui';
 import { useSession, useSessionStore } from '@/app/state/session';
@@ -54,6 +58,15 @@ function RootSwitch() {
     return <Navigate to={session.memberships.length > 0 ? '/home' : '/welcome'} replace />;
   }
   return <LandingScreen />;
+}
+
+/** Fallback while a lazily-loaded route chunk (admin console / dev gallery) fetches. */
+function RouteFallback() {
+  return (
+    <div id="main" className="flex min-h-dvh items-center justify-center">
+      <BrandLogo size={56} />
+    </div>
+  );
 }
 
 function devEnabled(): boolean {
@@ -81,6 +94,7 @@ export function App() {
     <BrowserRouter>
       <AppBootstrap>
         <RouteAnnouncer />
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<RootSwitch />} />
 
@@ -132,6 +146,7 @@ export function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </AppBootstrap>
     </BrowserRouter>
   );
