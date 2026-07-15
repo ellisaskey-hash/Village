@@ -6,6 +6,7 @@ import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { useDraft } from '@/lib/drafts';
 import { Button, Field, SegmentedControl, Sheet, Textarea, useToasts } from '@/components/ui';
+import { StaggeredBody } from '@/components/ui';
 import type { ListingKind } from '@/lib/services/types';
 
 /** `lend` is fixed for the equipment tile; the sell tile lets the poster pick sell/free/wanted. */
@@ -66,7 +67,7 @@ export function ListingComposer({
         </Button>
       }
     >
-      <div className="space-y-4">
+      <StaggeredBody className="space-y-4">
         {!fixedKind && (
           <SegmentedControl<ListingKind>
             ariaLabel="Listing kind"
@@ -85,7 +86,7 @@ export function ListingComposer({
           <Field label="Price (£)" type="number" value={price} onChange={(e) => setDraft({ price: e.target.value })} placeholder="25" />
         )}
         <Textarea label="Description" value={description} onChange={(e) => setDraft({ description: e.target.value })} placeholder="Good condition, collection from the High Street." maxLength={800} />
-      </div>
+      </StaggeredBody>
     </Sheet>
   );
 }

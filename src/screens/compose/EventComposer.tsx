@@ -5,6 +5,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { Button, Field, SegmentedControl, Select, Sheet, Textarea, useToasts } from '@/components/ui';
+import { StaggeredBody } from '@/components/ui';
 import type { EventCategory, RsvpMode } from '@/lib/services/types';
 
 const CATEGORIES: { value: EventCategory; label: string }[] = [
@@ -59,7 +60,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Sheet open={open} onClose={onClose} title="Add an event" hero={{ icon: 'events', tone: 'warn' }}
       footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Post event</Button>}>
-      <div className="space-y-4">
+      <StaggeredBody className="space-y-4">
         <Field label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Summer fete on the green" />
         <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value as EventCategory)} options={CATEGORIES} />
         <Field label="When" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
@@ -81,7 +82,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
           <Field label="Spaces" type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="30" />
         )}
         <Textarea label="Details" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} />
-      </div>
+      </StaggeredBody>
     </Sheet>
   );
 }

@@ -6,6 +6,7 @@ import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { useDraft } from '@/lib/drafts';
 import { Button, Field, Select, Sheet, Textarea, useToasts } from '@/components/ui';
+import { StaggeredBody } from '@/components/ui';
 import type { RequestCategory } from '@/lib/services/types';
 
 const CATEGORIES: { value: RequestCategory; label: string }[] = [
@@ -61,7 +62,7 @@ export function RequestComposer({ open, onClose }: { open: boolean; onClose: () 
         </Button>
       }
     >
-      <div className="space-y-4">
+      <StaggeredBody className="space-y-4">
         <Field label="What do you need?" value={title} onChange={(e) => setDraft({ title: e.target.value })} placeholder="Borrow a ladder for the weekend" />
         <Select
           label="Category"
@@ -70,7 +71,7 @@ export function RequestComposer({ open, onClose }: { open: boolean; onClose: () 
           options={CATEGORIES}
         />
         <Textarea label="Any detail?" value={description} onChange={(e) => setDraft({ description: e.target.value })} placeholder="A step ladder would be perfect. Happy to collect." maxLength={500} />
-      </div>
+      </StaggeredBody>
     </Sheet>
   );
 }

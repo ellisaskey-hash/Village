@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { PhotoHero } from '@/components/content/PhotoHero';
 
 export function EquipmentDetail() {
   const { id = '' } = useParams();
@@ -44,30 +45,35 @@ export function EquipmentDetail() {
         <h1 className="font-display text-h1 font-bold text-text">Equipment</h1>
       </header>
       {q.isLoading ? (
-        <Skeleton height={140} />
+        <div className="space-y-4"><Skeleton height={160} /><Skeleton height={72} /></div>
       ) : !e ? (
         <Card><p className="text-body text-textMuted">We couldn't find that item.</p></Card>
       ) : (
         <>
-          <Card>
-            <div className="flex items-start gap-3">
-              <IconBadge icon="equipment" tone="positive" size="lg" />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-h2 font-semibold text-text">{e.name}</h2>
-                <p className="text-small text-textMuted">{e.category} · {e.ownerName}</p>
+          <motion.div variants={cardEnter}>
+            <PhotoHero icon="equipment" from="var(--c-positive)" to="var(--c-accent)" />
+          </motion.div>
+          <motion.div variants={cardEnter}>
+            <Card>
+              <div className="flex items-start gap-3">
+                <IconBadge icon="equipment" tone="positive" size="lg" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-h2 font-semibold text-text">{e.name}</h2>
+                  <p className="text-small text-textMuted capitalize">{e.category} · {e.ownerName}</p>
+                </div>
               </div>
-            </div>
-            {e.note && <p className="mt-3 text-body text-text">{e.note}</p>}
-            {e.lendTerms && <p className="mt-2 text-small text-textMuted">Terms: {e.lendTerms}</p>}
-          </Card>
+              {e.note && <p className="mt-3 text-body text-text">{e.note}</p>}
+              {e.lendTerms && <p className="mt-2 text-small text-textMuted">Terms: {e.lendTerms}</p>}
+            </Card>
+          </motion.div>
 
-          {isOwner ? (
-            <Card><p className="text-small text-textMuted">This is yours, in the lending library.</p></Card>
-          ) : (
-            <Button variant="primary" size="xl" fullWidth leadingIcon="requests" onClick={() => setAskOpen(true)}>
-              Ask to borrow
-            </Button>
-          )}
+          <motion.div variants={cardEnter}>
+            {isOwner ? (
+              <Card><p className="text-small text-textMuted">This is yours, in the lending library.</p></Card>
+            ) : (
+              <Button variant="primary" size="xl" fullWidth leadingIcon="requests" onClick={() => setAskOpen(true)}>Ask to borrow</Button>
+            )}
+          </motion.div>
         </>
       )}
 
