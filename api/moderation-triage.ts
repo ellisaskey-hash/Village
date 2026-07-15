@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Server-side moderation triage (Vercel function). Advisory only — it returns a suggestion,
 // never acts. Anthropic runs here, never in the client bundle (CLAUDE.md rule 6). Tool-use is
 // forced so the reply is a typed object. With no ANTHROPIC_API_KEY set it returns the same
 // rule-based fixture the client uses, so the seam is real before the key lands (AWAITING-KEYS).
-//
-// Not part of the app tsconfig build (Vercel compiles api/* separately); typed loosely on
-// purpose so it needs no @vercel/node types in the app graph.
+import type { ApiRequest, ApiResponse } from './_types';
 
 interface TriageInput { reason: string; note: string | null }
 interface TriageSuggestion {
@@ -43,9 +40,12 @@ const TOOL = {
   },
 };
 
-export default async function handler(req: any, res: any) {
+interface AnthropicBlock { type: string; input?: Record<string, unknown> }
+interface AnthropicResponse { content?: AnthropicBlock[] }
+
+export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (req.method !== 'POST') { res.status(405).json({ error: 'POST only' }); return; }
-  const input: TriageInput = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body ?? {});
+  const input = (typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body ?? {})) as TriageInput;
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) { res.status(200).json(fixture(input)); return; } // AWAITING-KEYS
 
@@ -64,9 +64,9 @@ export default async function handler(req: any, res: any) {
         }],
       }),
     });
-    const data: any = await r.json();
-    const block = (data.content ?? []).find((b: any) => b.type === 'tool_use');
-    if (!block) { res.status(200).json(fixture(input)); return; }
+    const data = (await r.json()) as AnthropicResponse;
+    const block = (data.content ?? []).find((b) => b.type === 'tool_use');
+    if (!block?.input) { res.status(200).json(fixture(input)); return; }
     res.status(200).json({ ...block.input, fixture: false });
   } catch {
     res.status(200).json(fixture(input));

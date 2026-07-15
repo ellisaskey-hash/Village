@@ -16,3 +16,6 @@ npm-debug.log*
 .eslintcache
 
 .vercel
+
+dist-e2e
+.env.e2e-hidden
