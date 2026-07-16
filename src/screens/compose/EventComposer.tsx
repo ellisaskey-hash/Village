@@ -67,7 +67,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
 
   return (
     <Sheet open={open} onClose={onClose} title="Add an event" hero={{ icon: 'events', tone: 'warn' }}
-      footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Post event</Button>}>
+      footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!title.trim() || !startsAt} onClick={submit}>Post event</Button>}>
       <StaggeredBody className="space-y-4">
         <ActingAsSelector value={asBusinessId} onChange={setAsBusinessId} />
         <PhotoInput value={photos} onChange={setPhotos} />

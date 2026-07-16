@@ -5,6 +5,7 @@ import { useApplyTheme } from '@/app/state/theme';
 import { useApplyA11y } from '@/app/state/a11y';
 import { useBootstrapSession } from '@/app/state/session';
 import { AppBackground } from '@/components/decor/AppBackground';
+import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { MockBanner } from '@/components/layout/MockBanner';
 import { UpdatePrompt } from '@/components/layout/UpdatePrompt';
 import { OfflinePill, ToastProvider } from '@/components/ui';
@@ -30,7 +31,8 @@ export function AppBootstrap({ children }: { children: ReactNode }) {
 function Inner({ children }: { children: ReactNode }) {
   useBootstrapSession();
   const { isMock } = useServices();
-  const onDevRoute = useLocation().pathname.startsWith('/dev');
+  const pathname = useLocation().pathname;
+  const onDevRoute = pathname.startsWith('/dev');
   return (
     <>
       <a href="#main" className="skip-link">
@@ -40,7 +42,7 @@ function Inner({ children }: { children: ReactNode }) {
       <OfflinePill />
       <ToastProvider>
         <UpdatePrompt />
-        {children}
+        <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>
       </ToastProvider>
       {isMock && !onDevRoute && <MockBanner />}
     </>

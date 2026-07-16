@@ -6,7 +6,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
-import { Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { Button, Card, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 
 export function EquipmentDetail() {
@@ -46,6 +46,8 @@ export function EquipmentDetail() {
       </header>
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={160} /><Skeleton height={72} /></div>
+      ) : q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
       ) : !e ? (
         <Card><p className="text-body text-textMuted">We couldn't find that item.</p></Card>
       ) : (
@@ -78,7 +80,7 @@ export function EquipmentDetail() {
       )}
 
       <Sheet open={askOpen} onClose={() => setAskOpen(false)} title="Ask to borrow" hero={{ icon: 'requests', tone: 'accent' }}
-        footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={ask}>Send</Button>}>
+        footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!message.trim()} onClick={ask}>Send</Button>}>
         <Textarea label="Your message" value={message} onChange={(ev) => setMessage(ev.target.value)} placeholder={e ? `Hi, could I borrow the ${e.name} this weekend?` : ''} maxLength={400} />
       </Sheet>
     </motion.div>

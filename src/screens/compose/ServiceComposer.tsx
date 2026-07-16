@@ -39,7 +39,7 @@ export function ServiceComposer({ open, onClose }: { open: boolean; onClose: () 
 
   return (
     <Sheet open={open} onClose={onClose} title="Offer a service" hero={{ icon: 'services', tone: 'accent' }}
-      footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Add service</Button>}>
+      footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!title.trim()} onClick={submit}>Add service</Button>}>
       <div className="space-y-4">
         <Field label="What do you offer?" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Plumbing and heating" />
         <Field label="Category" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Trades" />

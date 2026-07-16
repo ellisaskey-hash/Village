@@ -41,7 +41,9 @@ export function VirtualList<T>({
   if (items.length <= threshold) {
     return (
       <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {items.map((item, i) => renderItem(item, i))}
+        {items.map((item, i) => (
+          <div key={getKey(item, i)}>{renderItem(item, i)}</div>
+        ))}
       </div>
     );
   }

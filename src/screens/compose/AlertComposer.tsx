@@ -51,7 +51,7 @@ export function AlertComposer({ open, onClose }: { open: boolean; onClose: () =>
 
   return (
     <Sheet open={open} onClose={onClose} title="Post an alert" hero={{ icon: 'alerts', tone: 'danger' }}
-      footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Post alert</Button>}>
+      footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!title.trim()} onClick={submit}>Post alert</Button>}>
       <div className="space-y-4">
         <InfoCallout icon="shield">
           Community alerts reach neighbours who've opted in. Road closures and safety notices are

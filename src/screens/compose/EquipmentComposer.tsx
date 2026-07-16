@@ -55,7 +55,7 @@ export function EquipmentComposer({ open, onClose }: { open: boolean; onClose: (
 
   return (
     <Sheet open={open} onClose={onClose} title="Offer equipment to lend" hero={{ icon: 'equipment', tone: 'accent' }}
-      footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Add to library</Button>}>
+      footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!name.trim()} onClick={submit}>Add to library</Button>}>
       <div className="space-y-4">
         <PhotoInput value={photos} onChange={setPhotos} />
         <Field label="What is it?" value={name} onChange={(e) => setName(e.target.value)} placeholder="Pressure washer" />

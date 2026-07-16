@@ -6,7 +6,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
-import { Badge, Banner, Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { Badge, Banner, Button, Card, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { ReportButton } from '@/components/moderation/ReportButton';
 import { AuthorCard } from '@/components/content/AuthorCard';
 
@@ -65,6 +65,8 @@ export function RequestDetail() {
 
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={120} /><Skeleton height={72} /></div>
+      ) : q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
       ) : !r ? (
         <Card><p className="text-body text-textMuted">We couldn't find that request.</p></Card>
       ) : (
@@ -118,7 +120,7 @@ export function RequestDetail() {
       )}
 
       <Sheet open={replyOpen} onClose={() => setReplyOpen(false)} title="Offer to help" hero={{ icon: 'requests', tone: 'accent' }}
-        footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={help}>Send</Button>}>
+        footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!message.trim()} onClick={help}>Send</Button>}>
         <Textarea label="Your message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Happy to help. I've got a ladder you can borrow this weekend." maxLength={500} />
       </Sheet>
     </motion.div>

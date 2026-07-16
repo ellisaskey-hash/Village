@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession } from '@/app/state/session';
-import { Avatar, Button, Chip, EmptyState, IconBadge, ListRow, Skeleton, useToasts, type IconName } from '@/components/ui';
+import { Avatar, Button, Chip, EmptyState, IconBadge, ListRow, QueryError, Skeleton, useToasts, type IconName } from '@/components/ui';
 import { DirectoryCard } from '@/components/content/DirectoryCard';
 
 type Sub = 'businesses' | 'services' | 'places' | 'equipment' | 'skills' | 'organisations' | 'people';
@@ -67,7 +67,9 @@ export function DirectoryView() {
         ))}
       </div>
 
-      {q.isLoading ? (
+      {q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
+      ) : q.isLoading ? (
         <div className="space-y-2"><Skeleton height={64} /><Skeleton height={64} /></div>
       ) : data.length === 0 ? (
         <EmptyState icon="places" title="Still setting this up" body="This part of the directory is being seeded. Check back soon." />

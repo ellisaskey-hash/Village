@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { Chip, EmptyState, Skeleton, VirtualList } from '@/components/ui';
+import { Chip, EmptyState, QueryError, Skeleton, VirtualList } from '@/components/ui';
 import { ListingCard, priceBadge } from '@/components/content/ListingCard';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import type { Listing, ListingKind } from '@/lib/services/types';
@@ -62,7 +62,9 @@ export function ListingsView() {
         </Chip>
       </div>
 
-      {q.isLoading ? (
+      {q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
+      ) : q.isLoading ? (
         <div className="grid grid-cols-2 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height={230} />)}</div>
       ) : filtered.length === 0 ? (
         <EmptyState icon="listings" title={kind === 'all' ? 'Nothing for sale yet' : 'Nothing here'} body={kind === 'all' ? 'Got something lying around? Give it a new home with a neighbour.' : 'Try another filter, or be the first to post one.'} />

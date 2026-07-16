@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { EmptyState, Skeleton } from '@/components/ui';
+import { EmptyState, QueryError, Skeleton } from '@/components/ui';
 import { EventCard } from '@/components/content/EventCard';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import type { Event } from '@/lib/services/types';
@@ -24,6 +24,7 @@ export function EventsView() {
     };
   }, [q.data]);
 
+  if (q.isError) return <QueryError onRetry={() => q.refetch()} />;
   if (q.isLoading) return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={112} />)}</div>;
   if (thisWeek.length === 0 && later.length === 0) {
     return <EmptyState icon="events" title="Nothing on just yet" body="Know something happening locally? Add it so your neighbours can come along." />;

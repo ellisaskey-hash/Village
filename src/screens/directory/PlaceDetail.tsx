@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
-import { Card, Icon, IconBadge, IconButton, Skeleton } from '@/components/ui';
+import { Card, Icon, IconBadge, IconButton, QueryError, Skeleton } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 
 export function PlaceDetail() {
@@ -21,6 +21,8 @@ export function PlaceDetail() {
       </header>
       {q.isLoading ? (
         <Skeleton height={120} />
+      ) : q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
       ) : !p ? (
         <Card><p className="text-body text-textMuted">We couldn't find that place.</p></Card>
       ) : (

@@ -126,7 +126,7 @@ export function ThreadScreen() {
 
       <form onSubmit={send} className="safe-bottom flex items-end gap-2 border-t border-border py-3">
         <Field label="Message" hideLabel value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" className="flex-1" />
-        <IconButton icon="send" ariaLabel="Send" variant="surface" size="md" onClick={() => void send()} disabled={busy} />
+        <IconButton icon="send" ariaLabel="Send" variant="surface" size="md" onClick={() => void send()} disabled={busy || !draft.trim()} />
       </form>
     </div>
   );

@@ -35,7 +35,7 @@ export function SkillComposer({ open, onClose }: { open: boolean; onClose: () =>
 
   return (
     <Sheet open={open} onClose={onClose} title="Share a skill" hero={{ icon: 'sparkle', tone: 'purple' }}
-      footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>Share skill</Button>}>
+      footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!skill.trim()} onClick={submit}>Share skill</Button>}>
       <div className="space-y-4">
         <Field label="What can you help with?" value={skill} onChange={(e) => setSkill(e.target.value)} placeholder="Bike repairs, French, first aid" />
         <Textarea label="Anything to add? (optional)" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Happy to show anyone the basics." maxLength={300} />

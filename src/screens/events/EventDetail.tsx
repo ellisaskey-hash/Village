@@ -5,7 +5,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { errorMessage } from '@/lib/errors';
 import { downloadIcs, formatWhen } from '@/lib/ics';
-import { Banner, Button, Card, Icon, IconBadge, IconButton, Skeleton, useToasts } from '@/components/ui';
+import { Banner, Button, Card, Icon, IconBadge, IconButton, QueryError, Skeleton, useToasts } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
 import type { RsvpStatus } from '@/lib/services/types';
@@ -37,6 +37,8 @@ export function EventDetail() {
       </motion.header>
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={208} /><Skeleton height={120} /></div>
+      ) : q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
       ) : !e ? (
         <Card><p className="text-body text-textMuted">We couldn't find that event.</p></Card>
       ) : (

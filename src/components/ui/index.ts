@@ -13,6 +13,7 @@ export { Sheet } from './Sheet';
 export { Modal } from './Modal';
 export { ToastProvider, useToasts, type ToastVariant } from './Toast';
 export { EmptyState } from './EmptyState';
+export { QueryError } from './QueryError';
 export { Skeleton, SkeletonListRow, SkeletonCard } from './Skeleton';
 export { SegmentedControl } from './SegmentedControl';
 export { Tabs } from './Tabs';

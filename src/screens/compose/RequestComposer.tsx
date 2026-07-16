@@ -57,7 +57,7 @@ export function RequestComposer({ open, onClose }: { open: boolean; onClose: () 
       title="Ask for a hand"
       hero={{ icon: 'requests', tone: 'accent' }}
       footer={
-        <Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>
+        <Button variant="primary" size="xl" fullWidth loading={busy} disabled={!title.trim()} onClick={submit}>
           Post request
         </Button>
       }

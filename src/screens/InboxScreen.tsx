@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cardEnter, listContainer, listItem, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
-import { Avatar, Badge, EmptyState, Icon, IconBadge, SegmentedControl, Skeleton, type IconName } from '@/components/ui';
+import { Avatar, Badge, EmptyState, Icon, IconBadge, QueryError, SegmentedControl, Skeleton, type IconName } from '@/components/ui';
 import { cx } from '@/lib/cx';
 import type { ThreadContext } from '@/lib/services/types';
 
@@ -66,7 +66,9 @@ export function InboxScreen() {
 
       <motion.div variants={cardEnter}>
         {section === 'messages' ? (
-          threads.isLoading ? (
+          threads.isError ? (
+            <QueryError onRetry={() => threads.refetch()} />
+          ) : threads.isLoading ? (
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>
           ) : !threads.data || threads.data.length === 0 ? (
             <EmptyState icon="messages" title="No messages yet" body="When you respond to a listing or request, the conversation shows up here." />
@@ -99,6 +101,8 @@ export function InboxScreen() {
               ))}
             </motion.div>
           )
+        ) : notifications.isError ? (
+          <QueryError onRetry={() => notifications.refetch()} />
         ) : notifications.isLoading ? (
           <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>
         ) : !notifications.data || notifications.data.length === 0 ? (

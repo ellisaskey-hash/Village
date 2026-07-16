@@ -72,7 +72,7 @@ export function ListingComposer({
       title={fixedKind === 'lend' ? 'Offer to lend' : 'List something'}
       hero={{ icon: 'listings', tone: 'accent' }}
       footer={
-        <Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>
+        <Button variant="primary" size="xl" fullWidth loading={busy} disabled={!title.trim()} onClick={submit}>
           Post
         </Button>
       }

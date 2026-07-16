@@ -6,7 +6,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
-import { Banner, Button, Card, IconBadge, IconButton, Sheet, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { Banner, Button, Card, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { ReportButton } from '@/components/moderation/ReportButton';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
@@ -68,6 +68,8 @@ export function ListingDetail() {
 
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={208} /><Skeleton height={120} /></div>
+      ) : q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
       ) : !l ? (
         <Card><p className="text-body text-textMuted">We couldn't find that listing.</p></Card>
       ) : (
@@ -119,7 +121,7 @@ export function ListingDetail() {
       )}
 
       <Sheet open={replyOpen} onClose={() => setReplyOpen(false)} title="Message about this" hero={{ icon: 'messages', tone: 'accent' }}
-        footer={<Button variant="primary" size="xl" fullWidth loading={busy} onClick={messageAbout}>Send</Button>}>
+        footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!message.trim()} onClick={messageAbout}>Send</Button>}>
         <Textarea label="Your message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Hi, is this still available? I could collect on Saturday." maxLength={500} />
       </Sheet>
     </motion.div>

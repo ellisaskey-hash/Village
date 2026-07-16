@@ -13,6 +13,7 @@ import {
   IconBadge,
   IconButton,
   Sheet,
+  QueryError,
   Skeleton,
   Textarea,
   useToasts,
@@ -80,6 +81,8 @@ export function BusinessDetail() {
 
       {q.isLoading ? (
         <Skeleton height={120} />
+      ) : q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
       ) : !b ? (
         <Card>
           <p className="text-body text-textMuted">We couldn't find that business.</p>

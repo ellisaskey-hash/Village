@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { Chip, EmptyState, IconBadge, ListRow, Skeleton, VirtualList } from '@/components/ui';
+import { Chip, EmptyState, IconBadge, ListRow, QueryError, Skeleton, VirtualList } from '@/components/ui';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import type { RequestCategory, RequestStatus } from '@/lib/services/types';
 
@@ -49,7 +49,9 @@ export function RequestsView() {
         ))}
       </div>
 
-      {q.isLoading ? (
+      {q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
+      ) : q.isLoading ? (
         <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>
       ) : filtered.length === 0 ? (
         <EmptyState icon="requests" title={cat === 'all' ? 'Nobody needs a hand right now' : 'Nothing in this one'} body="Ask for one. Lifts, tools, recommendations, a spare pair of hands." />

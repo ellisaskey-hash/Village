@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
-import { Banner, Card, IconBadge, IconButton, Skeleton } from '@/components/ui';
+import { Banner, Card, IconBadge, IconButton, QueryError, Skeleton } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 
 export function OrganisationDetail() {
@@ -25,6 +25,8 @@ export function OrganisationDetail() {
       </motion.header>
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={160} /><Skeleton height={120} /></div>
+      ) : q.isError ? (
+        <QueryError onRetry={() => q.refetch()} />
       ) : !o ? (
         <Card><p className="text-body text-textMuted">We couldn't find that organisation.</p></Card>
       ) : (
