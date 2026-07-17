@@ -719,20 +719,20 @@ export function createSupabaseServices(): Services {
 
     threads: {
       async mine(): Promise<ThreadSummary[]> {
-        const { data, error } = await getSupabase()
-          .from('threads')
-          .select('id, context, context_id, title, last_message_at, thread_participants!inner(profile_id)')
-          .order('last_message_at', { ascending: false });
+        // my_threads RPC enriches each thread with the other participant's name, a message
+        // preview + sender, and unread — computed server-side in one round-trip.
+        const { data, error } = await getSupabase().rpc('my_threads');
         if (error) throw error;
-        return (data ?? []).map((row) => {
-          const r = row as unknown as {
-            id: string; context: ThreadContext; context_id: string | null; title: string | null; last_message_at: string;
+        return ((data ?? []) as unknown[]).map((row) => {
+          const r = row as {
+            id: string; context: ThreadContext; context_id: string | null; title: string | null;
+            other_name: string; last_message_at: string; last_snippet: string | null;
+            last_sender_is_me: boolean; unread: boolean;
           };
           return {
             id: r.id, context: r.context, contextId: r.context_id, title: r.title,
-            otherName: r.title ?? 'Conversation', lastMessageAt: r.last_message_at, unread: false,
-            // TODO(supabase): compute via a latest-message-per-thread view; mock path has it.
-            lastSnippet: null, lastSenderIsMe: false,
+            otherName: r.other_name, lastMessageAt: r.last_message_at, unread: r.unread,
+            lastSnippet: r.last_snippet, lastSenderIsMe: r.last_sender_is_me,
           };
         });
       },
