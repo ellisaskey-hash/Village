@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession } from '@/app/state/session';
-import { Avatar, Button, Chip, EmptyState, IconBadge, ListRow, QueryError, Skeleton, useToasts, type IconName } from '@/components/ui';
+import { Avatar, Button, Chip, EmptyState, IconBadge, ListRow, QueryError, SearchBar, Skeleton, useToasts, type IconName } from '@/components/ui';
 import { DirectoryCard } from '@/components/content/DirectoryCard';
 import { ORGANISATION_KIND_LABEL, PLACE_KIND_LABEL, labelFor } from '@/lib/labels';
 
@@ -44,6 +44,7 @@ export function DirectoryView() {
   const communityId = active?.communityId ?? '';
   const canVouch = (active?.trustLevel ?? 0) >= 2;
   const [sub, setSub] = useState<Sub>('businesses');
+  const [query, setQuery] = useState('');
 
   async function vouch(profileId: string, name: string) {
     try {
@@ -71,10 +72,23 @@ export function DirectoryView() {
     },
   });
 
-  const data = q.data ?? [];
+  const raw = q.data ?? [];
+  // Free-text filter across whatever fields the active type surfaces (name/title/person/category).
+  const data = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return raw;
+    return (raw as unknown as Record<string, unknown>[]).filter((item) => {
+      const hay = [item.name, item.title, item.displayName, item.skill, item.personName, item.authorName, item.ownerName, item.category, Array.isArray(item.categories) ? item.categories.join(' ') : undefined, Array.isArray(item.identities) ? item.identities.join(' ') : undefined]
+        .filter((v): v is string => typeof v === 'string')
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [raw, query]);
 
   return (
     <div className="space-y-4">
+      <SearchBar value={query} onChange={setQuery} placeholder="Search the directory" ariaLabel="Search the directory" />
       <div className="flex flex-wrap gap-2">
         {SUBS.map((s) => (
           <Chip key={s.value} selected={sub === s.value} leadingIcon={s.icon} onClick={() => setSub(s.value)}>
@@ -88,6 +102,8 @@ export function DirectoryView() {
         <QueryError onRetry={() => q.refetch()} />
       ) : q.isLoading ? (
         <div className="space-y-2"><Skeleton height={64} /><Skeleton height={64} /></div>
+      ) : data.length === 0 && query.trim() ? (
+        <EmptyState icon="search" title="No matches" body={`Nothing in ${SUBS.find((s) => s.value === sub)?.label.toLowerCase()} matches “${query.trim()}”. Try another word or a different tab.`} />
       ) : data.length === 0 ? (
         <EmptyState
           icon={SUBS.find((s) => s.value === sub)?.icon ?? 'places'}
