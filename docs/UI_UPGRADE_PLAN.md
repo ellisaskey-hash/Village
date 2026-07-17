@@ -109,6 +109,12 @@ Save + Share are icon-only, Report is icon+label. Make them consistent (all icon
 
 ---
 
+## Progress (2026-07-17)
+- **Phase 0 — done & verified live:** inbox `my_threads` RPC (real other-name, preview, unread).
+- **Phase 1 — done & verified live:** cohesive `Placeholder` across all cards/heroes (+ neutralised the demo seed photos in the live DB), responsive 2/3/4-col grids, solid chat bubbles, single-row directory chips, EventCard 2-line title. The listings grid went from 2 clashing giant columns to a calm 4-up system.
+- **Phase 3 (partial) — done & verified live:** stronger hearth ambient; Home section headers → h2.
+- **Remaining:** Phase 2 (motion wiring — mind the route-boundary caveat), rest of Phase 3 (radius/contrast/elevation/badges), Phase 4 (illustration system, landing, village map, Home flagship hero, display face).
+
 ## Execution order
 Phase 0 (correctness) → Phase 1 (visual high-impact) → Phase 2 (motion, carefully re the route-boundary caveat) → Phase 3 (identity/consistency). Each in verified, deployed batches. Phase 4 items surfaced for a decision. Screenshot before/after on the flagship changes (1.1, 1.2, 1.4) since they're the ones that move the needle most.
 
