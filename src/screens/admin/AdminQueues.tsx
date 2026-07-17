@@ -3,7 +3,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import {
-  Badge, Button, Card, EmptyState, IconBadge, ListRow, Skeleton, useToasts,
+  Badge, Button, Card, EmptyState, IconBadge, ListRow, QueryError, Skeleton, useToasts,
 } from '@/components/ui';
 import { actionLabel, kindLabel } from './moderationCopy';
 import type { ModerationTargetKind } from '@/lib/services/types';
@@ -38,6 +38,7 @@ export function HiddenQueue() {
   }
 
   const items = q.data ?? [];
+  if (q.isError) return <Card><QueryError onRetry={() => q.refetch()} body="We couldn't load the hidden queue. This is a load error, not an empty queue." /></Card>;
   if (q.isLoading) return <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={72} />)}</div>;
   if (items.length === 0) return <Card><EmptyState icon="eye" title="Nothing hidden" body="Auto-hidden and moderator-hidden items appear here until you decide what to do." /></Card>;
   return (
@@ -84,6 +85,7 @@ export function DelaysQueue() {
   }
 
   const items = (q.data ?? []).filter((d) => !d.releasedAt);
+  if (q.isError) return <Card><QueryError onRetry={() => q.refetch()} body="We couldn't load the delayed-message queue. Give it another go." /></Card>;
   if (q.isLoading) return <Skeleton height={72} />;
   if (items.length === 0) {
     return (
@@ -122,6 +124,7 @@ export function ModerationLog() {
     enabled: Boolean(communityId),
   });
   const items = q.data ?? [];
+  if (q.isError) return <Card><QueryError onRetry={() => q.refetch()} body="We couldn't load the action log. Give it another go." /></Card>;
   if (q.isLoading) return <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>;
   if (items.length === 0) return <Card><EmptyState icon="listings" title="No actions yet" body="Every moderation action, automatic or human, is recorded here." /></Card>;
   return (

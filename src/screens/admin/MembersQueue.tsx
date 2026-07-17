@@ -4,7 +4,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import {
-  Avatar, Badge, Button, Card, EmptyState, ListRow, Sheet, Skeleton, VirtualList, useToasts,
+  Avatar, Badge, Button, Card, EmptyState, ListRow, QueryError, Sheet, Skeleton, VirtualList, useToasts,
 } from '@/components/ui';
 import type { AdminMember } from '@/lib/services/types';
 
@@ -60,6 +60,7 @@ export function MembersQueue() {
     return Boolean(m.suspendedUntil && m.suspendedUntil > new Date().toISOString());
   }
 
+  if (q.isError) return <Card><QueryError onRetry={() => q.refetch()} body="We couldn't load members. This is a load error, not an empty community." /></Card>;
   if (q.isLoading) return <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>;
   if (members.length === 0) return <Card><EmptyState icon="users" title="No members yet" body="Everyone who joins this community shows up here." /></Card>;
 

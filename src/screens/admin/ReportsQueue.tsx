@@ -4,7 +4,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import {
-  Badge, Button, Card, EmptyState, IconBadge, InfoCallout, ListRow, Sheet, Skeleton, useToasts,
+  Badge, Button, Card, EmptyState, IconBadge, InfoCallout, ListRow, QueryError, Sheet, Skeleton, useToasts,
 } from '@/components/ui';
 import { reasonLabel, kindLabel } from './moderationCopy';
 import type { Report, TriageSuggestion } from '@/lib/services/types';
@@ -48,7 +48,9 @@ export function ReportsQueue() {
 
   return (
     <>
-      {q.isLoading ? (
+      {q.isError ? (
+        <Card><QueryError onRetry={() => q.refetch()} body="We couldn't load the reports queue. This is a load error, not an empty queue." /></Card>
+      ) : q.isLoading ? (
         <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={72} />)}</div>
       ) : reports.length === 0 ? (
         <Card>

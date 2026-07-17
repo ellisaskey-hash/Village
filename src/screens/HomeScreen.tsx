@@ -6,7 +6,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useActiveMembership, useSession } from '@/app/state/session';
 import { useServices } from '@/lib/services/provider';
 import { formatWhen } from '@/lib/ics';
-import { Badge, Button, Card, EmptyState, Icon, IconBadge, PullToRefresh, Skeleton, type IconName } from '@/components/ui';
+import { Badge, Button, Card, EmptyState, Icon, IconBadge, PullToRefresh, QueryError, Skeleton, type IconName } from '@/components/ui';
 import { ListingCard } from '@/components/content/ListingCard';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import { AlertsStrip } from '@/screens/AlertsStrip';
@@ -50,6 +50,10 @@ export function HomeScreen() {
   const openRequests = (requestsQ.data ?? []).filter((r) => r.status === 'open' || r.status === 'answered').slice(0, 4);
   const freshListings = (listingsQ.data ?? []).filter((l) => l.status === 'active').slice(0, 8);
   const notices = (noticesQ.data ?? []).slice(0, 3);
+  // A failed load should read as "couldn't load", not a silently-empty community. Only surface
+  // the retry when a failure actually left the page with nothing (partial success still renders).
+  const failed = eventsQ.isError || requestsQ.isError || listingsQ.isError || noticesQ.isError;
+  const nothing = soon.length === 0 && openRequests.length === 0 && freshListings.length === 0 && notices.length === 0;
 
   async function refresh() {
     await Promise.all(['events', 'requests', 'listings', 'noticeboard', 'alerts'].map((k) => qc.invalidateQueries({ queryKey: [k, communityId] })));
@@ -81,6 +85,12 @@ export function HomeScreen() {
           <motion.div variants={cardEnter} className="space-y-3 lg:col-span-12">
             <Skeleton height={44} />
             <div className="flex gap-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} width={224} height={200} />)}</div>
+          </motion.div>
+        )}
+
+        {!loading && failed && nothing && (
+          <motion.div variants={cardEnter} className="lg:col-span-12">
+            <QueryError onRetry={refresh} body="We couldn't load what's happening nearby. Give it another go." />
           </motion.div>
         )}
 

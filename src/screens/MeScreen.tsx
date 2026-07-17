@@ -91,7 +91,7 @@ export function MeScreen() {
                 {session.profile.displayName}
                 {trust >= 2 && <Icon name="shield" size={16} className="shrink-0 text-positive" />}
               </h1>
-              <p className="text-small text-textMuted">{active ? `Villager since ${since} · ${TRUST_LABEL[trust]}` : 'No community yet'}</p>
+              <p className="text-small text-textMuted">{active ? (since ? `Villager since ${since} · ${TRUST_LABEL[trust]}` : TRUST_LABEL[trust]) : 'No community yet'}</p>
             </div>
             <Button variant="secondary" size="sm" leadingIcon="edit" className="ml-auto self-start" onClick={() => setEditOpen(true)}>Edit</Button>
           </div>
