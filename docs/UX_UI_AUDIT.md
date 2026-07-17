@@ -15,7 +15,15 @@
 - **Tier 1 — directory**: actionable contact/directions (`ContactRow`), editable business enquiry (was canned auto-send), claim-empty guard, per-type empty states with CTAs.
 - **Tier 1 — inbox**: message previews (`lastSnippet`), optimistic send, explicit mark-all-read (unread stays live), day separators, smart auto-scroll, primary send button (new `IconButton` variant).
 
-**Remaining:** Tier 2 (items 11-25) and Tier 3 (26-50) below, plus the noted seams that need migrations (event cancel/edit; Supabase thread snippet view). Directory dead-end rows (services/skills → no destination) need a product decision (profile route vs message flow) before build.
+**Tier 2 — done (shipped 2026-07-17):**
+- Content: photo gallery (counter/dots/snap/zoom/alt), explicit listings sort menu, request deadlines with urgency, event end-time + waitlist copy.
+- Nav: unread badges on Inbox tab/rail/bell (shell polls threads+notifications).
+- Admin: launch-community confirm Modal, report age, named trust SegmentedControls.
+- Auth: PasswordField (reveal), inline field validation, working forgot-password (real `requestReset` seam), consent-before-reading, Welcome as a real form.
+- Photos: upload limit/size/type validation with feedback, cover label, 44px remove.
+- Trust: Verified shield carried onto business detail.
+
+**Remaining Tier 2 (larger / needs a decision):** admin desktop master-detail + keyboard triage + bulk + undo (#20, own arc); photo drag-reorder (needs DnD); report+block in one flow (needs block seam); landing hero visual + social proof (needs assets); directory search (IA change). Plus Tier 3 (26-50) below, and the noted migration seams (event cancel/edit; Supabase thread snippet view) and the directory dead-end-rows product decision.
 
 ---
 
