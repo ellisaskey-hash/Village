@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { cx } from '@/lib/cx';
 import { pressable, tabIconSpring } from '@/lib/motion';
-import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
+import { useServices } from '@/lib/services/provider';
+import { Badge, BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
 import { CommunitySwitcher } from '@/components/layout/CommunitySwitcher';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
 import { ListingComposer } from '@/screens/compose/ListingComposer';
@@ -45,6 +47,14 @@ export function AppShell() {
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
+  const services = useServices();
+
+  // Unread count for the Inbox tab/rail/bell — the core "come back" signal. Polls modestly so it
+  // stays live across the app (the inbox list itself doesn't poll otherwise).
+  const threadsQ = useQuery({ queryKey: ['threads'], queryFn: () => services.threads.mine(), refetchInterval: 30_000 });
+  const notifsQ = useQuery({ queryKey: ['notifications'], queryFn: () => services.notifications.mine(), refetchInterval: 30_000 });
+  const inboxUnread =
+    (threadsQ.data ?? []).filter((t) => t.unread).length + (notifsQ.data ?? []).filter((n) => !n.readAt).length;
 
   // Any screen can open a composer by linking to ?compose=<type> (empty-state CTAs, Home quick
   // actions). We consume the param, open the matching composer, and clear it so it doesn't re-fire.
@@ -97,7 +107,7 @@ export function AppShell() {
         </div>
         <nav className="mt-4 flex flex-col gap-1">
           {TABS.map((t) => (
-            <RailLink key={t.to} {...t} />
+            <RailLink key={t.to} {...t} badge={t.to === '/inbox' ? inboxUnread : 0} />
           ))}
           <button
             type="button"
@@ -123,7 +133,7 @@ export function AppShell() {
           <CommunitySwitcher variant="header" />
           <div className="ml-auto flex items-center gap-1">
             <IconButton icon="search" ariaLabel="Search" size="sm" onClick={() => setSearchOpen(true)} />
-            <IconButton icon="bell" ariaLabel="Notifications" size="sm" onClick={() => navigate('/inbox')} />
+            <IconButton icon="bell" ariaLabel={inboxUnread > 0 ? `Notifications, ${inboxUnread} unread` : 'Notifications'} showBadge={inboxUnread > 0} size="sm" onClick={() => navigate('/inbox')} />
           </div>
         </header>
 
@@ -140,7 +150,7 @@ export function AppShell() {
         <TabItem {...TABS[0]!} />
         <TabItem {...TABS[1]!} />
         <PostButton onClick={() => setPostOpen(true)} />
-        <TabItem {...TABS[2]!} />
+        <TabItem {...TABS[2]!} badge={inboxUnread} />
         <TabItem {...TABS[3]!} />
       </nav>
 
@@ -174,9 +184,9 @@ export function AppShell() {
   );
 }
 
-function TabItem({ to, label, icon }: Tab) {
+function TabItem({ to, label, icon, badge = 0 }: Tab & { badge?: number }) {
   return (
-    <NavLink to={to} end={to === '/'} className="flex flex-1 justify-center" aria-label={label}>
+    <NavLink to={to} end={to === '/'} className="flex flex-1 justify-center" aria-label={badge > 0 ? `${label}, ${badge} unread` : label}>
       {({ isActive }) => (
         <motion.span
           whileTap={pressable.whileTap}
@@ -191,9 +201,14 @@ function TabItem({ to, label, icon }: Tab) {
           <motion.span
             animate={{ scale: isActive ? 1.1 : 1 }}
             transition={tabIconSpring}
-            className={cx('inline-flex rounded-full', isActive && 'shadow-glowAccent')}
+            className={cx('relative inline-flex rounded-full', isActive && 'shadow-glowAccent')}
           >
             <Icon name={icon} size={22} />
+            {badge > 0 && (
+              <span className="absolute -right-2 -top-1.5">
+                <Badge count={badge} tone="accent" />
+              </span>
+            )}
           </motion.span>
           {label}
         </motion.span>
@@ -202,11 +217,12 @@ function TabItem({ to, label, icon }: Tab) {
   );
 }
 
-function RailLink({ to, label, icon }: Tab) {
+function RailLink({ to, label, icon, badge = 0 }: Tab & { badge?: number }) {
   return (
     <NavLink
       to={to}
       end={to === '/'}
+      aria-label={badge > 0 ? `${label}, ${badge} unread` : undefined}
       className={({ isActive }) =>
         cx(
           'flex items-center gap-3 rounded-lg px-3 py-2.5 text-body font-medium transition-colors',
@@ -215,7 +231,8 @@ function RailLink({ to, label, icon }: Tab) {
       }
     >
       <Icon name={icon} size={20} />
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge > 0 && <Badge count={badge} tone="accent" />}
     </NavLink>
   );
 }
