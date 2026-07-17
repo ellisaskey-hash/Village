@@ -10,6 +10,7 @@ import { Banner, Button, Card, Icon, IconBadge, IconButton, QueryError, Skeleton
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
 import { ReportButton } from '@/components/moderation/ReportButton';
+import { SaveButton } from '@/components/content/SaveButton';
 import { shareLink } from '@/lib/share';
 import type { RsvpStatus } from '@/lib/services/types';
 
@@ -45,6 +46,7 @@ export function EventDetail() {
         <p className="text-eyebrow uppercase text-textMuted">Event</p>
         {e && (
           <div className="ml-auto flex items-center gap-1">
+            <SaveButton targetKind="event" targetId={e.id} targetLabel={e.title} />
             <IconButton icon="share" ariaLabel="Share" size="sm" onClick={() => shareLink(e.title, window.location.href, push)} />
             {!isHost && <ReportButton targetKind="event" targetId={e.id} targetLabel={e.title} />}
           </div>

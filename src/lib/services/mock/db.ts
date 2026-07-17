@@ -7,6 +7,7 @@ import {
   type Business,
   type Community,
   type EquipmentItem,
+  type SaveTargetKind,
   type EventCategory,
   type Invite,
   type Listing,
@@ -145,6 +146,7 @@ export interface MockDb {
   participants: MockParticipant[];
   messages: MockMessage[];
   notifications: MockNotification[];
+  saves: { profileId: string; targetKind: SaveTargetKind; targetId: string; targetLabel: string | null; createdAt: string }[];
   events: MockEvent[];
   eventRsvps: MockRsvp[];
   services: Service[];
@@ -211,6 +213,7 @@ function seed(): MockDb {
     participants: [],
     messages: [],
     notifications: [],
+    saves: [],
     events: [],
     eventRsvps: [],
     services: [],

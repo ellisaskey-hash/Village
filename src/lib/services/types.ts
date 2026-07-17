@@ -262,6 +262,14 @@ export interface Message {
   createdAt: string;
 }
 
+export type SaveTargetKind = 'listing' | 'request' | 'event';
+export interface SavedRef {
+  targetKind: SaveTargetKind;
+  targetId: string;
+  targetLabel: string | null;
+  createdAt: string;
+}
+
 export interface NotificationItem {
   id: string;
   category: string;

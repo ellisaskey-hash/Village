@@ -8,10 +8,17 @@ import { useActiveMembership, useSession, useSessionStore } from '@/app/state/se
 import { Avatar, Button, Card, Chip, EmptyState, Icon, IconBadge, ListRow, useToasts } from '@/components/ui';
 import { EditProfileSheet } from '@/screens/EditProfileSheet';
 import { IDENTITY_LABEL, labelFor } from '@/lib/labels';
-import type { TrustLevel } from '@/lib/services/types';
+import type { IconName, Tone } from '@/components/ui';
+import type { SaveTargetKind, TrustLevel } from '@/lib/services/types';
 
 const TRUST_LABEL: Record<TrustLevel, string> = {
   0: 'New neighbour', 1: 'Established', 2: 'Verified resident', 3: 'Steward',
+};
+
+const SAVE_META: Record<SaveTargetKind, { icon: IconName; tone: Tone; path: string; label: string }> = {
+  listing: { icon: 'listings', tone: 'accent', path: '/listings', label: 'Listing' },
+  request: { icon: 'requests', tone: 'accent', path: '/requests', label: 'Request' },
+  event: { icon: 'events', tone: 'warn', path: '/events', label: 'Event' },
 };
 
 export function MeScreen() {
@@ -42,6 +49,8 @@ export function MeScreen() {
   const myRequests = (requestsQuery.data ?? []).filter((r) => r.createdBy === uid);
   const myEvents = (eventsQuery.data ?? []).filter((e) => e.createdBy === uid);
   const hasActivity = myListings.length + myRequests.length + myEvents.length > 0;
+  const savesQuery = useQuery({ queryKey: ['saves'], queryFn: () => services.saves.list() });
+  const saved = savesQuery.data ?? [];
   const myEquipment = (equipmentQuery.data ?? []).filter((e) => e.ownerProfileId === uid);
   const mySkills = (skillsQuery.data ?? []).filter((s) => s.profileId === uid);
   const myServices = (servicesQuery.data ?? []).filter((s) => s.createdBy === uid);
@@ -129,6 +138,26 @@ export function MeScreen() {
           </div>
         )}
       </motion.section>
+
+      {saved.length > 0 && (
+        <motion.section variants={cardEnter} className="space-y-3">
+          <h2 className="text-h3 font-semibold text-text">Saved</h2>
+          <div className="space-y-2">
+            {saved.map((s) => {
+              const meta = SAVE_META[s.targetKind];
+              return (
+                <ListRow
+                  key={`${s.targetKind}-${s.targetId}`}
+                  leading={<IconBadge icon={meta.icon} tone={meta.tone} />}
+                  title={s.targetLabel ?? meta.label}
+                  subtitle={meta.label}
+                  onClick={() => navigate(`${meta.path}/${s.targetId}`)}
+                />
+              );
+            })}
+          </div>
+        </motion.section>
+      )}
 
       {hasContributions && (
         <motion.section variants={cardEnter} className="space-y-3">

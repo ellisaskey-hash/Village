@@ -10,6 +10,7 @@ import { Banner, Button, Card, IconBadge, IconButton, Sheet, QueryError, Skeleto
 import { ReportButton } from '@/components/moderation/ReportButton';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
+import { SaveButton } from '@/components/content/SaveButton';
 import { priceLabel } from './ListingsView';
 import { shareLink } from '@/lib/share';
 import { LISTING_STATUS_LABEL, labelFor } from '@/lib/labels';
@@ -78,6 +79,7 @@ export function ListingDetail() {
         <p className="text-eyebrow uppercase text-textMuted">Listing</p>
         {l && (
           <div className="ml-auto flex items-center gap-1">
+            <SaveButton targetKind="listing" targetId={l.id} targetLabel={l.title} />
             <IconButton icon="share" ariaLabel="Share" size="sm" onClick={() => shareLink(l.title, window.location.href, push)} />
             {!isAuthor && <ReportButton targetKind="listing" targetId={l.id} targetLabel={l.title} />}
           </div>

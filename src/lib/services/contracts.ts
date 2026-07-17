@@ -27,6 +27,8 @@ import type {
   SearchResult,
   SeedProposal,
   Service,
+  SavedRef,
+  SaveTargetKind,
   Session,
   Skill,
   ThreadContext,
@@ -318,6 +320,13 @@ export interface NotificationService {
   enablePush(): Promise<boolean>;
 }
 
+export interface SavesService {
+  /** The signed-in neighbour's saved listings/requests/events, newest first. */
+  list(): Promise<SavedRef[]>;
+  add(targetKind: SaveTargetKind, targetId: string, targetLabel: string): Promise<void>;
+  remove(targetKind: SaveTargetKind, targetId: string): Promise<void>;
+}
+
 export interface Services {
   /** True when running on the in-memory mock (no database). Screens surface a labelled banner. */
   readonly isMock: boolean;
@@ -334,6 +343,7 @@ export interface Services {
   requests: RequestService;
   threads: ThreadService;
   notifications: NotificationService;
+  saves: SavesService;
   events: EventService;
   alerts: AlertService;
   search: SearchService;

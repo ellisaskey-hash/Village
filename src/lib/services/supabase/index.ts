@@ -51,6 +51,7 @@ import {
   type SearchResult,
   type SeedProposal,
   type Service,
+  type SaveTargetKind,
   type Session,
   type Skill,
   type ThreadContext,
@@ -819,6 +820,42 @@ export function createSupabaseServices(): Services {
           { onConflict: 'endpoint' },
         );
         return !error;
+      },
+    },
+
+    saves: {
+      async list() {
+        const { data, error } = await getSupabase()
+          .from('saved_items')
+          .select('target_kind, target_id, target_label, created_at')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return (data ?? []).map((row) => {
+          const r = row as { target_kind: SaveTargetKind; target_id: string; target_label: string | null; created_at: string };
+          return { targetKind: r.target_kind, targetId: r.target_id, targetLabel: r.target_label, createdAt: r.created_at };
+        });
+      },
+      async add(targetKind: SaveTargetKind, targetId: string, targetLabel: string) {
+        const sb = getSupabase();
+        const { data: auth } = await sb.auth.getUser();
+        if (!auth.user) throw new Error('not signed in');
+        const { error } = await sb.from('saved_items').upsert(
+          { profile_id: auth.user.id, target_kind: targetKind, target_id: targetId, target_label: targetLabel },
+          { onConflict: 'profile_id,target_kind,target_id' },
+        );
+        if (error) throw error;
+      },
+      async remove(targetKind: SaveTargetKind, targetId: string) {
+        const sb = getSupabase();
+        const { data: auth } = await sb.auth.getUser();
+        if (!auth.user) throw new Error('not signed in');
+        const { error } = await sb
+          .from('saved_items')
+          .delete()
+          .eq('profile_id', auth.user.id)
+          .eq('target_kind', targetKind)
+          .eq('target_id', targetId);
+        if (error) throw error;
       },
     },
 

@@ -11,6 +11,7 @@ import { errorMessage } from '@/lib/errors';
 import { Banner, Button, Card, Chip, Icon, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { ReportButton } from '@/components/moderation/ReportButton';
 import { AuthorCard } from '@/components/content/AuthorCard';
+import { SaveButton } from '@/components/content/SaveButton';
 import { REQUEST_CATEGORY_LABEL, REQUEST_STATUS_LABEL, labelFor } from '@/lib/labels';
 import { shareLink } from '@/lib/share';
 
@@ -71,6 +72,7 @@ export function RequestDetail() {
         <p className="text-eyebrow uppercase text-textMuted">Request</p>
         {r && (
           <div className="ml-auto flex items-center gap-1">
+            <SaveButton targetKind="request" targetId={r.id} targetLabel={r.title} />
             <IconButton icon="share" ariaLabel="Share" size="sm" onClick={() => shareLink(r.title, window.location.href, push)} />
             {!isAuthor && <ReportButton targetKind="request" targetId={r.id} targetLabel={r.title} />}
           </div>

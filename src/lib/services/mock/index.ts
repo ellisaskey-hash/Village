@@ -927,6 +927,30 @@ export function createMockServices(): Services {
       },
     },
 
+    saves: {
+      async list() {
+        const me = requireProfileId();
+        return db()
+          .saves.filter((s) => s.profileId === me)
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+          .map((s) => ({ targetKind: s.targetKind, targetId: s.targetId, targetLabel: s.targetLabel, createdAt: s.createdAt }));
+      },
+      async add(targetKind, targetId, targetLabel) {
+        const me = requireProfileId();
+        const d = db();
+        if (!d.saves.some((s) => s.profileId === me && s.targetKind === targetKind && s.targetId === targetId)) {
+          d.saves.push({ profileId: me, targetKind, targetId, targetLabel, createdAt: nowIso() });
+          persist();
+        }
+      },
+      async remove(targetKind, targetId) {
+        const me = requireProfileId();
+        const d = db();
+        d.saves = d.saves.filter((s) => !(s.profileId === me && s.targetKind === targetKind && s.targetId === targetId));
+        persist();
+      },
+    },
+
     alerts: {
       async list(communityId) {
         const now = Date.now();
