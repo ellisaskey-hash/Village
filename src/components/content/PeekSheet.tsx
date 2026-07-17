@@ -6,6 +6,7 @@ import { errorMessage } from '@/lib/errors';
 import { Button, Icon, Sheet, useToasts } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { priceBadge } from '@/components/content/ListingCard';
+import { REQUEST_CATEGORY_LABEL, labelFor } from '@/lib/labels';
 import { formatWhen } from '@/lib/ics';
 import type { Event, Listing, RequestPost } from '@/lib/services/types';
 
@@ -96,7 +97,7 @@ export function PeekSheet({ item, onClose }: { item: PeekItem | null; onClose: (
     <Sheet open onClose={onClose} title={r.title} hero={{ icon: 'requests', tone: 'accent' }}
       footer={<Button variant="primary" size="xl" fullWidth leadingIcon="requests" onClick={() => go(`/requests/${r.id}`)}>I can help</Button>}>
       <div className="space-y-2">
-        <p className="text-small text-textMuted">{r.category} · {r.authorName}</p>
+        <p className="text-small text-textMuted">{labelFor(REQUEST_CATEGORY_LABEL, r.category)} · {r.authorName}</p>
         {r.description && <p className="text-body text-text">{r.description}</p>}
       </div>
     </Sheet>

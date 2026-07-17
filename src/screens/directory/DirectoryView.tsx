@@ -5,6 +5,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession } from '@/app/state/session';
 import { Avatar, Button, Chip, EmptyState, IconBadge, ListRow, QueryError, Skeleton, useToasts, type IconName } from '@/components/ui';
 import { DirectoryCard } from '@/components/content/DirectoryCard';
+import { ORGANISATION_KIND_LABEL, PLACE_KIND_LABEL, labelFor } from '@/lib/labels';
 
 type Sub = 'businesses' | 'services' | 'places' | 'equipment' | 'skills' | 'organisations' | 'people';
 
@@ -124,13 +125,13 @@ export function DirectoryView() {
       ) : sub === 'organisations' ? (
         <div className="space-y-2">
           {(data as Awaited<ReturnType<typeof services.directory.organisations>>).map((o) => (
-            <ListRow key={o.id} leading={<IconBadge icon="organisations" tone={o.verifiedSource ? 'info' : 'neutral'} />} title={o.name} subtitle={o.verifiedSource ? 'Verified source' : o.kind} onClick={() => navigate(`/organisations/${o.id}`)} />
+            <ListRow key={o.id} leading={<IconBadge icon="organisations" tone={o.verifiedSource ? 'info' : 'neutral'} />} title={o.name} subtitle={o.verifiedSource ? 'Verified source' : labelFor(ORGANISATION_KIND_LABEL, o.kind)} onClick={() => navigate(`/organisations/${o.id}`)} />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {(data as Awaited<ReturnType<typeof services.directory.places>>).map((p) => (
-            <DirectoryCard key={p.id} icon="places" photos={p.photos} title={p.name} subtitle={p.kind} from="var(--c-positive)" to="var(--c-info)" onClick={() => navigate(`/places/${p.id}`)} />
+            <DirectoryCard key={p.id} icon="places" photos={p.photos} title={p.name} subtitle={labelFor(PLACE_KIND_LABEL, p.kind)} from="var(--c-positive)" to="var(--c-info)" onClick={() => navigate(`/places/${p.id}`)} />
           ))}
         </div>
       )}

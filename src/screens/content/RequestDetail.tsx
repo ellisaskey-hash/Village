@@ -6,9 +6,10 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
-import { Badge, Banner, Button, Card, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { Banner, Button, Card, Chip, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { ReportButton } from '@/components/moderation/ReportButton';
 import { AuthorCard } from '@/components/content/AuthorCard';
+import { REQUEST_CATEGORY_LABEL, REQUEST_STATUS_LABEL, labelFor } from '@/lib/labels';
 
 export function RequestDetail() {
   const { id = '' } = useParams();
@@ -83,9 +84,13 @@ export function RequestDetail() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-h2 font-semibold text-text">{r.title}</h2>
-                    {r.status !== 'open' && <Badge tone="warn" dot />}
+                    {r.status !== 'open' && (
+                      <Chip tone={r.status === 'fulfilled' ? 'positive' : 'neutral'} selected>
+                        {labelFor(REQUEST_STATUS_LABEL, r.status)}
+                      </Chip>
+                    )}
                   </div>
-                  <p className="text-small text-textMuted capitalize">{r.category}</p>
+                  <p className="text-small text-textMuted">{labelFor(REQUEST_CATEGORY_LABEL, r.category)}</p>
                 </div>
               </div>
               {r.description && <p className="mt-3 text-body text-text">{r.description}</p>}

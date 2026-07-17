@@ -36,7 +36,10 @@ const VARIANT: Record<ToastVariant, { icon: IconName; tone: Tone }> = {
 
 const ToastContext = createContext<((t: ToastInput) => void) | null>(null);
 
-/** Top-anchored, auto-dismiss 3s, replace-not-stack toasts (COMPONENT_INVENTORY 3.1). */
+/** Top-anchored, auto-dismiss toasts (COMPONENT_INVENTORY 3.1). Capped at 3 (drop-oldest) so a
+ *  burst of failures can't paper the screen, while an action toast (e.g. Undo) isn't instantly
+ *  destroyed by a following success. Action toasts default to 5s so they can be read and acted on. */
+const MAX_TOASTS = 3;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const idRef = useRef(0);
@@ -48,8 +51,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = useCallback(
     (t: ToastInput) => {
       const id = ++idRef.current;
-      setItems((prev) => [...prev, { ...t, id }]);
-      const duration = t.durationMs ?? 3000;
+      setItems((prev) => [...prev, { ...t, id }].slice(-MAX_TOASTS));
+      const duration = t.durationMs ?? (t.action ? 5000 : 3000);
       if (duration > 0) window.setTimeout(() => dismiss(id), duration);
     },
     [dismiss],
@@ -84,7 +87,8 @@ function ToastHost({ items, onDismiss }: { items: ToastItem[]; onDismiss: (id: n
               initial="initial"
               animate="animate"
               exit="exit"
-              role="status"
+              role={v.tone === 'danger' ? 'alert' : 'status'}
+              aria-live={v.tone === 'danger' ? 'assertive' : 'polite'}
               className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border border-border bg-bgElevated p-3 shadow-raised"
             >
               <span className={cx('mt-0.5 shrink-0', badgeFg[v.tone])}>
@@ -110,7 +114,7 @@ function ToastHost({ items, onDismiss }: { items: ToastItem[]; onDismiss: (id: n
                 type="button"
                 aria-label="Dismiss"
                 onClick={() => onDismiss(t.id)}
-                className="shrink-0 text-textMuted transition-colors hover:text-text"
+                className="relative shrink-0 text-textMuted transition-colors after:absolute after:-inset-2.5 after:content-[''] hover:text-text"
               >
                 <Icon name="close" size={16} />
               </button>

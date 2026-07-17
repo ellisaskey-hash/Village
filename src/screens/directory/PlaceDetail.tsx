@@ -5,6 +5,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { Card, Icon, IconBadge, IconButton, QueryError, Skeleton } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
+import { PLACE_KIND_LABEL, labelFor } from '@/lib/labels';
 
 export function PlaceDetail() {
   const { id = '' } = useParams();
@@ -36,7 +37,7 @@ export function PlaceDetail() {
                 <IconBadge icon="places" tone="positive" size="lg" />
                 <div className="min-w-0 flex-1">
                   <h2 className="text-h2 font-semibold text-text">{p.name}</h2>
-                  <p className="text-small text-textMuted capitalize">{p.kind}</p>
+                  <p className="text-small text-textMuted">{labelFor(PLACE_KIND_LABEL, p.kind)}</p>
                 </div>
               </div>
               {p.description && <p className="mt-3 text-body text-text">{p.description}</p>}

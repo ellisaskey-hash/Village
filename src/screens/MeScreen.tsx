@@ -7,6 +7,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession, useSessionStore } from '@/app/state/session';
 import { Avatar, Button, Card, Chip, EmptyState, Icon, IconBadge, ListRow, useToasts } from '@/components/ui';
 import { EditProfileSheet } from '@/screens/EditProfileSheet';
+import { IDENTITY_LABEL, labelFor } from '@/lib/labels';
 import type { TrustLevel } from '@/lib/services/types';
 
 const TRUST_LABEL: Record<TrustLevel, string> = {
@@ -97,7 +98,7 @@ export function MeScreen() {
           {session.profile.bio && <p className="mt-3 text-body text-text">{session.profile.bio}</p>}
           {me && me.identities.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {me.identities.map((id) => <Chip key={id} tone="neutral" selected>{id}</Chip>)}
+              {me.identities.map((id) => <Chip key={id} tone="neutral" selected>{labelFor(IDENTITY_LABEL, id)}</Chip>)}
             </div>
           )}
           {trust < 2 && (

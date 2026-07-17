@@ -274,8 +274,18 @@ body {
 
 /* 10 — focus chrome + safe-area helpers */
 :where(button, a, [role='button'], [tabindex], input, textarea, select):focus-visible {
-  outline: none;
+  /* Transparent outline (not `none`) so Windows High Contrast Mode, which drops box-shadow,
+     still promotes a visible ring. See the forced-colors block below. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px var(--focus-ring);
+}
+/* Forced colours / WHCM: the OS strips box-shadow, so honour `outline` with a system colour. */
+@media (forced-colors: active) {
+  :where(button, a, [role='button'], [tabindex], input, textarea, select):focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
 }
 .safe-top {
   padding-top: env(safe-area-inset-top);
@@ -309,6 +319,18 @@ body {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+/* Honour the OS preference even if the user never opened the in-app motion toggle. The
+   in-app `data-motion='full'` opt-in still wins (a user who explicitly chose full motion). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion='full']) *,
+  :root:not([data-motion='full']) *::before,
+  :root:not([data-motion='full']) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* 12 — high contrast: collapse muted onto text, faint onto muted, borders up */

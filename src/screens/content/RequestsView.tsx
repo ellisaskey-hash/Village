@@ -4,6 +4,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { Chip, EmptyState, IconBadge, ListRow, QueryError, Skeleton, VirtualList } from '@/components/ui';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
+import { REQUEST_CATEGORY_LABEL, labelFor } from '@/lib/labels';
 import type { RequestCategory, RequestStatus } from '@/lib/services/types';
 
 const STATUS_LABEL: Record<RequestStatus, string> = {
@@ -64,7 +65,7 @@ export function RequestsView() {
             <ListRow
               leading={<IconBadge icon="requests" tone={r.status === 'open' ? 'accent' : 'neutral'} />}
               title={r.title}
-              subtitle={`${r.category} · ${r.authorName}`}
+              subtitle={`${labelFor(REQUEST_CATEGORY_LABEL, r.category)} · ${r.authorName}`}
               trailing={<Chip tone={r.status === 'fulfilled' ? 'positive' : 'neutral'} selected={r.status !== 'open'}>{STATUS_LABEL[r.status]}</Chip>}
               onClick={() => setPeek({ kind: 'request', data: r })}
             />

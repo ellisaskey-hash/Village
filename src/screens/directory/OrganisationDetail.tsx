@@ -5,6 +5,7 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { Banner, Card, IconBadge, IconButton, QueryError, Skeleton } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
+import { ORGANISATION_KIND_LABEL, labelFor } from '@/lib/labels';
 
 export function OrganisationDetail() {
   const { id = '' } = useParams();
@@ -40,7 +41,7 @@ export function OrganisationDetail() {
                 <IconBadge icon="organisations" tone={o.verifiedSource ? 'info' : 'neutral'} size="lg" />
                 <div className="min-w-0 flex-1">
                   <h2 className="text-h2 font-semibold text-text">{o.name}</h2>
-                  <p className="text-small text-textMuted capitalize">{o.kind}</p>
+                  <p className="text-small text-textMuted">{labelFor(ORGANISATION_KIND_LABEL, o.kind)}</p>
                 </div>
               </div>
               {o.description && <p className="mt-3 text-body text-text">{o.description}</p>}
