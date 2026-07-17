@@ -164,7 +164,7 @@ export function MeScreen() {
                 leading={<IconBadge icon="people" tone="accent" />}
                 title={inv.code}
                 subtitle={`${inv.uses}/${inv.maxUses} used`}
-                trailing={<button type="button" aria-label="Copy invite link" onClick={() => copyInvite(inv.code)} className="rounded-full p-2 text-textMuted transition-colors hover:text-accent"><Icon name="bookmark" size={18} /></button>}
+                trailing={<button type="button" aria-label="Copy invite link" onClick={() => copyInvite(inv.code)} className="rounded-full p-2 text-textMuted transition-colors hover:text-accent"><Icon name="copy" size={18} /></button>}
               />
             ))}
             <Button variant="secondary" size="sm" leadingIcon="plus" onClick={createInvite}>Create invite link</Button>
@@ -177,7 +177,7 @@ export function MeScreen() {
           <ListRow title="Admin console" subtitle={services.isMock ? 'Moderation, members, config (demo)' : 'Moderation, members, config'} leading={<Icon name="shield" size={20} className="text-textMuted" />} onClick={() => navigate('/admin')} />
         )}
         <ListRow title="Settings" leading={<Icon name="settings" size={20} className="text-textMuted" />} onClick={() => navigate('/me/settings')} />
-        <ListRow title="Sign out" leading={<Icon name="back" size={20} className="text-textMuted" />} onClick={signOut} />
+        <ListRow title="Sign out" leading={<Icon name="log-out" size={20} className="text-textMuted" />} onClick={signOut} />
       </motion.section>
 
       <EditProfileSheet open={editOpen} onClose={() => setEditOpen(false)} currentIdentities={me?.identities ?? []} />

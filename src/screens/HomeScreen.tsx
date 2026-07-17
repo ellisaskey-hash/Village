@@ -96,6 +96,25 @@ export function HomeScreen() {
           </motion.div>
         )}
 
+        {!loading && !failed && nothing && (
+          <motion.div variants={cardEnter} className="lg:col-span-12">
+            <Card>
+              <div className="flex items-start gap-4">
+                <IconBadge icon="sparkle" tone="accent" size="lg" />
+                <div className="min-w-0">
+                  <h2 className="text-h3 font-semibold text-text">Your community is just getting started</h2>
+                  <p className="mt-1 text-body text-textMuted">Be the first to post. Ask a neighbour for a hand, list something you no longer need, or add a local event.</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button variant="primary" size="sm" leadingIcon="requests" onClick={() => navigate('/home?compose=request')}>Ask for a hand</Button>
+                    <Button variant="secondary" size="sm" leadingIcon="listings" onClick={() => navigate('/home?compose=sell')}>List something</Button>
+                    <Button variant="secondary" size="sm" leadingIcon="events" onClick={() => navigate('/home?compose=event')}>Add an event</Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
         {soon.length > 0 && (
           <motion.section variants={cardEnter} className="lg:col-span-6">
             <SectionHeader title="Happening soon" onSeeAll={() => navigate('/explore?tab=events')} />

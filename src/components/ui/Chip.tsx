@@ -35,6 +35,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
       transition={pressable.transition}
       className={cx(
         'inline-flex h-11 select-none items-center gap-1.5 rounded-pill border px-3 text-small font-medium transition-colors',
+        'disabled:pointer-events-none disabled:opacity-40',
         selected
           ? selectedClasses
           : 'border-border bg-surface text-textMuted hover:border-borderStrong hover:text-text',

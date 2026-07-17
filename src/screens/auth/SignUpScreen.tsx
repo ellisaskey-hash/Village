@@ -6,18 +6,9 @@ import { errorMessage } from '@/lib/errors';
 import { Button, Checkbox, Field, PasswordField, Sheet, TextLink } from '@/components/ui';
 import { AuthLayout } from './AuthLayout';
 import { CommunityStandard } from './CommunityStandard';
+import { ageFromDob } from '@/lib/ics';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Whole years between a YYYY-MM-DD date and today. */
-function ageFrom(dob: string): number {
-  const d = new Date(dob);
-  const now = new Date();
-  let age = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1;
-  return age;
-}
 
 type FieldErrors = { displayName?: string; email?: string; password?: string; dob?: string };
 
@@ -53,7 +44,7 @@ export function SignUpScreen() {
     if (!EMAIL_RE.test(email)) next.email = 'Enter a valid email address';
     if (password.length < 8) next.password = 'Use at least 8 characters';
     if (!dob) next.dob = 'Add your date of birth';
-    else if (ageFrom(dob) < 16) next.dob = 'You need to be 16 or over to join';
+    else if (ageFromDob(dob) < 16) next.dob = 'You need to be 16 or over to join';
     setFieldErrors(next);
     return Object.keys(next).length === 0;
   }

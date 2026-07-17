@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { cx } from '@/lib/cx';
 import { Icon } from './Icon';
 import { badgeBg, badgeFg, type Tone } from './tones';
@@ -33,19 +34,21 @@ function initials(name: string): string {
 }
 
 export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
+  const [failed, setFailed] = useState(false);
   const tone = name ? toneFor(name) : 'neutral';
+  const showImg = src && !failed;
   return (
     <span
       className={cx(
         'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold',
         BOX[size],
-        !src && badgeBg[tone],
-        !src && badgeFg[tone],
+        !showImg && badgeBg[tone],
+        !showImg && badgeFg[tone],
         className,
       )}
     >
-      {src ? (
-        <img src={src} alt={name ?? ''} className="h-full w-full object-cover" />
+      {showImg ? (
+        <img src={src} alt={name ?? ''} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
       ) : name ? (
         <span>{initials(name)}</span>
       ) : (

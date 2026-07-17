@@ -5,15 +5,11 @@ import { useActiveMembership, useSession, useSessionStore } from '@/app/state/se
 import { errorMessage } from '@/lib/errors';
 import { Avatar, Button, Chip, Field, Sheet, Textarea, useToasts } from '@/components/ui';
 import { PhotoInput } from '@/components/content/PhotoInput';
+import { IDENTITY_LABEL, IDENTITY_ADULT_ONLY } from '@/lib/labels';
+import { ageFromDob } from '@/lib/ics';
 import type { Identity } from '@/lib/services/types';
 
-const IDENTITIES: { value: Identity; label: string }[] = [
-  { value: 'resident', label: 'Resident' },
-  { value: 'parent', label: 'Parent' },
-  { value: 'tradesperson', label: 'Tradesperson' },
-  { value: 'business', label: 'Business owner' },
-  { value: 'club', label: 'Club or group' },
-];
+const IDENTITIES = (Object.keys(IDENTITY_LABEL) as Identity[]).map((value) => ({ value, label: IDENTITY_LABEL[value] }));
 
 /** Edit your profile — name, avatar, bio and identity chips (spec 07 Me). Wires the existing
  *  profiles.update + memberships.updateIdentities services that had no UI. */
@@ -45,8 +41,14 @@ export function EditProfileSheet({ open, onClose, currentIdentities }: { open: b
     setIdentities((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   }
 
+  const isAdult = session ? ageFromDob(session.profile.dateOfBirth) >= 18 : false;
+
   async function save() {
     if (!session) return;
+    if (!name.trim()) {
+      push({ title: 'Your name cannot be empty', variant: 'error' });
+      return;
+    }
     setBusy(true);
     try {
       const updated = await services.profiles.update({
@@ -84,9 +86,13 @@ export function EditProfileSheet({ open, onClose, currentIdentities }: { open: b
         <div className="space-y-1.5">
           <span className="text-small font-medium text-text">How would you describe yourself here?</span>
           <div className="flex flex-wrap gap-2">
-            {IDENTITIES.map((id) => (
-              <Chip key={id.value} selected={identities.includes(id.value)} onClick={() => toggle(id.value)}>{id.label}</Chip>
-            ))}
+            {IDENTITIES.map((id) => {
+              // Adult-only identities stay locked for under-18s unless already held (the onboarding gate).
+              const locked = IDENTITY_ADULT_ONLY.has(id.value) && !isAdult && !identities.includes(id.value);
+              return (
+                <Chip key={id.value} selected={identities.includes(id.value)} disabled={locked} onClick={() => toggle(id.value)}>{id.label}</Chip>
+              );
+            })}
           </div>
         </div>
       </div>

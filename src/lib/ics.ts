@@ -55,6 +55,16 @@ export function formatWhenRange(startIso: string, endIso: string | null): string
   return `${start} to ${end}`;
 }
 
+/** Whole years between a YYYY-MM-DD date of birth and today. */
+export function ageFromDob(dob: string): number {
+  const d = new Date(dob);
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1;
+  return age;
+}
+
 /** Compact relative time for feeds/queues: "just now", "5m ago", "3h ago", "2d ago", then a date. */
 export function relativeTime(iso: string): string {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);

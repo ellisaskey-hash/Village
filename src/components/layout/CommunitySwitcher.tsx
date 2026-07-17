@@ -41,7 +41,7 @@ export function CommunitySwitcher({ variant }: { variant: 'header' | 'rail' }) {
         )}
       >
         <span className="truncate">{name}</span>
-        <Icon name="more" size={16} className="shrink-0 text-textMuted" />
+        <Icon name="chevron-down" size={16} className="shrink-0 text-textMuted" />
       </button>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="Switch community" hero={{ icon: 'home', tone: 'accent' }}>

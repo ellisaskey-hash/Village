@@ -258,18 +258,24 @@ export function SettingsScreen() {
         <h2 className="mb-2 text-h3 font-semibold text-text">Your data</h2>
         <Card className="space-y-3">
           <p className="text-small text-textMuted">
-            Take a copy of your data at any time, or close your account. When you close it, your
-            name and details are removed and your posts show as from a former neighbour, so
-            conversations others took part in still make sense.
+            Take a copy of everything you have shared here, any time.
           </p>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" leadingIcon="image" loading={exportBusy} onClick={exportData}>
-              Download my data
-            </Button>
-            <Button variant="ghost" size="sm" leadingIcon="remove" onClick={() => setRemoveOpen(true)}>
-              Remove my account
-            </Button>
-          </div>
+          <Button variant="secondary" size="sm" leadingIcon="download" loading={exportBusy} onClick={exportData}>
+            Download my data
+          </Button>
+        </Card>
+      </motion.section>
+
+      <motion.section variants={cardEnter}>
+        <h2 className="mb-2 text-small font-semibold uppercase tracking-wide text-danger">Danger zone</h2>
+        <Card className="space-y-3 border-danger/40">
+          <p className="text-small text-textMuted">
+            Closing your account removes your name and details; your posts show as from a former
+            neighbour so conversations others took part in still make sense. This cannot be undone.
+          </p>
+          <Button variant="ghost" size="sm" leadingIcon="remove" className="text-danger hover:bg-danger/10" onClick={() => setRemoveOpen(true)}>
+            Remove my account
+          </Button>
         </Card>
       </motion.section>
 
