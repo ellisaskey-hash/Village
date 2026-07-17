@@ -4,20 +4,24 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
 import { relativeTime } from '@/lib/ics';
+import { cx } from '@/lib/cx';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import {
   Badge, Button, Card, EmptyState, IconBadge, InfoCallout, ListRow, QueryError, Sheet, Skeleton, useToasts,
 } from '@/components/ui';
 import { reasonLabel, kindLabel } from './moderationCopy';
 import type { Report, TriageSuggestion } from '@/lib/services/types';
 
-/** Open reports, priority first. Tap a report for detail, advisory triage, and one-tap
- *  uphold / dismiss (spec 04 §Admin console). */
+/** Open reports, priority first. On desktop the queue is a master-detail: pick a report and its
+ *  detail + advisory triage fill the right pane, deciding auto-advances to the next one so the
+ *  queue is never lost. On mobile the detail opens in a bottom sheet (spec 04 §Admin console). */
 export function ReportsQueue() {
   const services = useServices();
   const push = useToasts();
   const qc = useQueryClient();
   const active = useActiveMembership();
   const communityId = active?.communityId ?? '';
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [openId, setOpenId] = useState<string | null>(null);
 
   const q = useQuery({
@@ -40,28 +44,44 @@ export function ReportsQueue() {
     try {
       await services.moderation.decide(report.id, uphold);
       push({ title: uphold ? 'Upheld and hidden' : 'Dismissed', variant: 'success' });
-      setOpenId(null);
+      // Desktop: advance to the next report so triage keeps flowing. Mobile: close the sheet.
+      if (isDesktop) {
+        const idx = reports.findIndex((r) => r.id === report.id);
+        setOpenId(reports[idx + 1]?.id ?? null);
+      } else {
+        setOpenId(null);
+      }
       await refresh();
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
     }
   }
 
+  const actions = (report: Report) => (
+    <div className="flex gap-2">
+      <Button variant="secondary" size="xl" fullWidth onClick={() => decide(report, false)}>Dismiss</Button>
+      <Button variant="primary" size="xl" fullWidth leadingIcon="eye" onClick={() => decide(report, true)}>Uphold and hide</Button>
+    </div>
+  );
+
+  if (q.isError) {
+    return <Card><QueryError onRetry={() => q.refetch()} body="We couldn't load the reports queue. This is a load error, not an empty queue." /></Card>;
+  }
+  if (q.isLoading) {
+    return <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={72} />)}</div>;
+  }
+  if (reports.length === 0) {
+    return <Card><EmptyState icon="check" title="No open reports" body="When someone flags a post or a profile, it lands here for review." /></Card>;
+  }
+
   return (
     <>
-      {q.isError ? (
-        <Card><QueryError onRetry={() => q.refetch()} body="We couldn't load the reports queue. This is a load error, not an empty queue." /></Card>
-      ) : q.isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={72} />)}</div>
-      ) : reports.length === 0 ? (
-        <Card>
-          <EmptyState icon="check" title="No open reports" body="When someone flags a post or a profile, it lands here for review." />
-        </Card>
-      ) : (
-        <div className="space-y-2">
+      <div className="lg:flex lg:items-start lg:gap-5">
+        <div className="space-y-2 lg:w-96 lg:shrink-0">
           {reports.map((r) => (
             <ListRow
               key={r.id}
+              className={cx(openId === r.id && 'lg:border lg:border-accent')}
               leading={<IconBadge icon={r.priority ? 'flame' : 'shield'} tone={r.priority ? 'warn' : 'accent'} />}
               title={r.targetLabel ?? `${kindLabel(r.targetKind)} report`}
               subtitle={`${reasonLabel(r.reason)} · by ${r.reporterName} · ${relativeTime(r.createdAt)}`}
@@ -70,21 +90,27 @@ export function ReportsQueue() {
             />
           ))}
         </div>
-      )}
 
+        {/* Desktop detail pane */}
+        <div className="hidden lg:sticky lg:top-6 lg:block lg:min-w-0 lg:flex-1">
+          {selected ? (
+            <Card className="space-y-4">
+              <ReportDetail report={selected} />
+              {actions(selected)}
+            </Card>
+          ) : (
+            <Card><EmptyState icon="shield" title="Select a report" body="Pick one from the queue to see the detail, the advisory triage, and decide." /></Card>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile bottom sheet */}
       <Sheet
-        open={Boolean(selected)}
+        open={!isDesktop && Boolean(selected)}
         onClose={() => setOpenId(null)}
         title="Report"
         hero={{ icon: selected?.priority ? 'flame' : 'shield', tone: selected?.priority ? 'warn' : 'accent' }}
-        footer={
-          selected && (
-            <div className="flex gap-2">
-              <Button variant="secondary" size="xl" fullWidth onClick={() => decide(selected, false)}>Dismiss</Button>
-              <Button variant="primary" size="xl" fullWidth leadingIcon="eye" onClick={() => decide(selected, true)}>Uphold and hide</Button>
-            </div>
-          )
-        }
+        footer={selected && actions(selected)}
       >
         {selected && <ReportDetail report={selected} />}
       </Sheet>
