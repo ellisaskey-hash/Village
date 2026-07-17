@@ -37,8 +37,17 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
   const [asBusinessId, setAsBusinessId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Local-time "now" as the min for the datetime picker so past dates can't be chosen.
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const minDateTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
   async function submit() {
     if (!active) return;
+    if (startsAt && new Date(startsAt).getTime() < Date.now()) {
+      push({ title: 'Pick a date and time in the future', variant: 'error' });
+      return;
+    }
     setBusy(true);
     try {
       const cap = rsvpMode === 'capacity' && capacity ? parseInt(capacity, 10) : undefined;
@@ -73,7 +82,7 @@ export function EventComposer({ open, onClose }: { open: boolean; onClose: () =>
         <PhotoInput value={photos} onChange={setPhotos} />
         <Field label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Summer fete on the green" />
         <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value as EventCategory)} options={CATEGORIES} />
-        <Field label="When" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+        <Field label="When" type="datetime-local" value={startsAt} min={minDateTime} onChange={(e) => setStartsAt(e.target.value)} />
         <Field label="Where" value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder="The Village Green" />
         <div className="space-y-1.5">
           <span className="text-small font-medium text-text">RSVPs</span>

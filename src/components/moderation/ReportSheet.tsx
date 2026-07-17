@@ -5,11 +5,11 @@ import { Button, InfoCallout, RadioGroup, Sheet, Textarea, useToasts } from '@/c
 import type { ModerationTargetKind, ReportReason } from '@/lib/services/types';
 
 const REASONS: { value: ReportReason; label: string; helper?: string }[] = [
-  { value: 'scam', label: 'A scam or fraud' },
-  { value: 'spam', label: 'Spam or advertising' },
+  { value: 'scam', label: 'A scam or fraud', helper: 'Someone trying to trick or con neighbours' },
+  { value: 'spam', label: 'Spam or advertising', helper: 'Repetitive or off-topic promotion' },
   { value: 'abuse', label: 'Abuse or harassment' },
   { value: 'unsafe', label: 'Someone may be at risk', helper: 'Use this if it looks like a safeguarding or safety concern' },
-  { value: 'wrongInfo', label: 'Wrong or misleading' },
+  { value: 'wrongInfo', label: 'Wrong or misleading', helper: 'False claims about a person, place or item' },
   { value: 'privacy', label: 'A privacy concern' },
   { value: 'other', label: 'Something else' },
 ];
@@ -28,17 +28,18 @@ interface ReportSheetProps {
 export function ReportSheet({ open, onClose, targetKind, targetId, targetLabel }: ReportSheetProps) {
   const services = useServices();
   const push = useToasts();
-  const [reason, setReason] = useState<ReportReason>('spam');
+  const [reason, setReason] = useState<ReportReason | ''>('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function submit() {
+    if (!reason) return;
     setBusy(true);
     try {
       await services.moderation.report({ targetKind, targetId, reason, note: note.trim() || undefined });
       push({ title: "Thanks for flagging this. We'll take a look.", variant: 'success' });
       setNote('');
-      setReason('spam');
+      setReason('');
       onClose();
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -54,14 +55,14 @@ export function ReportSheet({ open, onClose, targetKind, targetId, targetLabel }
       title="Report this"
       hero={{ icon: 'shield', tone: 'warn' }}
       footer={
-        <Button variant="primary" size="xl" fullWidth loading={busy} onClick={submit}>
+        <Button variant="primary" size="xl" fullWidth loading={busy} disabled={!reason} onClick={submit}>
           Send report
         </Button>
       }
     >
       <div className="space-y-4">
         {targetLabel && <p className="text-small text-textMuted">You are reporting: <span className="font-medium text-text">{targetLabel}</span></p>}
-        <RadioGroup ariaLabel="Why are you reporting this?" options={REASONS} value={reason} onChange={setReason} />
+        <RadioGroup<ReportReason | ''> ariaLabel="Why are you reporting this?" options={REASONS} value={reason} onChange={setReason} />
 
         {reason === 'unsafe' && <EscalationNotice />}
 

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cx } from '@/lib/cx';
 import { pressable, tabIconSpring } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
-import { Badge, BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
+import { Badge, BrandLogo, Icon, IconBadge, IconButton, ListRow, Sheet, type IconName } from '@/components/ui';
 import { CommunitySwitcher } from '@/components/layout/CommunitySwitcher';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
 import { ListingComposer } from '@/screens/compose/ListingComposer';
@@ -30,19 +30,18 @@ const TABS: Tab[] = [
   { to: '/me', label: 'Me', icon: 'user' },
 ];
 
-const POST_OPTIONS = [
-  { value: 'request', label: 'Request help', helper: 'Ask a neighbour for a hand' },
-  { value: 'sell', label: 'Sell or give away', helper: 'List something' },
-  { value: 'lend', label: 'Lend or offer equipment', helper: 'Add to the lending library' },
-  { value: 'event', label: 'Event', helper: 'Something happening locally' },
-  { value: 'alert', label: 'Alert', helper: 'Lost pet, road closure, notice' },
-  { value: 'service', label: 'Offer a service', helper: 'Trades and professionals' },
-  { value: 'skill', label: 'Share a skill', helper: 'Something you can help with' },
+const POST_OPTIONS: { value: Composer; label: string; helper: string; icon: IconName }[] = [
+  { value: 'request', label: 'Request help', helper: 'Ask a neighbour for a hand', icon: 'requests' },
+  { value: 'sell', label: 'Sell or give away', helper: 'List something', icon: 'listings' },
+  { value: 'equipment', label: 'Lend or offer equipment', helper: 'Add to the lending library', icon: 'equipment' },
+  { value: 'event', label: 'Event', helper: 'Something happening locally', icon: 'events' },
+  { value: 'alert', label: 'Alert', helper: 'Lost pet, road closure, notice', icon: 'alerts' },
+  { value: 'service', label: 'Offer a service', helper: 'Trades and professionals', icon: 'services' },
+  { value: 'skill', label: 'Share a skill', helper: 'Something you can help with', icon: 'sparkle' },
 ];
 
 export function AppShell() {
   const [postOpen, setPostOpen] = useState(false);
-  const [postChoice, setPostChoice] = useState('request');
   const [composer, setComposer] = useState<Composer>('none');
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
@@ -81,18 +80,9 @@ export function AppShell() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  function startPost() {
+  function openComposer(choice: Composer) {
     setPostOpen(false);
-    const map: Record<string, Composer> = {
-      request: 'request',
-      sell: 'sell',
-      lend: 'equipment',
-      event: 'event',
-      service: 'service',
-      skill: 'skill',
-      alert: 'alert',
-    };
-    setComposer(map[postChoice] ?? 'none');
+    setComposer(choice);
   }
 
   return (
@@ -155,20 +145,16 @@ export function AppShell() {
       </nav>
 
       <Sheet open={postOpen} onClose={() => setPostOpen(false)} title="Post to your community" hero={{ icon: 'plus', tone: 'accent' }}>
-        <div className="space-y-4">
-          <RadioGroup
-            ariaLabel="What would you like to post?"
-            value={postChoice}
-            onChange={setPostChoice}
-            options={POST_OPTIONS}
-          />
-          <button
-            type="button"
-            onClick={startPost}
-            className="w-full rounded-md bg-brand px-4 py-3 font-display font-semibold text-textOnAccent shadow-glowAccent"
-          >
-            Continue
-          </button>
+        <div className="space-y-2">
+          {POST_OPTIONS.map((o) => (
+            <ListRow
+              key={o.value}
+              leading={<IconBadge icon={o.icon} tone="accent" />}
+              title={o.label}
+              subtitle={o.helper}
+              onClick={() => openComposer(o.value)}
+            />
+          ))}
         </div>
       </Sheet>
 
