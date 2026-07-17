@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
+import { relativeTime } from '@/lib/ics';
 import {
   Badge, Button, Card, EmptyState, IconBadge, InfoCallout, ListRow, QueryError, Sheet, Skeleton, useToasts,
 } from '@/components/ui';
@@ -63,7 +64,7 @@ export function ReportsQueue() {
               key={r.id}
               leading={<IconBadge icon={r.priority ? 'flame' : 'shield'} tone={r.priority ? 'warn' : 'accent'} />}
               title={r.targetLabel ?? `${kindLabel(r.targetKind)} report`}
-              subtitle={`${kindLabel(r.targetKind)} · ${reasonLabel(r.reason)} · by ${r.reporterName}`}
+              subtitle={`${reasonLabel(r.reason)} · by ${r.reporterName} · ${relativeTime(r.createdAt)}`}
               trailing={<Badge count={r.reportCount} tone={r.priority ? 'warn' : 'neutral'} />}
               onClick={() => setOpenId(r.id)}
             />

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -14,6 +15,7 @@ import {
   IconBadge,
   IconButton,
   ListRow,
+  Modal,
   useToasts,
   type IconName,
 } from '@/components/ui';
@@ -33,6 +35,7 @@ export function SeedingConsole() {
   const qc = useQueryClient();
   const active = useActiveMembership();
   const communityId = active?.communityId ?? '';
+  const [launchConfirm, setLaunchConfirm] = useState(false);
 
   const proposals = useQuery({
     queryKey: ['proposals', communityId],
@@ -70,6 +73,7 @@ export function SeedingConsole() {
   }
 
   async function launch() {
+    setLaunchConfirm(false);
     try {
       await services.seeding.launch(communityId);
       await refresh();
@@ -147,11 +151,28 @@ export function SeedingConsole() {
               <span className="tabular text-small text-textMuted">{c.value}</span>
             </div>
           ))}
-          <Button variant="secondary" size="sm" className="mt-2" onClick={launch}>
+          <Button variant="primary" size="xl" fullWidth leadingIcon="sparkle" className="mt-2" onClick={() => setLaunchConfirm(true)}>
             Launch {active?.name}
           </Button>
+          {!checklist.every((c) => c.met) && (
+            <p className="text-small text-textMuted">Some checklist items aren't met yet. You can still launch, but it's worth a look first.</p>
+          )}
         </Card>
       </section>
+
+      <Modal
+        open={launchConfirm}
+        onClose={() => setLaunchConfirm(false)}
+        title={`Take ${active?.name ?? 'this community'} live?`}
+        hero={{ icon: 'sparkle', tone: 'accent' }}
+        primary={{ label: 'Launch now', onClick: launch, leadingIcon: 'sparkle' }}
+        secondary={{ label: 'Not yet', onClick: () => setLaunchConfirm(false) }}
+      >
+        <p className="text-body text-textMuted">
+          Neighbours will be able to find and join {active?.name ?? 'it'} straight away. Make sure the
+          places, businesses and organisations look right first.
+        </p>
+      </Modal>
 
       <section className="space-y-3">
         <div className="flex items-center gap-2">

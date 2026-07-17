@@ -3,17 +3,20 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
-import { Button, Card, Field, InfoCallout, useToasts } from '@/components/ui';
-import type { CommunityConfig as Config } from '@/lib/services/types';
+import { Button, Card, Field, InfoCallout, SegmentedControl, useToasts } from '@/components/ui';
+import { TRUST_LABEL } from '@/lib/labels';
+import type { CommunityConfig as Config, TrustLevel } from '@/lib/services/types';
 
-const FIELDS: { key: keyof Config; label: string; helper: string }[] = [
+const FIELDS: { key: keyof Config; label: string; helper: string; trust?: boolean }[] = [
   { key: 'autoHideReportThreshold', label: 'Reports before auto-hide', helper: 'How many reports hide an item pending review. Default 3.' },
-  { key: 'coldDmMinTrust', label: 'Trust needed to message a stranger', helper: 'A new neighbour can always reply in context; this gates cold messages.' },
+  { key: 'coldDmMinTrust', label: 'Trust needed to message a stranger', helper: 'A new neighbour can always reply in context; this gates cold messages.', trust: true },
   { key: 'listingCapT0', label: 'Listings for a new neighbour', helper: 'How many active listings before trust level 1. Default 2.' },
   { key: 'requestCapT0', label: 'Open requests for a new neighbour', helper: 'How many open requests before trust level 1. Default 1.' },
-  { key: 'eventsRequireTrust', label: 'Trust needed to post an event', helper: 'Default 1 (established members and up).' },
-  { key: 'alertsCommunityMinTrust', label: 'Trust needed for community alerts', helper: 'Lost-pet and notice alerts. Default 1.' },
+  { key: 'eventsRequireTrust', label: 'Trust needed to post an event', helper: 'Default: Established members and up.', trust: true },
+  { key: 'alertsCommunityMinTrust', label: 'Trust needed for community alerts', helper: 'Lost-pet and notice alerts.', trust: true },
 ];
+
+const TRUST_OPTIONS = ([0, 1, 2, 3] as TrustLevel[]).map((l) => ({ value: String(l), label: TRUST_LABEL[l] }));
 
 /** Community config editor (spec 04 §Admin console). Platform-admin only; the service enforces it. */
 export function CommunityConfig() {
@@ -65,17 +68,31 @@ export function CommunityConfig() {
       </InfoCallout>
 
       <Card className="space-y-4">
-        {FIELDS.map((f) => (
-          <Field
-            key={f.key}
-            label={f.label}
-            helper={f.helper}
-            type="number"
-            inputMode="numeric"
-            value={values[f.key] ?? ''}
-            onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
-          />
-        ))}
+        {FIELDS.map((f) =>
+          f.trust ? (
+            <div key={f.key} className="space-y-1.5">
+              <span className="text-small font-medium text-text">{f.label}</span>
+              <SegmentedControl
+                ariaLabel={f.label}
+                value={values[f.key] ?? '0'}
+                onChange={(val) => setValues((v) => ({ ...v, [f.key]: val }))}
+                options={TRUST_OPTIONS}
+              />
+              <span className="text-small text-textMuted">{f.helper}</span>
+            </div>
+          ) : (
+            <Field
+              key={f.key}
+              label={f.label}
+              helper={f.helper}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={values[f.key] ?? ''}
+              onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+            />
+          ),
+        )}
       </Card>
 
       <Button variant="primary" size="xl" fullWidth loading={busy} onClick={save}>Save config</Button>
