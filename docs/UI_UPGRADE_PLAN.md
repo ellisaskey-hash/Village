@@ -113,7 +113,10 @@ Save + Share are icon-only, Report is icon+label. Make them consistent (all icon
 - **Phase 0 — done & verified live:** inbox `my_threads` RPC (real other-name, preview, unread).
 - **Phase 1 — done & verified live:** cohesive `Placeholder` across all cards/heroes (+ neutralised the demo seed photos in the live DB), responsive 2/3/4-col grids, solid chat bubbles, single-row directory chips, EventCard 2-line title. The listings grid went from 2 clashing giant columns to a calm 4-up system.
 - **Phase 3 (partial) — done & verified live:** stronger hearth ambient; Home section headers → h2.
-- **Remaining:** Phase 2 (motion wiring — mind the route-boundary caveat), rest of Phase 3 (radius/contrast/elevation/badges), Phase 4 (illustration system, landing, village map, Home flagship hero, display face).
+- **Phase 2 — done & verified live:** VirtualList stagger on Listings/Requests, EventsView entrance consistency, Home quick-actions pressable. (Route-boundary AnimatePresence deliberately skipped — old blank-page bug.)
+- **Phase 3 — done & verified live:** stronger hearth ambient, section headers → h2, segmented-control active-pill separation.
+- **Phase 4 (self-contained pieces) — done & verified live:** Home "your village today" hero pulse (live count pills); first duotone empty-state illustration set (Messages/Listings/Requests/Events/Directory) wired via EmptyState's illustration slot.
+- **Remaining (brand decisions — need founder steer):** landing "village at dusk" hero, village-map motif, a distinctive display face, and expanding the illustration set to onboarding/first-run. Plus low-priority Phase-3 polish (radius token collapse, inactive-chip contrast micro-tune).
 
 ## Execution order
 Phase 0 (correctness) → Phase 1 (visual high-impact) → Phase 2 (motion, carefully re the route-boundary caveat) → Phase 3 (identity/consistency). Each in verified, deployed batches. Phase 4 items surfaced for a decision. Screenshot before/after on the flagship changes (1.1, 1.2, 1.4) since they're the ones that move the needle most.
