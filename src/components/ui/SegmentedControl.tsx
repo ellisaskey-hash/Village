@@ -38,7 +38,7 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
-      className={cx('inline-flex gap-1 rounded-pill border border-border bg-surface p-1', className)}
+      className={cx('inline-flex gap-1 rounded-pill border border-border bg-bgSunken p-1', className)}
     >
       {options.map((opt) => {
         const selected = opt.value === value;
