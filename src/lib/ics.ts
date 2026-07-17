@@ -39,3 +39,29 @@ export function formatWhen(iso: string): string {
     minute: '2-digit',
   });
 }
+
+const CLOCK: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+
+/** Start to end range, collapsing to just the end time when it's the same day.
+ *  "Sat 19 Jul, 14:00 to 16:00" or "Sat 19 Jul, 14:00 to Sun 20 Jul, 10:00". */
+export function formatWhenRange(startIso: string, endIso: string | null): string {
+  const start = formatWhen(startIso);
+  if (!endIso) return start;
+  const s = new Date(startIso);
+  const e = new Date(endIso);
+  const end = s.toDateString() === e.toDateString()
+    ? e.toLocaleTimeString('en-GB', CLOCK)
+    : formatWhen(endIso);
+  return `${start} to ${end}`;
+}
+
+/** "Needed by Sat 19 Jul", flagged urgent when the deadline is within ~2 days. */
+export function deadlineLabel(iso: string | null): { text: string; urgent: boolean } | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  const days = Math.ceil((d.getTime() - Date.now()) / 864e5);
+  return {
+    text: `Needed by ${d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`,
+    urgent: days <= 2,
+  };
+}

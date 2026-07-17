@@ -7,7 +7,7 @@ import { Button, Icon, Sheet, useToasts } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { priceBadge } from '@/components/content/ListingCard';
 import { REQUEST_CATEGORY_LABEL, labelFor } from '@/lib/labels';
-import { formatWhen } from '@/lib/ics';
+import { deadlineLabel, formatWhen } from '@/lib/ics';
 import type { Event, Listing, RequestPost } from '@/lib/services/types';
 
 export type PeekItem =
@@ -98,6 +98,10 @@ export function PeekSheet({ item, onClose }: { item: PeekItem | null; onClose: (
       footer={<Button variant="primary" size="xl" fullWidth leadingIcon="requests" onClick={() => go(`/requests/${r.id}?reply=1`)}>I can help</Button>}>
       <div className="space-y-2">
         <p className="text-small text-textMuted">{labelFor(REQUEST_CATEGORY_LABEL, r.category)} · {r.authorName}</p>
+        {(() => {
+          const dl = deadlineLabel(r.neededBy);
+          return dl ? <p className={dl.urgent ? 'text-small font-medium text-warn' : 'text-small text-textMuted'}>{dl.text}</p> : null;
+        })()}
         {r.description && <p className="text-body text-text">{r.description}</p>}
       </div>
     </Sheet>

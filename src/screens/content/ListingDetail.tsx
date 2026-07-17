@@ -11,6 +11,7 @@ import { ReportButton } from '@/components/moderation/ReportButton';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
 import { priceLabel } from './ListingsView';
+import { LISTING_STATUS_LABEL, labelFor } from '@/lib/labels';
 import type { ListingStatus } from '@/lib/services/types';
 
 const CONDITION: Record<string, string> = { new: 'New', likeNew: 'Like new', good: 'Good', fair: 'Fair', spares: 'Spares or repair' };
@@ -90,7 +91,7 @@ export function ListingDetail() {
             </motion.div>
           )}
           <motion.div variants={cardEnter}>
-            <PhotoHero photos={l.photos} icon="listings" from={l.kind === 'free' ? 'var(--c-positive)' : 'var(--c-accent)'} to="var(--c-accent-warm)" />
+            <PhotoHero photos={l.photos} label={l.title} icon="listings" from={l.kind === 'free' ? 'var(--c-positive)' : 'var(--c-accent)'} to="var(--c-accent-warm)" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>
@@ -102,7 +103,7 @@ export function ListingDetail() {
                 </div>
               </div>
               {l.description && <p className="mt-3 text-body text-text">{l.description}</p>}
-              {l.status !== 'active' && <p className="mt-2 text-small text-warn capitalize">{l.status}</p>}
+              {l.status !== 'active' && <p className="mt-2 text-small text-warn">{labelFor(LISTING_STATUS_LABEL, l.status)}</p>}
             </Card>
           </motion.div>
 

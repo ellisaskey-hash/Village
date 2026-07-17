@@ -30,7 +30,7 @@ export function PlaceDetail() {
       ) : (
         <>
           <motion.div variants={cardEnter}>
-            <PhotoHero photos={p.photos} icon="places" from="var(--c-positive)" to="var(--c-info)" />
+            <PhotoHero photos={p.photos} label={p.name} icon="places" from="var(--c-positive)" to="var(--c-info)" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>

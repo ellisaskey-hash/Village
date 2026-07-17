@@ -3,10 +3,12 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cardEnter, screenEnter } from '@/lib/motion';
+import { cx } from '@/lib/cx';
+import { deadlineLabel } from '@/lib/ics';
 import { useServices } from '@/lib/services/provider';
 import { useSession } from '@/app/state/session';
 import { errorMessage } from '@/lib/errors';
-import { Banner, Button, Card, Chip, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
+import { Banner, Button, Card, Chip, Icon, IconBadge, IconButton, Sheet, QueryError, Skeleton, Textarea, useToasts } from '@/components/ui';
 import { ReportButton } from '@/components/moderation/ReportButton';
 import { AuthorCard } from '@/components/content/AuthorCard';
 import { REQUEST_CATEGORY_LABEL, REQUEST_STATUS_LABEL, labelFor } from '@/lib/labels';
@@ -100,6 +102,14 @@ export function RequestDetail() {
                     )}
                   </div>
                   <p className="text-small text-textMuted">{labelFor(REQUEST_CATEGORY_LABEL, r.category)}</p>
+                  {(() => {
+                    const dl = deadlineLabel(r.neededBy);
+                    return dl ? (
+                      <span className={cx('mt-1.5 inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-small font-medium', dl.urgent ? 'bg-warn/15 text-warn' : 'bg-surface text-textMuted')}>
+                        <Icon name="calendar" size={13} /> {dl.text}
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
               </div>
               {r.description && <p className="mt-3 text-body text-text">{r.description}</p>}

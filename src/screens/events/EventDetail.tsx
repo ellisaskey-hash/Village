@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { errorMessage } from '@/lib/errors';
-import { downloadIcs, formatWhen } from '@/lib/ics';
+import { downloadIcs, formatWhenRange } from '@/lib/ics';
 import { useSession } from '@/app/state/session';
 import { Banner, Button, Card, Icon, IconBadge, IconButton, QueryError, Skeleton, useToasts } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
@@ -53,7 +53,7 @@ export function EventDetail() {
       ) : (
         <>
           <motion.div variants={cardEnter}>
-            <PhotoHero photos={e.photos} icon="events" from="var(--c-accent)" to="var(--c-accent-warm)" />
+            <PhotoHero photos={e.photos} label={e.title} icon="events" from="var(--c-accent)" to="var(--c-accent-warm)" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>
@@ -61,7 +61,7 @@ export function EventDetail() {
                 <IconBadge icon="events" tone="warn" size="lg" />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-h2 font-semibold text-text">{e.title}</h1>
-                  <p className="flex items-center gap-1.5 text-small text-textMuted"><Icon name="calendar" size={14} className="text-accent" /> {formatWhen(e.startsAt)}</p>
+                  <p className="flex items-center gap-1.5 text-small text-textMuted"><Icon name="calendar" size={14} className="text-accent" /> {formatWhenRange(e.startsAt, e.endsAt)}</p>
                   {e.locationText && <p className="flex items-center gap-1.5 text-small text-textMuted"><Icon name="pin" size={14} className="text-textFaint" /> {e.locationText}</p>}
                 </div>
               </div>

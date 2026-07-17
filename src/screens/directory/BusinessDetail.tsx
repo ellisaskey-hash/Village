@@ -99,7 +99,7 @@ export function BusinessDetail() {
       ) : (
         <>
           <motion.div variants={cardEnter}>
-            <PhotoHero photos={b.photos} icon="businesses" />
+            <PhotoHero photos={b.photos} label={b.name} icon="businesses" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>

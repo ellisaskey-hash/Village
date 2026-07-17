@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
-import { Chip, EmptyState, QueryError, Skeleton, VirtualList } from '@/components/ui';
+import { Chip, EmptyState, QueryError, Select, Skeleton, VirtualList } from '@/components/ui';
 import { ListingCard, priceBadge } from '@/components/content/ListingCard';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import type { Listing, ListingKind } from '@/lib/services/types';
@@ -61,9 +61,18 @@ export function ListingsView() {
           <Chip key={k.value} selected={kind === k.value} onClick={() => setKind(k.value)}>{k.label}</Chip>
         ))}
         <span className="mx-1 w-px shrink-0 self-stretch bg-border" />
-        <Chip selected={sort !== 'newest'} leadingIcon="filter" onClick={() => setSort((s) => (s === 'newest' ? 'priceLow' : s === 'priceLow' ? 'priceHigh' : 'newest'))}>
-          {sort === 'newest' ? 'Newest' : sort === 'priceLow' ? 'Price ↑' : 'Price ↓'}
-        </Chip>
+        <Select
+          label="Sort listings"
+          hideLabel
+          value={sort}
+          onChange={(e) => setSort(e.target.value as Sort)}
+          className="w-44 shrink-0"
+          options={[
+            { value: 'newest', label: 'Newest first' },
+            { value: 'priceLow', label: 'Price: low to high' },
+            { value: 'priceHigh', label: 'Price: high to low' },
+          ]}
+        />
       </div>
 
       {q.isError ? (
