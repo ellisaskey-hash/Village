@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { listContainer, listItem } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { EmptyState, QueryError, Skeleton } from '@/components/ui';
@@ -34,9 +36,13 @@ export function EventsView() {
     events.length > 0 && (
       <section className="space-y-3">
         <h3 className="text-eyebrow uppercase text-textMuted">{title}</h3>
-        <div className="space-y-3">
-          {events.map((e) => <EventCard key={e.id} event={e} onClick={() => setPeek({ kind: 'event', data: e })} />)}
-        </div>
+        <motion.div variants={listContainer} initial="initial" animate="animate" className="space-y-3">
+          {events.map((e) => (
+            <motion.div key={e.id} variants={listItem}>
+              <EventCard event={e} onClick={() => setPeek({ kind: 'event', data: e })} />
+            </motion.div>
+          ))}
+        </motion.div>
       </section>
     );
 

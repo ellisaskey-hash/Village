@@ -76,7 +76,7 @@ export function BusinessDetail() {
     >
       <header className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
-        <h1 className="font-display text-h1 font-bold text-text">Business</h1>
+        <p className="text-eyebrow uppercase text-textMuted">Business</p>
       </header>
 
       {q.isLoading ? (
@@ -97,7 +97,7 @@ export function BusinessDetail() {
               <div className="flex items-start gap-3">
                 <IconBadge icon="businesses" tone="accent" size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-h2 font-semibold text-text">{b.name}</h2>
+                  <h1 className="text-h2 font-semibold text-text">{b.name}</h1>
                   {b.categories.length > 0 && <p className="text-small text-textMuted">{b.categories.join(', ')}</p>}
                 </div>
               </div>

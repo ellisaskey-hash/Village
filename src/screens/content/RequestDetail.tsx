@@ -56,7 +56,7 @@ export function RequestDetail() {
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
       <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
-        <h1 className="font-display text-h1 font-bold text-text">Request</h1>
+        <p className="text-eyebrow uppercase text-textMuted">Request</p>
         {r && !isAuthor && (
           <span className="ml-auto">
             <ReportButton targetKind="request" targetId={r.id} targetLabel={r.title} />
@@ -83,7 +83,7 @@ export function RequestDetail() {
                 <IconBadge icon="requests" tone="accent" size="lg" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-h2 font-semibold text-text">{r.title}</h2>
+                    <h1 className="text-h2 font-semibold text-text">{r.title}</h1>
                     {r.status !== 'open' && (
                       <Chip tone={r.status === 'fulfilled' ? 'positive' : 'neutral'} selected>
                         {labelFor(REQUEST_STATUS_LABEL, r.status)}

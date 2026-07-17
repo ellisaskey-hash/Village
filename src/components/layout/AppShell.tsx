@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
-import { pressable } from '@/lib/motion';
+import { pressable, tabIconSpring } from '@/lib/motion';
 import { BrandLogo, Icon, IconButton, RadioGroup, Sheet, type IconName } from '@/components/ui';
 import { CommunitySwitcher } from '@/components/layout/CommunitySwitcher';
 import { RequestComposer } from '@/screens/compose/RequestComposer';
@@ -113,7 +113,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main id="main" className="flex-1 pb-24 lg:pb-10">
+        <main id="main" className="flex-1 pb-[calc(64px+env(safe-area-inset-bottom)+24px)] lg:pb-10">
           <Outlet />
         </main>
       </div>
@@ -121,7 +121,7 @@ export function AppShell() {
       {/* Mobile bottom tab bar */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-tabBar flex h-[64px] items-center justify-around border-t border-border bg-[var(--c-glass-panel-bg)] backdrop-blur-md lg:hidden"
+        className="safe-bottom fixed inset-x-0 bottom-0 z-tabBar flex min-h-[64px] items-center justify-around border-t border-border bg-[var(--c-glass-panel-bg)] backdrop-blur-md lg:hidden"
       >
         <TabItem {...TABS[0]!} />
         <TabItem {...TABS[1]!} />
@@ -167,13 +167,20 @@ function TabItem({ to, label, icon }: Tab) {
         <motion.span
           whileTap={pressable.whileTap}
           transition={pressable.transition}
-          aria-current={isActive ? 'page' : undefined}
           className={cx(
             'flex flex-col items-center gap-0.5 text-micro',
             isActive ? 'text-accent' : 'text-textMuted',
           )}
         >
-          <Icon name={icon} size={22} />
+          {/* NavLink sets aria-current="page" on the <a> itself; the active icon springs up
+              with an accent glow so the current tab reads at a glance. */}
+          <motion.span
+            animate={{ scale: isActive ? 1.1 : 1 }}
+            transition={tabIconSpring}
+            className={cx('inline-flex rounded-full', isActive && 'shadow-glowAccent')}
+          >
+            <Icon name={icon} size={22} />
+          </motion.span>
           {label}
         </motion.span>
       )}

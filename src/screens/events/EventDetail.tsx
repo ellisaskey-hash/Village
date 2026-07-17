@@ -33,7 +33,7 @@ export function EventDetail() {
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
       <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
-        <h1 className="font-display text-h1 font-bold text-text">Event</h1>
+        <p className="text-eyebrow uppercase text-textMuted">Event</p>
       </motion.header>
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={208} /><Skeleton height={120} /></div>
@@ -51,7 +51,7 @@ export function EventDetail() {
               <div className="flex items-start gap-3">
                 <IconBadge icon="events" tone="warn" size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-h2 font-semibold text-text">{e.title}</h2>
+                  <h1 className="text-h2 font-semibold text-text">{e.title}</h1>
                   <p className="flex items-center gap-1.5 text-small text-textMuted"><Icon name="calendar" size={14} className="text-accent" /> {formatWhen(e.startsAt)}</p>
                   {e.locationText && <p className="flex items-center gap-1.5 text-small text-textMuted"><Icon name="pin" size={14} className="text-textFaint" /> {e.locationText}</p>}
                 </div>

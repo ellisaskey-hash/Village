@@ -42,7 +42,7 @@ export function EquipmentDetail() {
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
       <header className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
-        <h1 className="font-display text-h1 font-bold text-text">Equipment</h1>
+        <p className="text-eyebrow uppercase text-textMuted">Equipment</p>
       </header>
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={160} /><Skeleton height={72} /></div>
@@ -60,7 +60,7 @@ export function EquipmentDetail() {
               <div className="flex items-start gap-3">
                 <IconBadge icon="equipment" tone="positive" size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-h2 font-semibold text-text">{e.name}</h2>
+                  <h1 className="text-h2 font-semibold text-text">{e.name}</h1>
                   <p className="text-small text-textMuted capitalize">{e.category} · {e.ownerName}</p>
                 </div>
               </div>

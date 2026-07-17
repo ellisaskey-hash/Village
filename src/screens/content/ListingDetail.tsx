@@ -58,7 +58,7 @@ export function ListingDetail() {
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
       <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
-        <h1 className="font-display text-h1 font-bold text-text">Listing</h1>
+        <p className="text-eyebrow uppercase text-textMuted">Listing</p>
         {l && !isAuthor && (
           <span className="ml-auto">
             <ReportButton targetKind="listing" targetId={l.id} targetLabel={l.title} />
@@ -87,7 +87,7 @@ export function ListingDetail() {
               <div className="flex items-start gap-3">
                 <IconBadge icon="listings" tone={l.kind === 'free' ? 'positive' : 'accent'} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-h2 font-semibold text-text">{l.title}</h2>
+                  <h1 className="text-h2 font-semibold text-text">{l.title}</h1>
                   <p className="text-small text-textMuted">{priceLabel(l)}{l.condition ? ` · ${CONDITION[l.condition] ?? l.condition}` : ''}{l.category ? ` · ${l.category}` : ''}</p>
                 </div>
               </div>

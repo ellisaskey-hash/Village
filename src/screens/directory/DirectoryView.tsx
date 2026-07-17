@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { screenEnter } from '@/lib/motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession } from '@/app/state/session';
@@ -68,6 +70,7 @@ export function DirectoryView() {
         ))}
       </div>
 
+      <motion.div key={sub} variants={screenEnter} initial="initial" animate="animate">
       {q.isError ? (
         <QueryError onRetry={() => q.refetch()} />
       ) : q.isLoading ? (
@@ -135,6 +138,7 @@ export function DirectoryView() {
           ))}
         </div>
       )}
+      </motion.div>
     </div>
   );
 }

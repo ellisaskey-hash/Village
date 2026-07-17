@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { Chip, EmptyState, QueryError, Skeleton, VirtualList } from '@/components/ui';
@@ -51,7 +53,7 @@ export function ListingsView() {
   }, [filtered]);
 
   return (
-    <div className="space-y-4">
+    <motion.div variants={screenEnter} initial="initial" animate="animate" className="space-y-4">
       <div className="-mx-screenX flex gap-2 overflow-x-auto px-screenX pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {KINDS.map((k) => (
           <Chip key={k.value} selected={kind === k.value} onClick={() => setKind(k.value)}>{k.label}</Chip>
@@ -84,6 +86,6 @@ export function ListingsView() {
       )}
 
       <PeekSheet item={peek} onClose={() => setPeek(null)} />
-    </div>
+    </motion.div>
   );
 }

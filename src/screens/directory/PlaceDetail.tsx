@@ -18,7 +18,7 @@ export function PlaceDetail() {
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
       <header className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
-        <h1 className="font-display text-h1 font-bold text-text">Place</h1>
+        <p className="text-eyebrow uppercase text-textMuted">Place</p>
       </header>
       {q.isLoading ? (
         <Skeleton height={120} />
@@ -36,7 +36,7 @@ export function PlaceDetail() {
               <div className="flex items-start gap-3">
                 <IconBadge icon="places" tone="positive" size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-h2 font-semibold text-text">{p.name}</h2>
+                  <h1 className="text-h2 font-semibold text-text">{p.name}</h1>
                   <p className="text-small text-textMuted">{labelFor(PLACE_KIND_LABEL, p.kind)}</p>
                 </div>
               </div>
