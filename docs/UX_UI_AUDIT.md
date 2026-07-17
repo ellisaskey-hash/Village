@@ -5,6 +5,20 @@
 **Total findings:** 154 (read-only; no code changed in this pass).
 **Bar:** "an app that's had millions of investment."
 
+---
+
+## Implementation progress
+
+**Done (shipped 2026-07-17):**
+- **All cross-cutting themes** — T1 (enum→label maps via `lib/labels.ts`), T2 (detail `<h1>` = entity name + eyebrow), T3 (tab spring/glow, safe-area tab bar, list/screen entrance motion), T6 (error states on Home/Me/admin), T8 (forced-colors focus, OS reduced-motion, Toast `role=alert`/cap/duration).
+- **Tier 1 — content**: real peek CTAs (`?reply=1`), browse create affordances + Home quick-actions open composers (`?compose=`), clean price formatting, listing status leak fixed, EventDetail host banner + Report + capacity/waitlist copy.
+- **Tier 1 — directory**: actionable contact/directions (`ContactRow`), editable business enquiry (was canned auto-send), claim-empty guard, per-type empty states with CTAs.
+- **Tier 1 — inbox**: message previews (`lastSnippet`), optimistic send, explicit mark-all-read (unread stays live), day separators, smart auto-scroll, primary send button (new `IconButton` variant).
+
+**Remaining:** Tier 2 (items 11-25) and Tier 3 (26-50) below, plus the noted seams that need migrations (event cancel/edit; Supabase thread snippet view). Directory dead-end rows (services/skills → no destination) need a product decision (profile route vs message flow) before build.
+
+---
+
 > Context: the earlier robustness pass already added a global `ErrorBoundary`, `QueryError` on browse/detail/inbox queries, and submit-empty guards. Findings below that touch those areas are the *remaining* gaps (Home / admin / Me still swallow errors; the empty guards want to become inline field errors).
 
 ---
