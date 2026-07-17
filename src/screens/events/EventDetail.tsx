@@ -23,11 +23,15 @@ export function EventDetail() {
   const e = q.data;
   const isHost = Boolean(e && session && e.createdBy === session.profileId);
 
+  const RSVP_TOAST: Record<RsvpStatus, string> = {
+    going: "You're going", maybe: 'Marked as maybe', waitlist: "You're on the waitlist", cancelled: 'No longer going',
+  };
   async function rsvp(status: RsvpStatus) {
     try {
       await services.events.rsvp(id, status);
       await qc.invalidateQueries({ queryKey: ['event', id] });
       await qc.invalidateQueries({ queryKey: ['events'] });
+      push({ title: RSVP_TOAST[status], variant: 'success' });
     } catch (err) {
       push({ title: errorMessage(err), variant: 'error' });
     }

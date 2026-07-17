@@ -3,6 +3,7 @@ import { cx } from '@/lib/cx';
 import { springSnappy } from '@/lib/motion';
 import { Icon } from '@/components/ui';
 import { LISTING_STATUS_LABEL, labelFor } from '@/lib/labels';
+import { relativeTime } from '@/lib/ics';
 import type { Listing } from '@/lib/services/types';
 
 /** Clean UK price: whole pounds drop the .00, thousands are grouped. £40 · £1,250 · £19.99 */
@@ -78,7 +79,7 @@ export function ListingCard({ listing: l, onClick, variant = 'full' }: ListingCa
       </div>
       <div className="min-w-0 p-3">
         <p className="truncate text-body font-semibold text-text">{l.title}</p>
-        <p className="truncate text-small text-textMuted">{l.authorName}</p>
+        <p className="truncate text-small text-textMuted">{l.authorName} · {relativeTime(l.createdAt)}</p>
       </div>
     </motion.button>
   );

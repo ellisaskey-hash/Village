@@ -15,6 +15,12 @@ const STATUS_LABEL: Record<RequestStatus, string> = {
   open: 'Open', answered: 'Answered', fulfilled: 'Sorted', expired: 'Expired', withdrawn: 'Withdrawn',
 };
 
+// A tint per category so the requests list reads as a designed set, not a monochrome spreadsheet.
+const CAT_TONE: Record<RequestCategory, 'accent' | 'warn' | 'positive' | 'info' | 'purple' | 'neutral'> = {
+  trades: 'warn', childcare: 'purple', lifts: 'info', recommendations: 'accent',
+  borrow: 'positive', help: 'accent', pets: 'purple', other: 'neutral',
+};
+
 type CatFilter = 'all' | RequestCategory;
 const CATS: { value: CatFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -73,7 +79,7 @@ export function RequestsView() {
           estimateSize={72}
           renderItem={(r) => (
             <ListRow
-              leading={<IconBadge icon="requests" tone={r.status === 'open' ? 'accent' : 'neutral'} />}
+              leading={<IconBadge icon="requests" tone={r.status === 'open' ? CAT_TONE[r.category] : 'neutral'} />}
               title={r.title}
               subtitle={`${labelFor(REQUEST_CATEGORY_LABEL, r.category)} · ${r.authorName}${deadlineLabel(r.neededBy) ? ` · ${deadlineLabel(r.neededBy)!.text}` : ''}`}
               trailing={<Chip tone={r.status === 'fulfilled' ? 'positive' : 'neutral'} selected={r.status !== 'open'}>{STATUS_LABEL[r.status]}</Chip>}

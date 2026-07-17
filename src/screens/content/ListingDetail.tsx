@@ -55,11 +55,16 @@ export function ListingDetail() {
     }
   }
 
+  const STATUS_TOAST: Record<ListingStatus, string> = {
+    active: 'Back to available', reserved: 'Marked as reserved', completed: 'Marked as done',
+    withdrawn: 'Withdrawn', expired: 'Expired',
+  };
   async function setStatus(status: ListingStatus) {
     try {
       await services.listings.setStatus(id, status);
       await qc.invalidateQueries({ queryKey: ['listing', id] });
       await qc.invalidateQueries({ queryKey: ['listings'] });
+      push({ title: STATUS_TOAST[status], variant: 'success' });
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
     }
