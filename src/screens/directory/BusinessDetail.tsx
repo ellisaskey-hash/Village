@@ -10,6 +10,7 @@ import {
   Banner,
   Button,
   Card,
+  Icon,
   IconBadge,
   IconButton,
   Sheet,
@@ -106,7 +107,14 @@ export function BusinessDetail() {
               <div className="flex items-start gap-3">
                 <IconBadge icon="businesses" tone="accent" size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-h2 font-semibold text-text">{b.name}</h1>
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-h2 font-semibold text-text">{b.name}</h1>
+                    {b.ownerProfileId && b.verifiedAt && (
+                      <span className="inline-flex items-center gap-1 text-small font-medium text-positive" title="Verified business">
+                        <Icon name="shield" size={15} /> Verified
+                      </span>
+                    )}
+                  </div>
                   {b.categories.length > 0 && <p className="text-small text-textMuted">{b.categories.join(', ')}</p>}
                 </div>
               </div>
