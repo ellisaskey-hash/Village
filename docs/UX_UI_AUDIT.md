@@ -23,7 +23,14 @@
 - Photos: upload limit/size/type validation with feedback, cover label, 44px remove.
 - Trust: Verified shield carried onto business detail.
 
-**Remaining Tier 2 (larger / needs a decision):** admin desktop master-detail + keyboard triage + bulk + undo (#20, own arc); photo drag-reorder (needs DnD); report+block in one flow (needs block seam); landing hero visual + social proof (needs assets); directory search (IA change). Plus Tier 3 (26-50) below, and the noted migration seams (event cancel/edit; Supabase thread snippet view) and the directory dead-end-rows product decision.
+**Tier 3 — done (shipped 2026-07-17):**
+- Content: status/RSVP success toasts, card freshness timestamps, category-tinted request rows, Share action on every content detail.
+- Compose: one-tap post menu (dropped select-then-Continue), report has no default reason (+ helper text), event composer blocks past dates.
+- Profile/settings: adult-only identity gate enforced in edit (+ empty-name block), isolated danger zone, semantic icon fixes (sign-out/copy/export/switcher).
+- Primitives: Chip disabled state, Avatar onError→initials + lazy-load, 7 new icons.
+- Home: warm first-run hero when every feed is empty.
+
+**Remaining (larger / needs a decision or seam):** admin desktop master-detail + keyboard triage + bulk + undo (#20, own arc); photo drag-reorder (DnD); report+block in one flow (block seam); landing hero visual + social proof (assets); directory search (IA); save/bookmark (saves service + Saved screen); category free-text→Select (needs a defined taxonomy); mobile-keyboard `visualViewport` handling; radius-token cleanup (cosmetic, deferred to avoid churn). Plus the migration seams (event cancel/edit; Supabase thread snippet view) and the directory dead-end-rows product decision.
 
 ---
 
