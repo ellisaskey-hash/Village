@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { listContainer, listItem } from '@/lib/motion';
@@ -14,6 +15,7 @@ export function EventsView() {
   const active = useActiveMembership();
   const communityId = active?.communityId ?? '';
   const [peek, setPeek] = useState<PeekItem | null>(null);
+  const [, setParams] = useSearchParams();
   const q = useQuery({ queryKey: ['events', communityId], queryFn: () => services.events.list(communityId), enabled: Boolean(communityId) });
 
   const { thisWeek, later } = useMemo(() => {
@@ -29,7 +31,7 @@ export function EventsView() {
   if (q.isError) return <QueryError onRetry={() => q.refetch()} />;
   if (q.isLoading) return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={112} />)}</div>;
   if (thisWeek.length === 0 && later.length === 0) {
-    return <EmptyState icon="events" title="Nothing on just yet" body="Know something happening locally? Add it so your neighbours can come along." />;
+    return <EmptyState icon="events" title="Nothing on just yet" body="Know something happening locally? Add it so your neighbours can come along." action={{ label: 'Add an event', leadingIcon: 'plus', onClick: () => setParams((p) => { p.set('compose', 'event'); return p; }) }} />;
   }
 
   const group = (title: string, events: Event[]) =>

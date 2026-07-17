@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cardEnter, screenEnter } from '@/lib/motion';
@@ -25,6 +25,15 @@ export function RequestDetail() {
   const q = useQuery({ queryKey: ['request', id], queryFn: () => services.requests.get(id), enabled: Boolean(id) });
   const r = q.data;
   const isAuthor = Boolean(r && session && r.createdBy === session.profileId);
+
+  // Peek's "I can help" deep-links here with ?reply=1 — open the reply sheet on arrival.
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get('reply') === '1' && r && !isAuthor) {
+      setReplyOpen(true);
+      setParams((p) => { p.delete('reply'); return p; }, { replace: true });
+    }
+  }, [params, r, isAuthor, setParams]);
 
   async function help() {
     setBusy(true);

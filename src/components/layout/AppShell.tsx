@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
 import { pressable, tabIconSpring } from '@/lib/motion';
@@ -44,6 +44,20 @@ export function AppShell() {
   const [composer, setComposer] = useState<Composer>('none');
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+
+  // Any screen can open a composer by linking to ?compose=<type> (empty-state CTAs, Home quick
+  // actions). We consume the param, open the matching composer, and clear it so it doesn't re-fire.
+  useEffect(() => {
+    const want = params.get('compose');
+    if (!want) return;
+    const map: Record<string, Composer> = {
+      request: 'request', sell: 'sell', lend: 'equipment', event: 'event',
+      service: 'service', skill: 'skill', alert: 'alert',
+    };
+    if (map[want]) setComposer(map[want]);
+    setParams((p) => { p.delete('compose'); return p; }, { replace: true });
+  }, [params, setParams]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

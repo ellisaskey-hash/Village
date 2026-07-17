@@ -5,9 +5,11 @@ import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { errorMessage } from '@/lib/errors';
 import { downloadIcs, formatWhen } from '@/lib/ics';
+import { useSession } from '@/app/state/session';
 import { Banner, Button, Card, Icon, IconBadge, IconButton, QueryError, Skeleton, useToasts } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
+import { ReportButton } from '@/components/moderation/ReportButton';
 import type { RsvpStatus } from '@/lib/services/types';
 
 export function EventDetail() {
@@ -16,8 +18,10 @@ export function EventDetail() {
   const services = useServices();
   const push = useToasts();
   const qc = useQueryClient();
+  const session = useSession();
   const q = useQuery({ queryKey: ['event', id], queryFn: () => services.events.get(id), enabled: Boolean(id) });
   const e = q.data;
+  const isHost = Boolean(e && session && e.createdBy === session.profileId);
 
   async function rsvp(status: RsvpStatus) {
     try {
@@ -34,6 +38,11 @@ export function EventDetail() {
       <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
         <p className="text-eyebrow uppercase text-textMuted">Event</p>
+        {e && !isHost && (
+          <span className="ml-auto">
+            <ReportButton targetKind="event" targetId={e.id} targetLabel={e.title} />
+          </span>
+        )}
       </motion.header>
       {q.isLoading ? (
         <div className="space-y-4"><Skeleton height={208} /><Skeleton height={120} /></div>
@@ -58,7 +67,14 @@ export function EventDetail() {
               </div>
               {e.description && <p className="mt-3 text-body text-text">{e.description}</p>}
               {e.rsvpMode !== 'none' && (
-                <p className="mt-3 text-small text-textMuted">{e.goingCount} going{e.rsvpMode === 'capacity' && e.capacity ? ` · ${e.capacity} spaces` : ''}</p>
+                <p className="mt-3 text-small text-textMuted">
+                  {e.goingCount} going
+                  {e.rsvpMode === 'capacity' && e.capacity
+                    ? e.goingCount >= e.capacity
+                      ? ' · Full'
+                      : ` · ${e.capacity - e.goingCount} ${e.capacity - e.goingCount === 1 ? 'space' : 'spaces'} left`
+                    : ''}
+                </p>
               )}
             </Card>
           </motion.div>
@@ -67,18 +83,28 @@ export function EventDetail() {
             <AuthorCard communityId={e.communityId} profileId={e.createdBy} fallbackName={e.authorName} />
           </motion.div>
 
-          {e.myRsvp === 'waitlist' && (
+          {isHost && (
+            <motion.div variants={cardEnter}>
+              <Banner tone="accent" icon="check" title="You're hosting this" body="Neighbours can see it and RSVP. Share the calendar link so more people can come along." />
+            </motion.div>
+          )}
+
+          {!isHost && e.myRsvp === 'waitlist' && (
             <motion.div variants={cardEnter}>
               <Banner tone="warn" icon="info" title="You're on the waitlist" body="We'll move you in if a space opens up." />
             </motion.div>
           )}
 
           <motion.div variants={cardEnter} className="space-y-2">
-            {e.rsvpMode !== 'none' && (
+            {!isHost && e.rsvpMode !== 'none' && (
               <div className="flex flex-wrap gap-2">
-                <Button variant={e.myRsvp === 'going' ? 'primary' : 'secondary'} size="sm" leadingIcon="check" onClick={() => rsvp('going')}>
-                  {e.myRsvp === 'going' ? "You're going" : "I'm going"}
-                </Button>
+                {e.rsvpMode === 'capacity' && e.capacity && e.goingCount >= e.capacity && e.myRsvp !== 'going' ? (
+                  <Button variant="secondary" size="sm" leadingIcon="people" onClick={() => rsvp('going')}>Join the waitlist</Button>
+                ) : (
+                  <Button variant={e.myRsvp === 'going' ? 'primary' : 'secondary'} size="sm" leadingIcon="check" onClick={() => rsvp('going')}>
+                    {e.myRsvp === 'going' ? "You're going" : "I'm going"}
+                  </Button>
+                )}
                 <Button variant={e.myRsvp === 'maybe' ? 'primary' : 'secondary'} size="sm" onClick={() => rsvp('maybe')}>Maybe</Button>
                 {(e.myRsvp === 'going' || e.myRsvp === 'maybe' || e.myRsvp === 'waitlist') && (
                   <Button variant="ghost" size="sm" onClick={() => rsvp('cancelled')}>Can't make it</Button>

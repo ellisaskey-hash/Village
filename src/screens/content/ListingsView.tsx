@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
@@ -30,6 +31,7 @@ export function ListingsView() {
   const [kind, setKind] = useState<KindFilter>('all');
   const [sort, setSort] = useState<Sort>('newest');
   const [peek, setPeek] = useState<PeekItem | null>(null);
+  const [, setParams] = useSearchParams();
 
   const q = useQuery({
     queryKey: ['listings', communityId],
@@ -69,7 +71,12 @@ export function ListingsView() {
       ) : q.isLoading ? (
         <div className="grid grid-cols-2 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height={230} />)}</div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon="listings" title={kind === 'all' ? 'Nothing for sale yet' : 'Nothing here'} body={kind === 'all' ? 'Got something lying around? Give it a new home with a neighbour.' : 'Try another filter, or be the first to post one.'} />
+        <EmptyState
+          icon="listings"
+          title={kind === 'all' ? 'Nothing for sale yet' : 'Nothing here'}
+          body={kind === 'all' ? 'Got something lying around? Give it a new home with a neighbour.' : 'Try another filter, or be the first to post one.'}
+          action={{ label: 'List something', leadingIcon: 'plus', onClick: () => setParams((p) => { p.set('compose', 'sell'); return p; }) }}
+        />
       ) : (
         <VirtualList
           items={rows}

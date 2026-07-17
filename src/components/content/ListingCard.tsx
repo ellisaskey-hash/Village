@@ -2,7 +2,17 @@ import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
 import { springSnappy } from '@/lib/motion';
 import { Icon } from '@/components/ui';
+import { LISTING_STATUS_LABEL, labelFor } from '@/lib/labels';
 import type { Listing } from '@/lib/services/types';
+
+/** Clean UK price: whole pounds drop the .00, thousands are grouped. £40 · £1,250 · £19.99 */
+export function formatPrice(pence: number): string {
+  const hasPence = pence % 100 !== 0;
+  return `£${(pence / 100).toLocaleString('en-GB', {
+    minimumFractionDigits: hasPence ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
+}
 
 /** Kind → the badge label + the placeholder gradient when a listing has no photo. */
 const KIND: Record<Listing['kind'], { label: string; from: string; to: string }> = {
@@ -16,7 +26,7 @@ export function priceBadge(l: Listing): string {
   if (l.kind === 'free') return 'Free';
   if (l.kind === 'wanted') return 'Wanted';
   if (l.kind === 'lend') return 'To borrow';
-  return l.pricePence != null ? `£${(l.pricePence / 100).toFixed(2)}` : 'For sale';
+  return l.pricePence != null ? formatPrice(l.pricePence) : 'For sale';
 }
 
 interface ListingCardProps {
@@ -62,7 +72,7 @@ export function ListingCard({ listing: l, onClick, variant = 'full' }: ListingCa
         </span>
         {(reserved || closed) && (
           <span className="absolute right-2 top-2 rounded-pill bg-bg/80 px-2.5 py-1 text-small font-medium text-textMuted backdrop-blur-md">
-            {reserved ? 'Reserved' : l.status}
+            {reserved ? 'Reserved' : labelFor(LISTING_STATUS_LABEL, l.status)}
           </span>
         )}
       </div>

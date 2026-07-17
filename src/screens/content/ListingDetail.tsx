@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cardEnter, screenEnter } from '@/lib/motion';
@@ -29,6 +29,16 @@ export function ListingDetail() {
   const q = useQuery({ queryKey: ['listing', id], queryFn: () => services.listings.get(id), enabled: Boolean(id) });
   const l = q.data;
   const isAuthor = Boolean(l && session && l.createdBy === session.profileId);
+
+  // Peek's "Message" deep-links here with ?reply=1 — open the reply sheet straight away so the
+  // quick action is real, then clear the param so a refresh/back doesn't reopen it.
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get('reply') === '1' && l && !isAuthor) {
+      setReplyOpen(true);
+      setParams((p) => { p.delete('reply'); return p; }, { replace: true });
+    }
+  }, [params, l, isAuthor, setParams]);
 
   async function messageAbout() {
     setBusy(true);

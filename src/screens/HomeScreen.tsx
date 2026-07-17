@@ -11,10 +11,12 @@ import { ListingCard } from '@/components/content/ListingCard';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import { AlertsStrip } from '@/screens/AlertsStrip';
 
+// Quick actions open the relevant composer (AppShell reads ?compose=), not a browse list —
+// "Ask for a hand" should let you ask, not send you to read other people's requests.
 const QUICK: { icon: IconName; label: string; to: string }[] = [
-  { icon: 'requests', label: 'Ask for a hand', to: '/explore?tab=requests' },
-  { icon: 'listings', label: 'List something', to: '/explore?tab=listings' },
-  { icon: 'alerts', label: 'Report something lost', to: '/explore' },
+  { icon: 'requests', label: 'Ask for a hand', to: '/home?compose=request' },
+  { icon: 'listings', label: 'List something', to: '/home?compose=sell' },
+  { icon: 'alerts', label: 'Report something lost', to: '/home?compose=alert' },
 ];
 
 function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
@@ -141,7 +143,7 @@ export function HomeScreen() {
 
         {freshListings.length > 0 && (
           <motion.section variants={cardEnter} className="lg:col-span-12">
-            <SectionHeader title="New in the village" onSeeAll={() => navigate('/explore?tab=listings')} />
+            <SectionHeader title="New nearby" onSeeAll={() => navigate('/explore?tab=listings')} />
             <div className="-mx-screenX flex gap-3 overflow-x-auto px-screenX pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {freshListings.map((l) => (
                 <ListingCard key={l.id} listing={l} variant="compact" onClick={() => setPeek({ kind: 'listing', data: l })} />

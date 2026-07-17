@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
@@ -31,6 +32,7 @@ export function RequestsView() {
   const communityId = active?.communityId ?? '';
   const [cat, setCat] = useState<CatFilter>('all');
   const [peek, setPeek] = useState<PeekItem | null>(null);
+  const [, setParams] = useSearchParams();
 
   const q = useQuery({
     queryKey: ['requests', communityId],
@@ -57,7 +59,12 @@ export function RequestsView() {
       ) : q.isLoading ? (
         <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon="requests" title={cat === 'all' ? 'Nobody needs a hand right now' : 'Nothing in this one'} body="Ask for one. Lifts, tools, recommendations, a spare pair of hands." />
+        <EmptyState
+          icon="requests"
+          title={cat === 'all' ? 'Nobody needs a hand right now' : 'Nothing in this one'}
+          body="Ask for one. Lifts, tools, recommendations, a spare pair of hands."
+          action={{ label: 'Ask for a hand', leadingIcon: 'plus', onClick: () => setParams((p) => { p.set('compose', 'request'); return p; }) }}
+        />
       ) : (
         <VirtualList
           items={filtered}

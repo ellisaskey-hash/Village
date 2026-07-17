@@ -53,7 +53,7 @@ export function PeekSheet({ item, onClose }: { item: PeekItem | null; onClose: (
         footer={
           <div className="flex gap-2">
             <Button variant="secondary" size="xl" fullWidth onClick={() => go(`/listings/${l.id}`)}>View listing</Button>
-            <Button variant="primary" size="xl" fullWidth leadingIcon="messages" onClick={() => go(`/listings/${l.id}`)}>Message</Button>
+            <Button variant="primary" size="xl" fullWidth leadingIcon="messages" onClick={() => go(`/listings/${l.id}?reply=1`)}>Message</Button>
           </div>
         }>
         <div className="space-y-3">
@@ -95,7 +95,7 @@ export function PeekSheet({ item, onClose }: { item: PeekItem | null; onClose: (
   const r = item.data;
   return (
     <Sheet open onClose={onClose} title={r.title} hero={{ icon: 'requests', tone: 'accent' }}
-      footer={<Button variant="primary" size="xl" fullWidth leadingIcon="requests" onClick={() => go(`/requests/${r.id}`)}>I can help</Button>}>
+      footer={<Button variant="primary" size="xl" fullWidth leadingIcon="requests" onClick={() => go(`/requests/${r.id}?reply=1`)}>I can help</Button>}>
       <div className="space-y-2">
         <p className="text-small text-textMuted">{labelFor(REQUEST_CATEGORY_LABEL, r.category)} · {r.authorName}</p>
         {r.description && <p className="text-body text-text">{r.description}</p>}
