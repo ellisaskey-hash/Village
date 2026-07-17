@@ -22,7 +22,7 @@ const QUICK: { icon: IconName; label: string; to: string }[] = [
 function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
   return (
     <div className="mb-2 flex items-baseline justify-between">
-      <h2 className="text-h3 font-semibold text-text">{title}</h2>
+      <h2 className="text-h2 font-semibold text-text">{title}</h2>
       {onSeeAll && (
         <button type="button" onClick={onSeeAll} className="text-small font-medium text-accent transition-opacity hover:opacity-70">
           See all

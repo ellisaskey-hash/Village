@@ -144,9 +144,9 @@
   --g-brand: linear-gradient(135deg, #57b36e 0%, #e0a94e 100%);
   --g-hairline: linear-gradient(90deg, rgba(47, 122, 68, 0.55), rgba(180, 121, 31, 0.18));
 
-  --bg-ambient-1: radial-gradient(75% 55% at 8% 6%, rgba(240, 185, 90, 0.18), transparent 72%);
-  --bg-ambient-2: radial-gradient(70% 50% at 92% 12%, rgba(125, 216, 131, 0.14), transparent 72%);
-  --bg-ambient-3: radial-gradient(85% 60% at 50% 96%, rgba(224, 169, 78, 0.16), transparent 75%);
+  --bg-ambient-1: radial-gradient(78% 58% at 6% 4%, rgba(240, 185, 90, 0.28), transparent 70%);
+  --bg-ambient-2: radial-gradient(72% 52% at 94% 10%, rgba(125, 216, 131, 0.22), transparent 70%);
+  --bg-ambient-3: radial-gradient(95% 62% at 50% 100%, rgba(224, 169, 78, 0.24), transparent 74%);
 
   --c-glass-panel-bg: #ffffff;
   --c-glass-fade-from: #ffffff;
