@@ -3,8 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { cardEnter, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
-import { Card, Icon, IconBadge, IconButton, QueryError, Skeleton } from '@/components/ui';
+import { Card, IconBadge, IconButton, QueryError, Skeleton } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
+import { ContactRow } from '@/components/content/ContactRow';
 import { PLACE_KIND_LABEL, labelFor } from '@/lib/labels';
 
 export function PlaceDetail() {
@@ -41,7 +42,11 @@ export function PlaceDetail() {
                 </div>
               </div>
               {p.description && <p className="mt-3 text-body text-text">{p.description}</p>}
-              {p.address && <p className="mt-2 flex items-center gap-1.5 text-small text-textMuted"><Icon name="pin" size={14} className="text-textFaint" /> {p.address}</p>}
+              {p.address && (
+                <div className="mt-3">
+                  <ContactRow icon="pin" sublabel="Directions" label={p.address} href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address)}`} external />
+                </div>
+              )}
             </Card>
           </motion.div>
         </>

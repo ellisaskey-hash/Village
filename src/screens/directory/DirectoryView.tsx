@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,9 +21,22 @@ const SUBS: { value: Sub; label: string; icon: IconName }[] = [
   { value: 'people', label: 'People', icon: 'people' },
 ];
 
+// Per-type empty copy + icon, with a create CTA where neighbours can add their own (the seeded
+// types — businesses/places/organisations — just get honest "not listed yet" copy, no jargon).
+const EMPTY_COPY: Record<Sub, { title: string; body: string; compose?: string }> = {
+  businesses: { title: 'No businesses listed yet', body: 'Local shops, trades and services show up here as they join.' },
+  services: { title: 'No services offered yet', body: 'Offer one and neighbours can find you here.', compose: 'service' },
+  places: { title: 'No places yet', body: 'Parks, halls, pubs and landmarks around here will appear here.' },
+  equipment: { title: 'Nothing to borrow yet', body: 'Lend something and neighbours can ask to borrow it.', compose: 'lend' },
+  skills: { title: 'No skills shared yet', body: "Share something you can help with and it'll appear here.", compose: 'skill' },
+  organisations: { title: 'No organisations yet', body: 'The parish council, schools, churches and clubs will show up here.' },
+  people: { title: 'No neighbours here yet', body: 'Everyone who joins your community appears here.' },
+};
+
 export function DirectoryView() {
   const services = useServices();
   const navigate = useNavigate();
+  const [, setParams] = useSearchParams();
   const active = useActiveMembership();
   const session = useSession();
   const push = useToasts();
@@ -76,7 +89,14 @@ export function DirectoryView() {
       ) : q.isLoading ? (
         <div className="space-y-2"><Skeleton height={64} /><Skeleton height={64} /></div>
       ) : data.length === 0 ? (
-        <EmptyState icon="places" title="Still setting this up" body="This part of the directory is being seeded. Check back soon." />
+        <EmptyState
+          icon={SUBS.find((s) => s.value === sub)?.icon ?? 'places'}
+          title={EMPTY_COPY[sub].title}
+          body={EMPTY_COPY[sub].body}
+          {...(EMPTY_COPY[sub].compose
+            ? { action: { label: 'Add yours', leadingIcon: 'plus' as const, onClick: () => setParams((p) => { p.set('compose', EMPTY_COPY[sub].compose!); return p; }) } }
+            : {})}
+        />
       ) : sub === 'people' ? (
         <div className="space-y-2">
           {(data as Awaited<ReturnType<typeof services.memberships.membersOf>>).map((m) => (

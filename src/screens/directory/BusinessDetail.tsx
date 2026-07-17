@@ -19,6 +19,7 @@ import {
   useToasts,
 } from '@/components/ui';
 import { PhotoHero } from '@/components/content/PhotoHero';
+import { ContactRow } from '@/components/content/ContactRow';
 
 export function BusinessDetail() {
   const { id = '' } = useParams();
@@ -29,6 +30,8 @@ export function BusinessDetail() {
   const qc = useQueryClient();
   const [claimOpen, setClaimOpen] = useState(false);
   const [evidence, setEvidence] = useState('');
+  const [enquireOpen, setEnquireOpen] = useState(false);
+  const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
   const q = useQuery({
@@ -54,11 +57,17 @@ export function BusinessDetail() {
   const b = q.data;
   const isOwner = Boolean(b && session && b.ownerProfileId === session.profileId);
 
-  async function enquire() {
+  function openEnquire() {
+    if (b) setMessage(`Hi, I'd like to enquire about ${b.name}.`);
+    setEnquireOpen(true);
+  }
+
+  async function sendEnquiry() {
     if (!b?.ownerProfileId) return;
     setBusy(true);
     try {
-      const threadId = await services.threads.open('business', b.id, b.ownerProfileId, `Hi, I'd like to enquire about ${b.name}.`);
+      const threadId = await services.threads.open('business', b.id, b.ownerProfileId, message);
+      setEnquireOpen(false);
       navigate(`/inbox/t/${threadId}`);
     } catch (e) {
       push({ title: errorMessage(e), variant: 'error' });
@@ -103,10 +112,10 @@ export function BusinessDetail() {
               </div>
               {b.description && <p className="mt-3 text-body text-text">{b.description}</p>}
               {(b.contact.phone || b.contact.email || b.contact.website) && (
-                <div className="mt-3 space-y-1 text-small text-textMuted">
-                  {b.contact.phone && <p>{b.contact.phone}</p>}
-                  {b.contact.email && <p>{b.contact.email}</p>}
-                  {b.contact.website && <p>{b.contact.website}</p>}
+                <div className="mt-3 space-y-2">
+                  {b.contact.phone && <ContactRow icon="phone" sublabel="Call" label={b.contact.phone} href={`tel:${b.contact.phone.replace(/\s+/g, '')}`} />}
+                  {b.contact.email && <ContactRow icon="mail" sublabel="Email" label={b.contact.email} href={`mailto:${b.contact.email}`} />}
+                  {b.contact.website && <ContactRow icon="external-link" sublabel="Website" label={b.contact.website.replace(/^https?:\/\//, '')} href={b.contact.website.startsWith('http') ? b.contact.website : `https://${b.contact.website}`} external />}
                 </div>
               )}
             </Card>
@@ -124,13 +133,21 @@ export function BusinessDetail() {
 
           {b.ownerProfileId && !isOwner && (
             <motion.div variants={cardEnter}>
-              <Button variant="primary" size="xl" fullWidth leadingIcon="messages" loading={busy} onClick={enquire}>
+              <Button variant="primary" size="xl" fullWidth leadingIcon="messages" onClick={openEnquire}>
                 Enquire
               </Button>
             </motion.div>
           )}
         </>
       )}
+
+      <Sheet open={enquireOpen} onClose={() => setEnquireOpen(false)} title={b ? `Message ${b.name}` : 'Message'} hero={{ icon: 'messages', tone: 'accent' }}
+        footer={<Button variant="primary" size="xl" fullWidth loading={busy} disabled={!message.trim()} onClick={sendEnquiry}>Send</Button>}>
+        <div className="space-y-4">
+          <p className="text-small text-textMuted">Say what you're after. They'll reply in your inbox.</p>
+          <Textarea label="Your message" value={message} onChange={(ev) => setMessage(ev.target.value)} maxLength={500} />
+        </div>
+      </Sheet>
 
       <Sheet open={claimOpen} onClose={() => setClaimOpen(false)} title="Claim this page" hero={{ icon: 'shield', tone: 'accent' }}>
         <div className="space-y-4">
@@ -144,7 +161,7 @@ export function BusinessDetail() {
             placeholder="I'm the owner. My number on Companies House is 01892..."
             maxLength={400}
           />
-          <Button variant="primary" size="xl" fullWidth loading={busy} onClick={submitClaim}>
+          <Button variant="primary" size="xl" fullWidth loading={busy} disabled={!evidence.trim()} onClick={submitClaim}>
             Send claim
           </Button>
         </div>
