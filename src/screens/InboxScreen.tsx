@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -38,13 +38,14 @@ export function InboxScreen() {
   const threads = useQuery({ queryKey: ['threads'], queryFn: () => services.threads.mine() });
   const notifications = useQuery({ queryKey: ['notifications'], queryFn: () => services.notifications.mine() });
 
-  useEffect(() => {
-    if (section === 'notifications') {
-      services.notifications.markAllRead().then(() => qc.invalidateQueries({ queryKey: ['notifications'] }));
-    }
-  }, [section, services, qc]);
+  // Mark-read is an explicit action, not a side-effect of opening the tab — otherwise the unread
+  // accent is dead the moment the tab paints and you can't see what's new.
+  function markAllRead() {
+    services.notifications.markAllRead().then(() => qc.invalidateQueries({ queryKey: ['notifications'] }));
+  }
 
   const unreadThreads = (threads.data ?? []).filter((t) => t.unread).length;
+  const unreadNotifs = (notifications.data ?? []).filter((n) => !n.readAt).length;
 
   return (
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="mx-auto max-w-2xl space-y-5 px-screenX py-6">
@@ -59,10 +60,18 @@ export function InboxScreen() {
           onChange={setSection}
           options={[
             { value: 'messages', label: unreadThreads > 0 ? `Messages (${unreadThreads})` : 'Messages' },
-            { value: 'notifications', label: 'Notifications' },
+            { value: 'notifications', label: unreadNotifs > 0 ? `Notifications (${unreadNotifs})` : 'Notifications' },
           ]}
         />
       </motion.div>
+
+      {section === 'notifications' && unreadNotifs > 0 && (
+        <motion.div variants={cardEnter} className="flex justify-end">
+          <button type="button" onClick={markAllRead} className="text-small font-medium text-accent transition-opacity hover:opacity-70">
+            Mark all read
+          </button>
+        </motion.div>
+      )}
 
       <motion.div variants={cardEnter}>
         {section === 'messages' ? (
@@ -81,7 +90,10 @@ export function InboxScreen() {
                   type="button"
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate(`/inbox/t/${t.id}`)}
-                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-bgElevated p-3 text-left transition-colors hover:border-borderStrong"
+                  className={cx(
+                    'flex w-full items-center gap-3 rounded-lg border bg-bgElevated p-3 text-left transition-colors hover:border-borderStrong',
+                    t.unread ? 'border-accent/40 bg-accent/5' : 'border-border',
+                  )}
                 >
                   <div className="relative">
                     <Avatar name={t.otherName} size="md" />
@@ -91,7 +103,13 @@ export function InboxScreen() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className={cx('truncate text-body', t.unread ? 'font-semibold text-text' : 'font-medium text-text')}>{t.title ?? t.otherName}</p>
-                    <p className="truncate text-small text-textMuted">{t.otherName}</p>
+                    <p className={cx('truncate text-small', t.unread ? 'text-text' : 'text-textMuted')}>
+                      {t.lastSnippet
+                        ? `${t.lastSenderIsMe ? 'You: ' : ''}${t.lastSnippet}`
+                        : t.title
+                          ? t.otherName
+                          : 'Say hello'}
+                    </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className="text-small text-textFaint">{ago(t.lastMessageAt)}</span>

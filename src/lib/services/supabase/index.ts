@@ -726,6 +726,8 @@ export function createSupabaseServices(): Services {
           return {
             id: r.id, context: r.context, contextId: r.context_id, title: r.title,
             otherName: r.title ?? 'Conversation', lastMessageAt: r.last_message_at, unread: false,
+            // TODO(supabase): compute via a latest-message-per-thread view; mock path has it.
+            lastSnippet: null, lastSenderIsMe: false,
           };
         });
       },
@@ -746,7 +748,7 @@ export function createSupabaseServices(): Services {
           return { id: m.id, threadId: m.thread_id, senderId: m.sender_id, senderName: m.profiles?.display_name ?? '', body: m.body, createdAt: m.created_at };
         });
         return {
-          thread: { id: tr.id, context: tr.context, contextId: tr.context_id, title: tr.title, otherName: tr.title ?? 'Conversation', lastMessageAt: tr.last_message_at, unread: false },
+          thread: { id: tr.id, context: tr.context, contextId: tr.context_id, title: tr.title, otherName: tr.title ?? 'Conversation', lastMessageAt: tr.last_message_at, unread: false, lastSnippet: null, lastSenderIsMe: false },
           messages,
         };
       },

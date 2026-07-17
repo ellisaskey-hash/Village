@@ -745,6 +745,9 @@ export function createMockServices(): Services {
             const unread = d.messages.some(
               (m) => m.threadId === t.id && m.senderId !== me && (!mine || m.createdAt > mine.lastReadAt),
             );
+            const last = d.messages
+              .filter((m) => m.threadId === t.id)
+              .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
             return {
               id: t.id,
               context: t.context,
@@ -753,6 +756,8 @@ export function createMockServices(): Services {
               otherName: otherP ? profileName(otherP.profileId) : 'Community',
               lastMessageAt: t.lastMessageAt,
               unread,
+              lastSnippet: last?.body ?? null,
+              lastSenderIsMe: last ? last.senderId === me : false,
             };
           });
       },
@@ -771,6 +776,8 @@ export function createMockServices(): Services {
           otherName: otherP ? profileName(otherP.profileId) : 'Community',
           lastMessageAt: t.lastMessageAt,
           unread: false,
+          lastSnippet: null,
+          lastSenderIsMe: false,
         };
         const messages: Message[] = d.messages
           .filter((m) => m.threadId === id)

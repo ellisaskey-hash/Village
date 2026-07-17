@@ -11,7 +11,7 @@ interface IconButtonProps extends Omit<NativeButtonProps, 'aria-label'> {
   icon: IconName;
   /** Required — an icon-only control has no visible text (COMPONENT_INVENTORY 1.2). */
   ariaLabel: string;
-  variant?: 'ghost' | 'surface';
+  variant?: 'ghost' | 'surface' | 'primary';
   showBadge?: boolean;
   size?: Size;
 }
@@ -32,11 +32,15 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       whileTap={pressable.whileTap}
       transition={pressable.transition}
       className={cx(
-        'relative inline-flex items-center justify-center rounded-full text-text transition-colors',
-        'hover:text-accent disabled:pointer-events-none disabled:opacity-40',
+        'relative inline-flex items-center justify-center rounded-full transition-colors',
+        'disabled:pointer-events-none disabled:opacity-40',
         // sm keeps a 44px hit area via an invisible expanded ::after
         size === 'sm' && "after:absolute after:-inset-1.5 after:content-['']",
-        variant === 'surface' ? 'bg-surface hover:bg-surfaceHover' : 'hover:bg-surface',
+        variant === 'primary'
+          ? 'bg-brand text-textOnAccent shadow-glowAccent hover:opacity-90'
+          : variant === 'surface'
+            ? 'bg-surface text-text hover:bg-surfaceHover hover:text-accent'
+            : 'text-text hover:bg-surface hover:text-accent',
         BOX[size],
         className,
       )}

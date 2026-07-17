@@ -247,6 +247,10 @@ export interface ThreadSummary {
   otherName: string;
   lastMessageAt: string;
   unread: boolean;
+  /** Preview of the latest message for the inbox row; null when the thread has no messages. */
+  lastSnippet: string | null;
+  /** Whether the current user sent that last message (renders a "You: " prefix). */
+  lastSenderIsMe: boolean;
 }
 
 export interface Message {
