@@ -254,6 +254,9 @@ export function createMockServices(): Services {
       async signOut() {
         setCurrentProfileId(null);
       },
+      async requestReset() {
+        // Mock: no email backend. Resolves so the UI can show the neutral confirmation.
+      },
     },
 
     communities: {

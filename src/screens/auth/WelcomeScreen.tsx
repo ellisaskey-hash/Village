@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useServices } from '@/lib/services/provider';
 import { Button, Card, Field, Icon, TextLink, useToasts } from '@/components/ui';
@@ -16,8 +16,15 @@ export function WelcomeScreen() {
   const [results, setResults] = useState<CommunityCard[] | null>(null);
   const [searching, setSearching] = useState(false);
 
-  async function findCommunities() {
-    if (!postcode.trim()) return;
+  const [postcodeError, setPostcodeError] = useState('');
+
+  async function findCommunities(e?: FormEvent) {
+    e?.preventDefault();
+    if (!postcode.trim()) {
+      setPostcodeError('Enter your postcode to search');
+      return;
+    }
+    setPostcodeError('');
     setSearching(true);
     try {
       setResults(await services.communities.discover(postcode));
@@ -52,18 +59,20 @@ export function WelcomeScreen() {
         </Card>
       )}
 
-      <div className="flex items-end gap-2">
+      <form onSubmit={findCommunities} className="flex items-start gap-2">
         <Field
           label="Your postcode"
           value={postcode}
-          onChange={(e) => setPostcode(e.target.value)}
+          onChange={(e) => { setPostcode(e.target.value); setPostcodeError(''); }}
           placeholder="e.g. TN12 8AA"
+          autoComplete="postal-code"
           className="flex-1"
+          {...(postcodeError ? { error: postcodeError } : {})}
         />
-        <Button variant="primary" size="xl" loading={searching} onClick={findCommunities}>
+        <Button variant="primary" size="xl" type="submit" loading={searching} className="mt-[26px]">
           Find
         </Button>
-      </div>
+      </form>
 
       {results && results.length === 0 && (
         <Card>

@@ -347,6 +347,10 @@ export function createSupabaseServices(): Services {
       async signOut() {
         await getSupabase().auth.signOut();
       },
+      async requestReset(email: string) {
+        const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/reset` : undefined;
+        await getSupabase().auth.resetPasswordForEmail(email, redirectTo ? { redirectTo } : undefined);
+      },
     },
 
     communities: {

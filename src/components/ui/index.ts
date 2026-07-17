@@ -19,6 +19,7 @@ export { SegmentedControl } from './SegmentedControl';
 export { Tabs } from './Tabs';
 export { SearchBar } from './SearchBar';
 export { Field } from './Field';
+export { PasswordField } from './PasswordField';
 export { Textarea } from './Textarea';
 export { Select } from './Select';
 export { Checkbox } from './Checkbox';

@@ -162,6 +162,8 @@ export interface AuthService {
   signUp(input: SignUpInput): Promise<Session>;
   signIn(email: string, password: string): Promise<Session>;
   signOut(): Promise<void>;
+  /** Sends a password-reset link. Always resolves (never reveals whether the email exists). */
+  requestReset(email: string): Promise<void>;
 }
 
 export interface CommunityService {
