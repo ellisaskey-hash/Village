@@ -72,19 +72,19 @@ export function DirectoryView() {
     },
   });
 
-  const raw = q.data ?? [];
   // Free-text filter across whatever fields the active type surfaces (name/title/person/category).
   const data = useMemo(() => {
+    const list = q.data ?? [];
     const needle = query.trim().toLowerCase();
-    if (!needle) return raw;
-    return (raw as unknown as Record<string, unknown>[]).filter((item) => {
+    if (!needle) return list;
+    return (list as unknown as Record<string, unknown>[]).filter((item) => {
       const hay = [item.name, item.title, item.displayName, item.skill, item.personName, item.authorName, item.ownerName, item.category, Array.isArray(item.categories) ? item.categories.join(' ') : undefined, Array.isArray(item.identities) ? item.identities.join(' ') : undefined]
         .filter((v): v is string => typeof v === 'string')
         .join(' ')
         .toLowerCase();
       return hay.includes(needle);
     });
-  }, [raw, query]);
+  }, [q.data, query]);
 
   return (
     <div className="space-y-4">
