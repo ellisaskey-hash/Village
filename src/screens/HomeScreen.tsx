@@ -19,6 +19,25 @@ const QUICK: { icon: IconName; label: string; to: string }[] = [
   { icon: 'alerts', label: 'Report something lost', to: '/home?compose=alert' },
 ];
 
+/** A live "your village today" stat pill for the Home hero — a count + label, tappable to the
+ *  relevant tab. The count is the hero; the label is quiet. */
+function TodayStat({ icon, tone, count, label, onClick }: { icon: IconName; tone: 'accent' | 'warn' | 'positive'; count: number; label: string; onClick: () => void }) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileHover={{ y: -2 }}
+      whileTap={pressable.whileTap}
+      transition={pressable.transition}
+      className="inline-flex items-center gap-2 rounded-pill border border-border bg-bgElevated py-1.5 pl-1.5 pr-3.5 shadow-card transition-colors hover:border-accent/40"
+    >
+      <IconBadge icon={icon} tone={tone} size="sm" />
+      <span className="text-body font-bold text-text">{count}</span>
+      <span className="text-small text-textMuted">{label}</span>
+    </motion.button>
+  );
+}
+
 function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
   return (
     <div className="mb-2 flex items-baseline justify-between">
@@ -52,6 +71,13 @@ export function HomeScreen() {
   const openRequests = (requestsQ.data ?? []).filter((r) => r.status === 'open' || r.status === 'answered').slice(0, 4);
   const freshListings = (listingsQ.data ?? []).filter((l) => l.status === 'active').slice(0, 8);
   const notices = (noticesQ.data ?? []).slice(0, 3);
+  // A live pulse of the day for the Home hero — full counts (not the sliced feeds below).
+  const weekEventCount = (eventsQ.data ?? []).filter((e) => {
+    const t = new Date(e.startsAt).getTime();
+    return t >= Date.now() - 3600e3 && t < Date.now() + 7 * 864e5;
+  }).length;
+  const openRequestCount = (requestsQ.data ?? []).filter((r) => r.status === 'open').length;
+  const freshListingCount = (listingsQ.data ?? []).filter((l) => l.status === 'active').length;
   // A failed load should read as "couldn't load", not a silently-empty community. Only surface
   // the retry when a failure actually left the page with nothing (partial success still renders).
   const failed = eventsQ.isError || requestsQ.isError || listingsQ.isError || noticesQ.isError;
@@ -77,6 +103,13 @@ export function HomeScreen() {
         <motion.header variants={cardEnter} className="lg:col-span-12">
           <p className="text-eyebrow uppercase text-textMuted">{active?.name ?? 'Your community'}</p>
           <h1 className="font-display text-h1 font-bold text-text">Good to see you, {firstName}</h1>
+          {!loading && !nothing && (weekEventCount + openRequestCount + freshListingCount) > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {openRequestCount > 0 && <TodayStat icon="requests" tone="accent" count={openRequestCount} label={openRequestCount === 1 ? 'needs a hand' : 'need a hand'} onClick={() => navigate('/explore?tab=requests')} />}
+              {weekEventCount > 0 && <TodayStat icon="events" tone="warn" count={weekEventCount} label="on this week" onClick={() => navigate('/explore?tab=events')} />}
+              {freshListingCount > 0 && <TodayStat icon="listings" tone="positive" count={freshListingCount} label="up for grabs" onClick={() => navigate('/explore?tab=listings')} />}
+            </div>
+          )}
         </motion.header>
 
         <motion.div variants={cardEnter} className="lg:col-span-12">

@@ -8,6 +8,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { Chip, EmptyState, QueryError, Select, Skeleton, VirtualList } from '@/components/ui';
 import { ListingCard, priceBadge } from '@/components/content/ListingCard';
+import { EmptyListings } from '@/components/illustrations/Empties';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
 import type { Listing, ListingKind } from '@/lib/services/types';
 
@@ -87,7 +88,7 @@ export function ListingsView() {
         <div className="grid gap-3" style={gridStyle}>{Array.from({ length: cols * 2 }).map((_, i) => <Skeleton key={i} height={230} />)}</div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="listings"
+          illustration={<EmptyListings />}
           title={kind === 'all' ? 'Nothing for sale yet' : 'Nothing here'}
           body={kind === 'all' ? 'Got something lying around? Give it a new home with a neighbour.' : 'Try another filter, or be the first to post one.'}
           action={{ label: 'List something', leadingIcon: 'plus', onClick: () => setParams((p) => { p.set('compose', 'sell'); return p; }) }}

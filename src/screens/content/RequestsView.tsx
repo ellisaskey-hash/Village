@@ -7,6 +7,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { Chip, EmptyState, IconBadge, ListRow, QueryError, Skeleton, VirtualList } from '@/components/ui';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
+import { EmptyRequests } from '@/components/illustrations/Empties';
 import { REQUEST_CATEGORY_LABEL, labelFor } from '@/lib/labels';
 import { deadlineLabel } from '@/lib/ics';
 import type { RequestCategory, RequestStatus } from '@/lib/services/types';
@@ -67,7 +68,7 @@ export function RequestsView() {
         <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="requests"
+          illustration={<EmptyRequests />}
           title={cat === 'all' ? 'Nobody needs a hand right now' : 'Nothing in this one'}
           body="Ask for one. Lifts, tools, recommendations, a spare pair of hands."
           action={{ label: 'Ask for a hand', leadingIcon: 'plus', onClick: () => setParams((p) => { p.set('compose', 'request'); return p; }) }}

@@ -7,6 +7,7 @@ import { useServices } from '@/lib/services/provider';
 import { useActiveMembership, useSession } from '@/app/state/session';
 import { Avatar, Button, Chip, EmptyState, IconBadge, ListRow, QueryError, SearchBar, Skeleton, useToasts, type IconName } from '@/components/ui';
 import { DirectoryCard } from '@/components/content/DirectoryCard';
+import { EmptyDirectory } from '@/components/illustrations/Empties';
 import { ORGANISATION_KIND_LABEL, PLACE_KIND_LABEL, labelFor } from '@/lib/labels';
 
 type Sub = 'businesses' | 'services' | 'places' | 'equipment' | 'skills' | 'organisations' | 'people';
@@ -106,7 +107,7 @@ export function DirectoryView() {
         <EmptyState icon="search" title="No matches" body={`Nothing in ${SUBS.find((s) => s.value === sub)?.label.toLowerCase()} matches “${query.trim()}”. Try another word or a different tab.`} />
       ) : data.length === 0 ? (
         <EmptyState
-          icon={SUBS.find((s) => s.value === sub)?.icon ?? 'places'}
+          illustration={<EmptyDirectory />}
           title={EMPTY_COPY[sub].title}
           body={EMPTY_COPY[sub].body}
           {...(EMPTY_COPY[sub].compose

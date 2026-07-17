@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { cardEnter, listContainer, listItem, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { Avatar, Badge, EmptyState, Icon, IconBadge, QueryError, SegmentedControl, Skeleton, type IconName } from '@/components/ui';
+import { EmptyMessages } from '@/components/illustrations/Empties';
 import { cx } from '@/lib/cx';
 import type { ThreadContext } from '@/lib/services/types';
 
@@ -80,7 +81,7 @@ export function InboxScreen() {
           ) : threads.isLoading ? (
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={64} />)}</div>
           ) : !threads.data || threads.data.length === 0 ? (
-            <EmptyState icon="messages" title="No messages yet" body="When you respond to a listing or request, the conversation shows up here." />
+            <EmptyState illustration={<EmptyMessages />} title="No messages yet" body="When you respond to a listing or request, the conversation shows up here." />
           ) : (
             <motion.div variants={listContainer} initial="initial" animate="animate" className="space-y-2">
               {threads.data.map((t) => (

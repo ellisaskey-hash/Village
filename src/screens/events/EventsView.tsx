@@ -8,6 +8,7 @@ import { useActiveMembership } from '@/app/state/session';
 import { Chip, EmptyState, QueryError, Skeleton } from '@/components/ui';
 import { EventCard } from '@/components/content/EventCard';
 import { PeekSheet, type PeekItem } from '@/components/content/PeekSheet';
+import { EmptyEvents } from '@/components/illustrations/Empties';
 import { EVENT_CATEGORY_LABEL } from '@/lib/labels';
 import type { Event, EventCategory } from '@/lib/services/types';
 
@@ -80,7 +81,7 @@ export function EventsView() {
         <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={112} />)}</div>
       ) : buckets.total === 0 ? (
         <EmptyState
-          icon="events"
+          illustration={<EmptyEvents />}
           title={cat === 'all' ? 'Nothing on just yet' : 'Nothing in this one'}
           body={cat === 'all' ? 'Know something happening locally? Add it so your neighbours can come along.' : 'Try another category, or add the first one.'}
           action={{ label: 'Add an event', leadingIcon: 'plus', onClick: () => setParams((p) => { p.set('compose', 'event'); return p; }) }}
