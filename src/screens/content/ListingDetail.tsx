@@ -11,6 +11,7 @@ import { ReportButton } from '@/components/moderation/ReportButton';
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
 import { priceLabel } from './ListingsView';
+import { shareLink } from '@/lib/share';
 import { LISTING_STATUS_LABEL, labelFor } from '@/lib/labels';
 import type { ListingStatus } from '@/lib/services/types';
 
@@ -75,10 +76,11 @@ export function ListingDetail() {
       <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
         <p className="text-eyebrow uppercase text-textMuted">Listing</p>
-        {l && !isAuthor && (
-          <span className="ml-auto">
-            <ReportButton targetKind="listing" targetId={l.id} targetLabel={l.title} />
-          </span>
+        {l && (
+          <div className="ml-auto flex items-center gap-1">
+            <IconButton icon="share" ariaLabel="Share" size="sm" onClick={() => shareLink(l.title, window.location.href, push)} />
+            {!isAuthor && <ReportButton targetKind="listing" targetId={l.id} targetLabel={l.title} />}
+          </div>
         )}
       </motion.header>
 

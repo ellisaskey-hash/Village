@@ -10,6 +10,7 @@ import { Banner, Button, Card, Icon, IconBadge, IconButton, QueryError, Skeleton
 import { PhotoHero } from '@/components/content/PhotoHero';
 import { AuthorCard } from '@/components/content/AuthorCard';
 import { ReportButton } from '@/components/moderation/ReportButton';
+import { shareLink } from '@/lib/share';
 import type { RsvpStatus } from '@/lib/services/types';
 
 export function EventDetail() {
@@ -42,10 +43,11 @@ export function EventDetail() {
       <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
         <p className="text-eyebrow uppercase text-textMuted">Event</p>
-        {e && !isHost && (
-          <span className="ml-auto">
-            <ReportButton targetKind="event" targetId={e.id} targetLabel={e.title} />
-          </span>
+        {e && (
+          <div className="ml-auto flex items-center gap-1">
+            <IconButton icon="share" ariaLabel="Share" size="sm" onClick={() => shareLink(e.title, window.location.href, push)} />
+            {!isHost && <ReportButton targetKind="event" targetId={e.id} targetLabel={e.title} />}
+          </div>
         )}
       </motion.header>
       {q.isLoading ? (

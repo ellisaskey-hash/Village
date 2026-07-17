@@ -12,6 +12,7 @@ import { Banner, Button, Card, Chip, Icon, IconBadge, IconButton, Sheet, QueryEr
 import { ReportButton } from '@/components/moderation/ReportButton';
 import { AuthorCard } from '@/components/content/AuthorCard';
 import { REQUEST_CATEGORY_LABEL, REQUEST_STATUS_LABEL, labelFor } from '@/lib/labels';
+import { shareLink } from '@/lib/share';
 
 export function RequestDetail() {
   const { id = '' } = useParams();
@@ -68,10 +69,11 @@ export function RequestDetail() {
       <motion.header variants={cardEnter} className="flex items-center gap-2">
         <IconButton icon="back" ariaLabel="Back" size="sm" onClick={() => navigate(-1)} />
         <p className="text-eyebrow uppercase text-textMuted">Request</p>
-        {r && !isAuthor && (
-          <span className="ml-auto">
-            <ReportButton targetKind="request" targetId={r.id} targetLabel={r.title} />
-          </span>
+        {r && (
+          <div className="ml-auto flex items-center gap-1">
+            <IconButton icon="share" ariaLabel="Share" size="sm" onClick={() => shareLink(r.title, window.location.href, push)} />
+            {!isAuthor && <ReportButton targetKind="request" targetId={r.id} targetLabel={r.title} />}
+          </div>
         )}
       </motion.header>
 
