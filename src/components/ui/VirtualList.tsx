@@ -1,5 +1,7 @@
 import { useRef, type ReactNode } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { motion } from 'framer-motion';
+import { listContainer, listItem } from '@/lib/motion';
 
 interface VirtualListProps<T> {
   items: T[];
@@ -10,6 +12,8 @@ interface VirtualListProps<T> {
   /** Rows above this count get windowed; at or below it we render them all (no overhead,
    *  keeps small lists simple and screenshot-stable). WEAKNESSES fix: virtualise > 50. */
   threshold?: number;
+  /** Stagger the small-list (non-windowed) rows in on mount, matching Events/Inbox. */
+  stagger?: boolean;
   className?: string;
 }
 
@@ -24,6 +28,7 @@ export function VirtualList<T>({
   getKey,
   estimateSize = 76,
   threshold = 50,
+  stagger = false,
   className,
 }: VirtualListProps<T>) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -39,6 +44,21 @@ export function VirtualList<T>({
   // Small lists: render everything. Avoids absolute-positioning + measurement overhead and
   // keeps the DOM simple for the common case (and for e2e/screenshots).
   if (items.length <= threshold) {
+    if (stagger) {
+      return (
+        <motion.div
+          variants={listContainer}
+          initial="initial"
+          animate="animate"
+          className={className}
+          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+        >
+          {items.map((item, i) => (
+            <motion.div key={getKey(item, i)} variants={listItem}>{renderItem(item, i)}</motion.div>
+          ))}
+        </motion.div>
+      );
+    }
     return (
       <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {items.map((item, i) => (

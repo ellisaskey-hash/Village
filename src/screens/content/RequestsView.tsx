@@ -74,6 +74,7 @@ export function RequestsView() {
         />
       ) : (
         <VirtualList
+          stagger
           items={filtered}
           getKey={(r) => r.id}
           estimateSize={72}

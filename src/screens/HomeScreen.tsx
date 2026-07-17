@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { cardEnter, screenEnter } from '@/lib/motion';
+import { cardEnter, screenEnter, pressable } from '@/lib/motion';
 import { useActiveMembership, useSession } from '@/app/state/session';
 import { useServices } from '@/lib/services/provider';
 import { formatWhen } from '@/lib/ics';
@@ -197,7 +197,9 @@ export function HomeScreen() {
                 key={qk.label}
                 type="button"
                 onClick={() => navigate(qk.to)}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ y: -2 }}
+                whileTap={pressable.whileTap}
+                transition={pressable.transition}
                 className="flex flex-col items-center gap-2 rounded-lg border border-border bg-bgElevated p-4 text-center transition-colors hover:border-accent/40 lg:flex-row lg:gap-3 lg:text-left"
               >
                 <IconBadge icon={qk.icon} tone="accent" size="md" />

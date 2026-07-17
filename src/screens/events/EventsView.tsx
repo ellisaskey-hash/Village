@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { listContainer, listItem } from '@/lib/motion';
+import { listContainer, listItem, screenEnter } from '@/lib/motion';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { Chip, EmptyState, QueryError, Skeleton } from '@/components/ui';
@@ -72,7 +72,7 @@ export function EventsView() {
     );
 
   return (
-    <div className="space-y-4">
+    <motion.div variants={screenEnter} initial="initial" animate="animate" className="space-y-4">
       {filters}
       {q.isError ? (
         <QueryError onRetry={() => q.refetch()} />
@@ -94,6 +94,6 @@ export function EventsView() {
         </div>
       )}
       <PeekSheet item={peek} onClose={() => setPeek(null)} />
-    </div>
+    </motion.div>
   );
 }

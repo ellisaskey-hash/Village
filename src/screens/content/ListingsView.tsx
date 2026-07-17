@@ -94,6 +94,7 @@ export function ListingsView() {
         />
       ) : (
         <VirtualList
+          stagger
           items={rows}
           getKey={(row) => row.map((l) => l.id).join('-')}
           estimateSize={248}
