@@ -100,7 +100,7 @@ export function ListingDetail() {
             </motion.div>
           )}
           <motion.div variants={cardEnter}>
-            <PhotoHero photos={l.photos} label={l.title} icon="listings" from={l.kind === 'free' ? 'var(--c-positive)' : 'var(--c-accent)'} to="var(--c-accent-warm)" />
+            <PhotoHero photos={l.photos} label={l.title} icon="listings" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>

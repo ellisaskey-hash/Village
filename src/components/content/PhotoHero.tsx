@@ -1,20 +1,19 @@
 import { useState, type UIEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { backdropMotion } from '@/lib/motion';
-import { Icon, IconButton, type IconName } from '@/components/ui';
+import { IconButton, type IconName } from '@/components/ui';
+import { Placeholder } from '@/components/content/Placeholder';
 
 interface PhotoHeroProps {
   photos?: string[];
   icon: IconName;
   /** Used for meaningful alt text (e.g. the listing/event title). */
   label?: string;
-  from?: string;
-  to?: string;
 }
 
 /** Full-width hero for detail screens: a snap-scrolling photo gallery with a counter, dot markers
- *  and tap-to-zoom, or a tinted gradient + icon when there are no photos. */
-export function PhotoHero({ photos, icon, label, from = 'var(--c-accent)', to = 'var(--c-accent-warm)' }: PhotoHeroProps) {
+ *  and tap-to-zoom, or a neutral placeholder when there are no photos. */
+export function PhotoHero({ photos, icon, label }: PhotoHeroProps) {
   const list = photos ?? [];
   const [index, setIndex] = useState(0);
   const [zoom, setZoom] = useState<number | null>(null);
@@ -22,8 +21,8 @@ export function PhotoHero({ photos, icon, label, from = 'var(--c-accent)', to = 
 
   if (list.length === 0) {
     return (
-      <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-xl border border-border" style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
-        <Icon name={icon} size={48} className="text-textOnAccent opacity-90" />
+      <div className="h-40 w-full overflow-hidden rounded-xl border border-border">
+        <Placeholder icon={icon} size={48} />
       </div>
     );
   }

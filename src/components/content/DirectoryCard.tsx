@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
 import { springSnappy } from '@/lib/motion';
-import { Icon, type IconName } from '@/components/ui';
+import { type IconName } from '@/components/ui';
+import { Placeholder } from '@/components/content/Placeholder';
 
 interface DirectoryCardProps {
   title: string;
@@ -11,8 +12,6 @@ interface DirectoryCardProps {
   /** Small pill overlaid on the photo, e.g. "Claim it" or "Verified". */
   badge?: { label: string; tone: 'accent' | 'positive' | 'info' };
   onClick?: () => void;
-  from?: string;
-  to?: string;
 }
 
 const TONE: Record<'accent' | 'positive' | 'info', string> = {
@@ -21,9 +20,9 @@ const TONE: Record<'accent' | 'positive' | 'info', string> = {
   info: 'bg-info text-textOnAccent',
 };
 
-/** Photo-forward directory card for businesses / places (spec 07 directory). Gradient + icon
- *  fallback when there is no photo, so a seeded stub is never blank. */
-export function DirectoryCard({ title, subtitle, icon, photos, badge, onClick, from = 'var(--c-accent)', to = 'var(--c-accent-warm)' }: DirectoryCardProps) {
+/** Photo-forward directory card for businesses / places (spec 07 directory). Neutral placeholder
+ *  when there is no photo, so a seeded stub is never blank and the grid reads as one system. */
+export function DirectoryCard({ title, subtitle, icon, photos, badge, onClick }: DirectoryCardProps) {
   const photo = (photos ?? [])[0];
   return (
     <motion.button
@@ -38,9 +37,7 @@ export function DirectoryCard({ title, subtitle, icon, photos, badge, onClick, f
         {photo ? (
           <img src={photo} alt={title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center" style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
-            <Icon name={icon} size={32} className="text-textOnAccent opacity-90" />
-          </div>
+          <Placeholder icon={icon} size={32} />
         )}
         {badge && (
           <span className={cx('absolute left-2 top-2 rounded-pill px-2.5 py-1 text-small font-semibold shadow-card backdrop-blur-md', TONE[badge.tone])}>

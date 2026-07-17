@@ -161,8 +161,8 @@ export function ThreadScreen() {
                     {!mine && (showAvatar ? <Avatar name={m.senderName} size="sm" /> : <span className="w-8 shrink-0" />)}
                     <div
                       className={cx(
-                        'max-w-[78%] rounded-2xl px-3.5 py-2 text-body shadow-card',
-                        mine ? 'rounded-br-md bg-brand text-textOnAccent' : 'rounded-bl-md border border-border bg-bgElevated text-text',
+                        'max-w-[80%] rounded-2xl px-3.5 py-2 text-body shadow-card lg:max-w-[52ch]',
+                        mine ? 'rounded-br-md bg-accent text-textOnAccent' : 'rounded-bl-md border border-border bg-bgElevated text-text',
                       )}
                     >
                       {showAvatar && <span className="mb-0.5 block text-micro font-medium text-textMuted">{m.senderName}</span>}

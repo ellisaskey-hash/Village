@@ -53,7 +53,7 @@ export function EquipmentDetail() {
       ) : (
         <>
           <motion.div variants={cardEnter}>
-            <PhotoHero photos={e.photos} label={e.name} icon="equipment" from="var(--c-positive)" to="var(--c-accent)" />
+            <PhotoHero photos={e.photos} label={e.name} icon="equipment" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>

@@ -61,7 +61,7 @@ export function EventDetail() {
       ) : (
         <>
           <motion.div variants={cardEnter}>
-            <PhotoHero photos={e.photos} label={e.title} icon="events" from="var(--c-accent)" to="var(--c-accent-warm)" />
+            <PhotoHero photos={e.photos} label={e.title} icon="events" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>

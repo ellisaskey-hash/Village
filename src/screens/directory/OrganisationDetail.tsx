@@ -33,7 +33,7 @@ export function OrganisationDetail() {
       ) : (
         <>
           <motion.div variants={cardEnter}>
-            <PhotoHero icon="organisations" from={o.verifiedSource ? 'var(--c-info)' : 'var(--c-purple)'} to="var(--c-accent)" />
+            <PhotoHero icon="organisations" />
           </motion.div>
           <motion.div variants={cardEnter}>
             <Card>

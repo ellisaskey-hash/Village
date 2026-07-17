@@ -89,9 +89,9 @@ export function DirectoryView() {
   return (
     <div className="space-y-4">
       <SearchBar value={query} onChange={setQuery} placeholder="Search the directory" ariaLabel="Search the directory" />
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-screenX flex gap-2 overflow-x-auto px-screenX pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {SUBS.map((s) => (
-          <Chip key={s.value} selected={sub === s.value} leadingIcon={s.icon} onClick={() => setSub(s.value)}>
+          <Chip key={s.value} selected={sub === s.value} onClick={() => setSub(s.value)}>
             {s.label}
           </Chip>
         ))}
@@ -128,7 +128,7 @@ export function DirectoryView() {
           ))}
         </div>
       ) : sub === 'businesses' ? (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {(data as Awaited<ReturnType<typeof services.directory.businesses>>).map((b) => (
             <DirectoryCard
               key={b.id}
@@ -168,9 +168,9 @@ export function DirectoryView() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {(data as Awaited<ReturnType<typeof services.directory.places>>).map((p) => (
-            <DirectoryCard key={p.id} icon="places" photos={p.photos} title={p.name} subtitle={labelFor(PLACE_KIND_LABEL, p.kind)} from="var(--c-positive)" to="var(--c-info)" onClick={() => navigate(`/places/${p.id}`)} />
+            <DirectoryCard key={p.id} icon="places" photos={p.photos} title={p.name} subtitle={labelFor(PLACE_KIND_LABEL, p.kind)} onClick={() => navigate(`/places/${p.id}`)} />
           ))}
         </div>
       )}

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { screenEnter } from '@/lib/motion';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { useServices } from '@/lib/services/provider';
 import { useActiveMembership } from '@/app/state/session';
 import { Chip, EmptyState, QueryError, Select, Skeleton, VirtualList } from '@/components/ui';
@@ -48,11 +49,16 @@ export function ListingsView() {
     return list;
   }, [q.data, kind, sort]);
 
+  // Column count follows the viewport so desktop shows a real grid, not two giant cards.
+  const isLg = useMediaQuery('(min-width: 1024px)');
+  const isSm = useMediaQuery('(min-width: 640px)');
+  const cols = isLg ? 4 : isSm ? 3 : 2;
   const rows = useMemo(() => {
     const r: Listing[][] = [];
-    for (let i = 0; i < filtered.length; i += 2) r.push(filtered.slice(i, i + 2));
+    for (let i = 0; i < filtered.length; i += cols) r.push(filtered.slice(i, i + cols));
     return r;
-  }, [filtered]);
+  }, [filtered, cols]);
+  const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` };
 
   return (
     <motion.div variants={screenEnter} initial="initial" animate="animate" className="space-y-4">
@@ -78,7 +84,7 @@ export function ListingsView() {
       {q.isError ? (
         <QueryError onRetry={() => q.refetch()} />
       ) : q.isLoading ? (
-        <div className="grid grid-cols-2 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height={230} />)}</div>
+        <div className="grid gap-3" style={gridStyle}>{Array.from({ length: cols * 2 }).map((_, i) => <Skeleton key={i} height={230} />)}</div>
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="listings"
@@ -92,7 +98,7 @@ export function ListingsView() {
           getKey={(row) => row.map((l) => l.id).join('-')}
           estimateSize={248}
           renderItem={(row) => (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3" style={gridStyle}>
               {row.map((l) => (
                 <ListingCard key={l.id} listing={l} onClick={() => setPeek({ kind: 'listing', data: l })} />
               ))}

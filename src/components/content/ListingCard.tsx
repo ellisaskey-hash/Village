@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { cx } from '@/lib/cx';
 import { springSnappy } from '@/lib/motion';
-import { Icon } from '@/components/ui';
+import { Placeholder } from '@/components/content/Placeholder';
 import { LISTING_STATUS_LABEL, labelFor } from '@/lib/labels';
 import { relativeTime } from '@/lib/ics';
 import type { Listing } from '@/lib/services/types';
@@ -14,14 +14,6 @@ export function formatPrice(pence: number): string {
     maximumFractionDigits: 2,
   })}`;
 }
-
-/** Kind → the badge label + the placeholder gradient when a listing has no photo. */
-const KIND: Record<Listing['kind'], { label: string; from: string; to: string }> = {
-  sell: { label: 'For sale', from: 'var(--c-accent)', to: 'var(--c-accent-warm)' },
-  free: { label: 'Free', from: 'var(--c-positive)', to: 'var(--c-accent)' },
-  wanted: { label: 'Wanted', from: 'var(--c-purple)', to: 'var(--c-accent)' },
-  lend: { label: 'To borrow', from: 'var(--c-info)', to: 'var(--c-accent)' },
-};
 
 export function priceBadge(l: Listing): string {
   if (l.kind === 'free') return 'Free';
@@ -40,7 +32,6 @@ interface ListingCardProps {
 /** Photo-forward listing card (spec 07: photo, price/FREE/WANTED badge, title, status).
  *  Falls back to a kind-tinted gradient + icon when there is no photo, so it is never blank. */
 export function ListingCard({ listing: l, onClick, variant = 'full' }: ListingCardProps) {
-  const kind = KIND[l.kind];
   const photo = (l.photos ?? [])[0];
   const reserved = l.status === 'reserved';
   const closed = l.status === 'completed' || l.status === 'expired' || l.status === 'withdrawn';
@@ -61,9 +52,7 @@ export function ListingCard({ listing: l, onClick, variant = 'full' }: ListingCa
         {photo ? (
           <img src={photo} alt={l.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center" style={{ backgroundImage: `linear-gradient(135deg, ${kind.from}, ${kind.to})` }}>
-            <Icon name="listings" size={variant === 'compact' ? 28 : 40} className="text-textOnAccent opacity-90" />
-          </div>
+          <Placeholder icon="listings" size={variant === 'compact' ? 28 : 40} />
         )}
         <span className={cx(
           'absolute left-2 top-2 rounded-pill px-2.5 py-1 text-small font-semibold shadow-card backdrop-blur-md',
