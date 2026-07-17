@@ -32,9 +32,11 @@ await rpcOn();
 await q("insert into memberships (profile_id,community_id,trust_level,joined_via,status) select $1,$2,3,'admin','active' where not exists (select 1 from memberships where profile_id=$1 and community_id=$2)", [adminProfile.id, hors.id]);
 await rpcOff();
 
-// A tiny CSP-safe SVG "photo" (img-src allows data:). Deterministic, obviously a placeholder.
-function photo(label, bg) {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='600' height='400' fill='${bg}'/><text x='300' y='210' font-family='sans-serif' font-size='34' fill='white' text-anchor='middle'>${label}</text></svg>`;
+// A tiny CSP-safe SVG "photo" (img-src allows data:). Warm neutral placeholder matching the app's
+// no-photo treatment — no clashing per-item colours or names, so demo grids read as one system.
+// (label/bg args kept for call-site compatibility; intentionally unused.)
+function photo() {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#eeede5'/><stop offset='1' stop-color='#ffffff'/></linearGradient></defs><rect width='600' height='400' fill='url(#g)'/><circle cx='300' cy='200' r='44' fill='none' stroke='#7dd883' stroke-opacity='0.4' stroke-width='7'/></svg>`;
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
