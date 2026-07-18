@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { cardEnter, screenEnter, springSnappy } from '@/lib/motion';
+import { cardEnter, screenEnter } from '@/lib/motion';
 import { BrandLogo, Button, IconBadge, TextLink, type IconName } from '@/components/ui';
+import { VillageScene } from '@/components/illustrations/VillageScene';
 
 const VALUE: { icon: IconName; title: string; body: string }[] = [
   { icon: 'requests', title: 'Ask a neighbour', body: 'A lift, a ladder, a recommendation. Post a request and someone nearby will help.' },
@@ -23,7 +24,10 @@ export function LandingScreen() {
       className="mx-auto max-w-3xl px-screenX py-16"
     >
       <motion.div variants={cardEnter} className="flex flex-col items-center gap-6 text-center">
-        <BrandLogo size={64} withWordmark />
+        <BrandLogo size={56} withWordmark />
+        <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-border shadow-card">
+          <VillageScene />
+        </div>
         <h1 className="font-display text-display font-bold text-text">Your village, in one place</h1>
         <p className="max-w-xl text-h3 font-normal text-textMuted">
           Requests, listings, events and alerts for where you live. Local is a calmer place to be a
@@ -41,16 +45,14 @@ export function LandingScreen() {
 
       <motion.section variants={cardEnter} className="mt-16 grid gap-4 sm:grid-cols-2">
         {VALUE.map((v) => (
-          <motion.div
+          <div
             key={v.title}
-            whileHover={{ y: -4 }}
-            transition={springSnappy}
-            className="rounded-lg border border-border bg-bgElevated p-cardPad shadow-card transition-shadow hover:shadow-raised"
+            className="rounded-lg border border-border bg-bgElevated p-cardPad shadow-card"
           >
             <IconBadge icon={v.icon} tone="accent" size="md" />
             <h2 className="mt-3 text-h3 font-semibold text-text">{v.title}</h2>
             <p className="mt-1 text-small text-textMuted">{v.body}</p>
-          </motion.div>
+          </div>
         ))}
       </motion.section>
 
